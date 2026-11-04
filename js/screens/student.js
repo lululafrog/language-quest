@@ -245,6 +245,7 @@ function ClassJar({ cls }) {
 // ---------- JOUER SEULE ----------
 export function StudentPlay() {
   const { auth } = useStudent();
+  const local = useStore();
   const tile = (icon, name, sub, to) => html`<button class="game-tile" onClick=${() => go(to)}><span class="game-icon">${icon}</span><b>${name}</b><span class="muted small">${sub}</span></button>`;
   return html`<div class="page narrow student">
     <h1>🎮 Main (Play)</h1>
@@ -253,7 +254,7 @@ export function StudentPlay() {
       ${tile('📸', 'Foto 5 kata', 'Foto benda di sekitarmu (Photo things around you)', '/photo')}
       ${tile('🃏', 'Kartu foto', 'Gambar → kata bahasa Inggris (Picture → English word)', '/photo/cards')}
       ${tile('🔎', 'Cari fotonya', 'Dengar kata, pilih foto (Listen, pick the photo)', '/photo/find')}
-      ${tile('🎙️', 'Ucapkan! (Say it!)', 'Ucapkan kata, aku mendengarkan (Say the word, I listen)', '/s/say')}
+      ${local.settings.mic && tile('🎙️', 'Ucapkan! (Say it!)', 'Ucapkan kata, aku mendengarkan (Say the word, I listen)', '/s/say')}
       ${tile('❓', 'Kuis (Quiz)', 'Pilih jawaban yang benar (Choose the right answer)', '/games/quiz')}
       ${tile('🔗', 'Cocokkan (Match)', 'Kata ↔ gambar (Word ↔ picture)', '/games/match')}
       ${tile('🧠', 'Memori (Memory)', 'Cari pasangan kartu (Find the pairs)', '/games/memory')}

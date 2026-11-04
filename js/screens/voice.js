@@ -45,10 +45,18 @@ export function VoiceScreen() {
     <h1>🎙️ ${B('Pilih suara', 'Choose a voice')}</h1>
     <p class="muted">${B('Sentuh untuk mendengar. Pilih suara yang paling kamu suka!', 'Tap to listen. Choose the voice you like best!')}</p>
     <${VoicePicker} lang="en" />
+    <${MicToggle} />
     <details class="card voice-tip"><summary>💡 ${B('Mau suara yang lebih bagus?', 'Want a nicer voice?')}</summary>
       <p><b>Android:</b> Setelan → Aksesibilitas → Output teks ke ucapan → ⚙️ Google → Instal data suara → English → ${B('pilih suara perempuan, kualitas tinggi', 'pick a female, high-quality voice')}.</p>
       <p><b>iPhone:</b> Setelan → Aksesibilitas → Konten Lisan → Suara → English → ${B('unduh suara « Enhanced » atau « Premium » (contoh: Ava, Samantha)', 'download an « Enhanced » or « Premium » voice (e.g. Ava, Samantha)')}.</p>
       <p class="muted small">${B('Setelah itu, buka lagi halaman ini dan pilih suara baru.', 'Then come back to this page and choose the new voice.')}</p>
     </details>
   </div>`;
+}
+
+// Latihan berbicara (micro) : désactivé par défaut.
+function MicToggle() {
+  const s = useStore();
+  return html`<label class="card check mic-toggle"><input type="checkbox" checked=${!!s.settings.mic} onChange=${(e) => update((st) => { st.settings.mic = e.target.checked; })} />
+    <span>🎙️ ${B('Latihan berbicara dengan mikrofon', 'Speaking practice with the microphone')}<span class="small muted block">${B('Untuk HP dengan Chrome atau Safari', 'For phones with Chrome or Safari')}</span></span></label>`;
 }

@@ -6,7 +6,7 @@ import { duelQuestions } from '../screens/multiplayer.js';
 import { shuffle, sample } from '../ui.js';
 import { distractors } from '../gen.js';
 import { B } from '../i18n.js';
-import { today } from '../store.js';
+import { today, getState } from '../store.js';
 
 export const SUMMIT_M = 3726;
 export const LEVELS_N = 100;
@@ -109,7 +109,7 @@ const spell = (w) => ({ kind: 'translate', kindLabel: B('Tulis dalam bahasa Ingg
 const recog = (w, pool) => (pic(w) ? mcqPic(w, pool) : mcqId(w, pool));
 const matchOf = (words) => ({ kind: 'match', pairs: words.slice(0, 5).map((w) => [w.en, pic(w) ? w.emoji : w.id]), big: words.slice(0, 5).every(pic) });
 const mix = (w, pool, i) => [recog, mcqEn, listen, mcqId][i % 4](w, pool);
-const micOk = () => typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition) && window.top === window;
+const micOk = () => typeof window !== 'undefined' && !!getState().settings.mic && !!(window.SpeechRecognition || window.webkitSpeechRecognition) && window.top === window;
 const say = (w) => ({ kind: 'say', w });
 
 function lessonExercises(zone) {

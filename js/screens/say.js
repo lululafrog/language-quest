@@ -1,13 +1,14 @@
 // Prononciation : l'élève dit un mot (ou une phrase) au micro, l'app vérifie et encourage.
 import { html, useState, useEffect, useMemo } from '../vendor/preact-htm.js';
-import { useStore } from '../store.js';
+import { useStore, getState, update } from '../store.js';
 import { listen, canListen, speak, normalize, similarity } from '../speech.js';
 import { go, AudioBtn, Confetti, shuffle, sample } from '../ui.js';
 import { chime } from '../exercises.js';
 import { ZONES, levelInfo, pathState } from '../data/path.js';
 import { B, progress } from '../i18n.js';
 
-export const canSay = () => canListen() && location.protocol !== 'file:' && window.top === window;
+export const micOn = () => !!getState().settings.mic;
+export const canSay = () => micOn() && canListen() && location.protocol !== 'file:' && window.top === window;
 
 const NUM = { 0: 'zero', 1: 'one', 2: 'two', 3: 'three', 4: 'four', 5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten' };
 // Mots qui sonnent pareil : la reconnaissance vocale choisit parfois l'autre.
