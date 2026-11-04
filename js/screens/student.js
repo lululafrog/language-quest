@@ -224,6 +224,7 @@ export function StudentTeam() {
     <h2>📒 Album stikerku (My sticker album)</h2>
     <div class="album">${STICKERS.map((s, i) => html`<span class=${i < got ? 'on' : ''}>${i < got ? s : '?'}</span>`)}</div>
     <${ClassJar} cls=${cls} />
+    <button class="btn ghost block" onClick=${() => go('/s/voice')}>🎙️ Pilih suara (Choose a voice)</button>
     <button class="btn ghost block" onClick=${async () => { await signOut(); setUiLang('fr'); go('/s/login'); }}>🚪 Keluar (Log out)</button>
   </div>`;
 }

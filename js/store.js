@@ -27,7 +27,7 @@ const defaults = () => ({
   path: { done: {}, days: {} },  // niveau -> étoiles ; jour -> niveaux finis
   wordbank: {},  // mot (base) -> { id, d, src, line, added } : mots touchés en lisant
   reads: {},     // texte -> date de lecture complète
-  settings: { newPerDay: 10, rate: 0.85, unlockAll: false, showPron: true },
+  settings: { newPerDay: 10, rate: 0.82, pitch: 1.05, voices: {}, unlockAll: false, showPron: true },
 });
 
 function load() {

@@ -17,12 +17,41 @@ if (window.speechSynthesis) {
 }
 export const onVoices = (f) => { listeners.add(f); return () => listeners.delete(f); };
 
-export function voiceFor(lang) {
+// Classement des voix : naturelles et féminines d'abord, voix « gadget » jamais.
+const NATURAL = /natural|neural|premium|enhanced|wavenet|studio|journey|siri/i;
+const FEMALE = /female|woman|samantha|\bava\b|allison|susan|victoria|karen|moira|tessa|serena|kate|fiona|martha|catherine|zira|aria|jenny|libby|sonia|emma|michelle|joanna|salli|kimberly|nicky|damayanti|gadis|x-sfg|x-iob|x-iog|x-tpc|x-tpf|x-gba|x-gbc|x-gbg|x-idc|google uk english female|google us english/i;
+// Voix « Eloquence » d'Apple : très robotiques.
+const ROBOTIC = /\b(flo|sandy|shelley|grandma|grandpa|eddy|reed|rocko)\b/i;
+const MALE = /\bmale\b|daniel|alex\b|fred|arthur|oliver|thomas|david|mark|george|guy|ryan|rishi|aaron|gordon|eddy|reed|rocko|x-iom|x-tpd|x-gbd|x-rjs/i;
+const NOVELTY = /bad ?news|bells|bubbles|cellos|zarvox|whisper|albert|jester|organ|trinoids|wobble|boing|bahh|superstar|junior|ralph|good ?news|hysterical|deranged|pipe ?organ|princess|kathy|fred/i;
+
+function langVoices(lang) {
   const pre = LANG_PREFIX[lang] || [lang];
-  const ok = voices.filter((v) => pre.some((p) => v.lang.toLowerCase().replace('_', '-').startsWith(p + '-') || v.lang.toLowerCase() === p));
-  if (!ok.length) return null;
-  if (lang === 'en') return ok.find((v) => /en-gb/i.test(v.lang)) || ok.find((v) => /en-us/i.test(v.lang)) || ok[0];
-  return ok.find((v) => v.localService) || ok[0];
+  return voices.filter((v) => pre.some((p) => v.lang.toLowerCase().replace('_', '-').startsWith(p + '-') || v.lang.toLowerCase() === p));
+}
+export function voiceScore(v) {
+  let sc = 0;
+  const id = `${v.name} ${v.voiceURI || ''}`;
+  if (NATURAL.test(id)) sc += 50;
+  if (FEMALE.test(id)) sc += 30;
+  if (MALE.test(id) && !/female/i.test(id)) sc -= 40;
+  if (NOVELTY.test(id)) sc -= 200;
+  if (ROBOTIC.test(id)) sc -= 60;
+  if (/en-(gb|us)|id-id|in-id/i.test(v.lang)) sc += 5;
+  if (/google/i.test(v.name)) sc += 8;
+  return sc;
+}
+export const rankVoices = (lang) => {
+  const all = langVoices(lang).filter((v) => voiceScore(v) > -100).sort((a, b) => voiceScore(b) - voiceScore(a));
+  const good = all.filter((v) => voiceScore(v) > 5);
+  return good.length ? good : all;
+};
+
+export function voiceFor(lang) {
+  const chosen = getState().settings.voices?.[lang];
+  const list = langVoices(lang);
+  if (!list.length) return null;
+  return (chosen && list.find((v) => v.name === chosen)) || rankVoices(lang)[0] || list[0];
 }
 
 export const canSpeak = (lang) => !!voiceFor(lang);
@@ -35,7 +64,10 @@ export function speak(text, lang = 'id', rate) {
   const u = new SpeechSynthesisUtterance(text.replace(/\.\.\.|…|___/g, ' '));
   u.voice = v;
   u.lang = v.lang;
-  u.rate = rate || getState().settings.rate || 0.85;
+  const st = getState().settings;
+  // Voix posée : un peu plus lente, un ton légèrement plus doux.
+  u.rate = rate || st.rate || 0.82;
+  u.pitch = st.pitch ?? 1.05;
   speechSynthesis.speak(u);
   return u;
 }

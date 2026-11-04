@@ -25,7 +25,7 @@ export function Library() {
       <span class="book-meta">${'●'.repeat(t.level)}${'○'.repeat(3 - t.level)}${s.reads?.[t.id] ? ' · ✅' : ''}</span>
     </button>`);
   return html`<div class="page narrow student">
-    <h1>📚 Baca (Read)</h1>
+    <div class="row between"><h1>📚 Baca (Read)</h1><button class="btn ghost sm" onClick=${() => go('/s/voice')}>🎙️ ${B('Suara', 'Voice')}</button></div>
     <p class="muted">Sentuh kata yang belum kamu tahu: lihat artinya dan simpan! (Tap a word you don't know: see its meaning and save it!)</p>
     <button class="todo words-cta" onClick=${() => go('/s/words')}>
       <span class="todo-ic">⭐</span><span class="grow"><b>Kata-kataku (My words) · ${n}</b>
@@ -62,7 +62,7 @@ export function Reader({ id }) {
       setPlaying(i);
       await new Promise((res) => {
         const u = speak(t.lines[i][0], 'en', 0.8);
-        const done = () => setTimeout(res, 250);
+        const done = () => setTimeout(res, 650);
         if (u && 'onend' in u) { u.onend = done; u.onerror = done; } else setTimeout(res, 2500);
       });
     }
@@ -76,7 +76,8 @@ export function Reader({ id }) {
 
   return html`<div class="page narrow reader" style=${`--bc:${t.color}`}>
     <div class="row between"><button class="btn ghost sm" onClick=${() => go('/s/read')}>← Baca (Read)</button>
-      <label class="check small"><input type="checkbox" checked=${showId} onChange=${(e) => setShowId(e.target.checked)} /> 🇮🇩 ${B('Terjemahan', 'Translation')}</label></div>
+      <span class="row"><button class="btn ghost sm" onClick=${() => go('/s/voice')} aria-label="Voice">🎙️</button>
+      <label class="check small"><input type="checkbox" checked=${showId} onChange=${(e) => setShowId(e.target.checked)} /> 🇮🇩 ${B('Terjemahan', 'Translation')}</label></span></div>
     <div class="reader-head"><span class="reader-cover">${t.cover}</span>
       <div><small>${KIND[t.kind]}</small><h1>${t.title}</h1><span class="muted">🇮🇩 ${t.titleId}</span>${t.note && html`<span class="small block">${t.note}</span>`}</div></div>
     <button class=${'btn block ' + (playing >= 0 ? 'ghost' : 'primary')} onClick=${playAll}>${playing >= 0 ? '⏹ ' + B('Berhenti', 'Stop') : '🔊 ' + B('Dengarkan semua', 'Listen to all')}</button>

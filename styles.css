@@ -762,3 +762,14 @@ body[data-universe="student"] { --accent: #8b5cf6; --accent-2: #ef6c4d; }
 .flash-line { font-style: italic; color: var(--muted); }
 .flash-line mark { background: #ffe58f; border-radius: 4px; padding: 0 3px; }
 .flash-id { font-size: 1.6rem; font-weight: 800; background: #dcfce7; border-radius: 14px; padding: .4rem 1rem; }
+
+/* ---------- Choix de la voix ---------- */
+.voice-picker { display: grid; gap: .7rem; margin: .6rem 0; }
+.voice-list { display: grid; gap: 6px; }
+.voice { display: flex; align-items: center; gap: .7rem; text-align: left; border: 2px solid transparent; background: #fff; border-radius: 16px; padding: .6rem .8rem; box-shadow: var(--shadow); }
+.voice.on { border-color: #8b5cf6; background: #f5f1ff; }
+.voice .grow { min-width: 0; overflow-wrap: anywhere; }
+.voice-ic { font-size: 1.3rem; }
+.voice-slider { display: flex; align-items: center; gap: .6rem; font-weight: 700; }
+.voice-slider input { flex: 1; }
+.voice-tip p { font-size: .9rem; }

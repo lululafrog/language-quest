@@ -5,6 +5,7 @@ import { totals, deckStats, newLeftToday, unlockedIdLessons } from '../cards.js'
 import { ID_LESSONS, LEVELS } from '../data/indonesian.js';
 import { voiceFor, canListen, speak } from '../speech.js';
 import { exportText, confirmBox } from '../dialog.js';
+import { VoicePicker } from './voice.js';
 import { PHOTO_DECK } from '../store.js';
 
 const fmtTime = (ms) => {
@@ -106,7 +107,8 @@ export function Settings() {
       <p>🇮🇩 Indonésien : ${vId ? html`<b class="ok-text">✓ ${vId.name}</b> <button class="btn ghost sm" onClick=${() => speak('Selamat pagi, apa kabar?', 'id')}>Tester</button>` : html`<b class="ko-text">✗ aucune voix installée</b>`}</p>
       <p>🇬🇧 Anglais : ${vEn ? html`<b class="ok-text">✓ ${vEn.name}</b> <button class="btn ghost sm" onClick=${() => speak('Hello! How are you?', 'en')}>Tester</button>` : html`<b class="ko-text">✗ aucune voix</b>`}</p>
       <p>🎙️ Reconnaissance vocale : ${canListen() ? html`<b class="ok-text">✓ disponible</b>` : html`<b class="ko-text">✗ non disponible dans ce navigateur (Chrome ou Safari récents conseillés)</b>`}</p>
-      <label class="setting">Vitesse de lecture <input type="range" min="0.5" max="1.2" step="0.05" value=${s.settings.rate} onInput=${(e) => set('rate', +e.target.value)} /> ${s.settings.rate}</label>
+      <details><summary>🇬🇧 Choisir la voix anglaise (la plus naturelle est choisie d'office)</summary><${VoicePicker} lang="en" /></details>
+      <details><summary>🇮🇩 Choisir la voix indonésienne</summary><${VoicePicker} lang="id" /></details>
       <details><summary>Installer la voix indonésienne (hors ligne)</summary>
         <p><b>iPhone / iPad :</b> Réglages → Accessibilité → Contenu énoncé → Voix → Indonésien → télécharger « Damayanti ».</p>
         <p><b>Android :</b> Paramètres → Système → Langues → Synthèse vocale → Moteur Google → ⚙️ → Installer les données vocales → Indonésien.</p>
