@@ -25,6 +25,12 @@ service cloud.firestore {
           || (signedIn() && request.auth.uid == uid
             && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['name', 'team', 'rid'])
             && upBy('stars', 30));
+
+        // Sauvegarde personnelle (île, mots, lectures) : l'élève et la prof seulement.
+        match /sync/{doc} {
+          allow read: if isOwner(code) || (signedIn() && request.auth.uid == uid);
+          allow write: if signedIn() && request.auth.uid == uid;
+        }
       }
 
       match /matches/{mid} {

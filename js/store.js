@@ -62,6 +62,42 @@ export function update(fn) {
   subs.forEach((f) => f(state));
 }
 
+export const subscribe = (f) => { subs.add(f); return () => subs.delete(f); };
+
+// ---------- Données personnelles de l'élève (sauvegardées en ligne) ----------
+// L'île, les mots enregistrés (et leur révision) et les lectures suivent l'élève, pas le téléphone.
+export function personal(s = state) {
+  const cards = Object.fromEntries(Object.entries(s.cards).filter(([k]) => k.startsWith('w:')));
+  return { path: s.path || { done: {}, days: {} }, words: s.wordbank || {}, cards, reads: s.reads || {} };
+}
+
+// Remplace (autre élève sur ce téléphone) ou fusionne (même élève, autre appareil).
+export function applyPersonal(remote, uid, mode) {
+  update((s) => {
+    const r = { path: { done: {}, days: {} }, words: {}, cards: {}, reads: {}, ...(remote || {}) };
+    if (mode === 'replace') {
+      Object.keys(s.cards).filter((k) => k.startsWith('w:')).forEach((k) => delete s.cards[k]);
+      s.path = { done: { ...r.path.done }, days: { ...r.path.days } };
+      s.wordbank = { ...r.words };
+      s.reads = { ...r.reads };
+      Object.assign(s.cards, r.cards);
+    } else {
+      s.path = s.path || { done: {}, days: {} };
+      Object.entries(r.path.done || {}).forEach(([n, st]) => { s.path.done[n] = Math.max(st, s.path.done[n] || 0); });
+      Object.entries(r.path.days || {}).forEach(([d, c]) => { s.path.days[d] = Math.max(c, s.path.days[d] || 0); });
+      s.wordbank = { ...r.words, ...(s.wordbank || {}) };
+      s.reads = { ...r.reads, ...(s.reads || {}) };
+      Object.entries(r.cards || {}).forEach(([k, c]) => { if (!s.cards[k] || (c.last || 0) > (s.cards[k].last || 0)) s.cards[k] = c; });
+    }
+    s.owner = uid;
+  });
+}
+
+// Déconnexion : le téléphone redevient neutre pour la prochaine élève.
+export function clearPersonal() {
+  applyPersonal(null, null, 'replace');
+}
+
 export function useStore() {
   const [s, set] = useState(state);
   useEffect(() => { subs.add(set); return () => subs.delete(set); }, []);

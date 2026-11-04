@@ -146,8 +146,10 @@ export async function getClass(code) {
 
 export async function studentSignIn(code, rid, pin) {
   const f = await fb();
-  await f.auth.signInWithEmailAndPassword(f.A, email(code, rid), password(code, pin));
+  // Le code de classe est posé avant la connexion : la sauvegarde en ligne le trouve tout de suite.
   try { localStorage.setItem('lq-student', code); } catch { /* rien */ }
+  try { await f.auth.signInWithEmailAndPassword(f.A, email(code, rid), password(code, pin)); }
+  catch (e) { try { localStorage.removeItem('lq-student'); } catch { /* rien */ } throw e; }
 }
 
 // ---------- Abonnements temps réel ----------

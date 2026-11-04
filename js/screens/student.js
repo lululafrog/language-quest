@@ -11,7 +11,8 @@ import { setUiLang } from '../i18n.js';
 import { DailyCard, pathState } from './island.js';
 import { STICKER_ART } from '../data/stickers.js';
 import { isDue } from '../fsrs.js';
-import { useStore } from '../store.js';
+import { useStore, clearPersonal } from '../store.js';
+import { useCloudSync } from '../net/sync.js';
 
 // Raccourci « mots à revoir » sur l'accueil.
 function WordsCard() {
@@ -96,6 +97,7 @@ const REWARD = { photo: 1, touch: 2, read: 2, review: 1 };
 export function StudentBridge() {
   const { code, uid, me, cls } = useStudent();
   usePresence(code, uid);
+  useCloudSync(code, uid);
   const meRef = useRef(me);
   meRef.current = me;
   useEffect(() => {
@@ -245,7 +247,7 @@ export function StudentTeam() {
     <${StickerAlbum} got=${got} stars=${me.stars} />
     <${ClassJar} cls=${cls} />
     <button class="btn ghost block" onClick=${() => go('/s/voice')}>🎙️ Pilih suara (Choose a voice)</button>
-    <button class="btn ghost block" onClick=${async () => { await signOut(); setUiLang('fr'); go('/s/login'); }}>🚪 Keluar (Log out)</button>
+    <button class="btn ghost block" onClick=${async () => { await signOut(); clearPersonal(); setUiLang('fr'); go('/s/login'); }}>🚪 Keluar (Log out)</button>
   </div>`;
 }
 
