@@ -74,6 +74,22 @@ const CORE = {
   one: ['satu', 'ti'], two: ['dua', 'ti'], three: ['tiga', 'ti'], four: ['empat', 'ti'], five: ['lima', 'ti'], many: ['banyak', 'ti'],
   day: ['hari', 'ti'], time: ['waktu', 'ti'], ago: ['yang lalu', 'ti'], then: ['lalu', 'ti'], next: ['berikutnya', 'ti'], morning: ['pagi', 'ti'],
   every: ['setiap', 'ti'], year: ['tahun', 'ti'], later: ['kemudian', 'ti'], always: ['selalu', 'ti'],
+  // Ajouts : nouvelles chansons et légendes
+  if: ['kalau, jika', 'sm'], "you're": ['kamu (adalah)', 'sm'], surely: ['pasti', 'sm'], out: ['keluar', 'sm'], again: ['lagi', 'sm'], me: ['aku (objek)', 'sm'],
+  anyone: ['siapa pun', 'sm'], more: ['lebih, makin banyak', 'sm'], only: ['hanya', 'sm'], never: ['tidak pernah', 'ti'], night: ['malam', 'ti'],
+  clap: ['bertepuk', 'ac'], show: ['menunjukkan', 'ac'], stamp: ['menghentakkan (kaki)', 'ac'], dry: ['mengeringkan; kering', 'ac'], clean: ['membersihkan', 'ac'],
+  fall: ['jatuh', 'ac'], find: ['mencari, menemukan', 'ac'], move: ['bergerak, pindah', 'ac'], push: ['mendorong', 'ac'], put: ['menaruh, memasukkan', 'ac'],
+  catch: ['menangkap', 'ac'], shout: ['berteriak', 'ac'], keep: ['menepati, menyimpan', 'ac'], wash: ['mencuci', 'ac'], walk: ['berjalan', 'ac'],
+  help: ['menolong', 'ac'], ask: ['meminta, bertanya', 'ac'], open: ['membuka', 'ac'], speak: ['berbicara', 'ac'], sit: ['duduk', 'ac'],
+  face: ['wajah', 'bo'], tooth: ['gigi', 'bo'], spider: ['laba-laba', 'an'], cockatoo: ['burung kakatua', 'an'], snake: ['ular', 'an'], fish: ['ikan', 'an'], dog: ['anjing', 'an'],
+  rain: ['hujan', 'na'], sun: ['matahari', 'na'], ground: ['tanah', 'na'], toba: ['Toba (danau di Sumatra)', 'na'],
+  spout: ['pipa air, talang', 'pl'], house: ['rumah', 'pl'], clothes: ['baju, pakaian', 'pl'], shirt: ['baju, kemeja', 'pl'], way: ['jalan', 'pl'],
+  gold: ['emas', 'pl'], garden: ['kebun', 'pl'], scarecrow: ['orang-orangan sawah', 'pl'], glue: ['lem', 'pl'], cage: ['kandang', 'pl'], window: ['jendela', 'pl'],
+  stepmother: ['ibu tiri', 'fa'], farmer: ['petani', 'fa'], samosir: ['Samosir (nama)', 'fa'], grandmother: ['nenek', 'fa'], father: ['ayah', 'fa'], sister: ['saudara perempuan', 'fa'],
+  bawang: ['bawang', 'fo'], pumpkin: ['labu', 'fo'], lunch: ['makan siang', 'fo'], water: ['air', 'fo'],
+  itsy: ['kecil sekali', 'de'], bitsy: ['kecil sekali', 'de'], putih: ['putih', 'de'], merah: ['merah', 'de'], lazy: ['malas', 'de'], nice: ['baik, menyenangkan', 'de'],
+  full: ['penuh', 'de'], honest: ['jujur', 'de'], sticky: ['lengket', 'de'], stuck: ['menempel, tersangkut', 'de'], red: ['merah', 'de'],
+  la: ['(bunyi lagu)', 'ot'], oh: ['oh, aduh', 'ot'], party: ['pesta', 'ot'], promise: ['janji', 'ot'], hello: ['halo', 'ot'],
   // Autres
   life: ['hidup, kehidupan', 'ot'], dream: ['mimpi', 'ot'], idea: ['ide', 'ot'], line: ['barisan, garis', 'ot'], name: ['nama', 'ot'],
   festival: ['festival, pesta', 'ot'], bau: ['Bau (menangkap, bahasa Sasak)', 'ot'], 'e-i-e-i-o': ['(bunyi lagu)', 'ot'],
@@ -83,7 +99,7 @@ const CORE = {
 const IRREG = {
   am: 'be', is: 'be', are: 'be', was: 'be', were: 'be', has: 'have', had: 'have', did: 'do', does: 'do', went: 'go', came: 'come',
   saw: 'see', said: 'say', says: 'say', gave: 'give', ran: 'run', threw: 'throw', grew: 'grow', became: 'become', could: 'can',
-  took: 'take', ate: 'eat', children: 'child', people: 'people', women: 'woman', mice: 'mouse', feet: 'foot', teeth: 'tooth',
+  took: 'take', ate: 'eat', fell: 'fall', found: 'find', caught: 'catch', spoke: 'speak', sat: 'sit', made: 'make', put: 'put', children: 'child', people: 'people', women: 'woman', mice: 'mouse', feet: 'foot', teeth: 'tooth',
 };
 
 // Mots des leçons (domaine selon la leçon) et des 50 verbes.
@@ -106,6 +122,7 @@ export function lookup(raw) {
   const w = clean(raw);
   if (!w) return null;
   const tries = [w, IRREG[w], FORMS[w]];
+  if (w.endsWith("'s")) tries.push(w.slice(0, -2));
   if (w.endsWith('ies')) tries.push(w.slice(0, -3) + 'y');
   if (w.endsWith('ied')) tries.push(w.slice(0, -3) + 'y');
   if (w.endsWith('s')) tries.push(w.slice(0, -1));
