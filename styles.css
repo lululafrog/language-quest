@@ -553,3 +553,51 @@ body[data-universe="student"] { --accent: #8b5cf6; --accent-2: #ef6c4d; }
 .race-score { font-size: 1.3rem; min-width: 1.6em; text-align: right; }
 .spin { animation: spin 2.4s linear infinite; display: inline-block; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- L'île : chemin jusqu'au Rinjani ---------- */
+.daily { background: var(--zc); color: var(--zi); border-radius: 24px; padding: 1rem; display: grid; gap: .7rem; box-shadow: var(--shadow); margin: .6rem 0 1rem; }
+.daily-top { display: flex; justify-content: space-between; font-weight: 800; }
+.daily-streak { font-size: 1.2rem; }
+.daily-body { display: flex; gap: .8rem; align-items: center; }
+.daily-body .grow { display: grid; min-width: 0; }
+.daily-body b { font-size: 1.25rem; color: var(--ink); }
+.daily-icon { font-size: 3rem; }
+.alt-bar { height: 10px; border-radius: 99px; background: rgba(255, 255, 255, .7); overflow: hidden; }
+.alt-bar i { display: block; height: 100%; background: linear-gradient(90deg, #22c55e, #f59e0b, #ef6c4d); }
+.isle { position: relative; padding-bottom: 1rem; overflow-x: clip; }
+.alt-meter { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 52px); z-index: 5; display: flex; justify-content: space-around; padding: .6rem; background: rgba(255, 248, 236, .95); backdrop-filter: blur(6px); font-weight: 800; border-bottom: 1px solid var(--line); }
+.summit { display: grid; justify-items: center; text-align: center; padding: 1.2rem 1rem .4rem; background: linear-gradient(#bfe8f5, #eadfd6); }
+.summit svg { width: 260px; max-width: 80%; overflow: visible; }
+.summit b { font-size: 1.3rem; }
+.zone-band { position: relative; background: var(--zc); padding: 1rem 0 .4rem; display: flex; flex-direction: column; gap: .55rem; }
+.zone-deco { position: absolute; font-size: 4.5rem; opacity: .22; pointer-events: none; }
+.zone-deco.l { left: 4%; top: 18%; }
+.zone-deco.r { right: 4%; bottom: 22%; }
+.zone-label { display: flex; align-items: center; gap: .6rem; margin: .6rem auto .2rem; padding: .5rem 1rem; background: rgba(255, 255, 255, .75); border-radius: 99px; color: var(--zi); }
+.zone-label > span { font-size: 1.8rem; }
+.zone-label div { display: grid; }
+.zone-label small { font-size: .75rem; }
+.lvl-row { position: relative; display: flex; justify-content: center; transform: translateX(var(--x)); }
+.lvl { position: relative; width: 66px; height: 66px; border-radius: 50%; border: 0; background: #fff; color: var(--zi); box-shadow: 0 6px 0 rgba(0, 0, 0, .14); display: grid; place-items: center; font-weight: 900; }
+.lvl-ic { font-size: 1.5rem; line-height: 1; }
+.lvl-n { position: absolute; bottom: 5px; font-size: .7rem; opacity: .7; }
+.lvl.done { background: #ffd166; color: #7a4b00; }
+.lvl.cur { background: #ef6c4d; color: #fff; box-shadow: 0 6px 0 #c4502f, 0 0 0 6px rgba(239, 108, 77, .3); animation: bob 1.6s ease-in-out infinite; }
+.lvl.locked { background: rgba(255, 255, 255, .55); box-shadow: 0 4px 0 rgba(0, 0, 0, .08); }
+.lvl.boss { width: 82px; height: 82px; }
+.lvl-stars { position: absolute; bottom: -18px; font-size: .8rem; color: #e0a100; letter-spacing: -1px; }
+@keyframes bob { 50% { transform: translateY(-4px); } }
+.me-pin { position: absolute; left: calc(50% + 46px); top: 4px; display: grid; justify-items: center; font-size: 1.9rem; line-height: 1; }
+.me-pin.left { left: auto; right: calc(50% + 46px); }
+.me-pin small { font-size: .65rem; font-weight: 800; background: #fff; border-radius: 99px; padding: 1px 6px; }
+.shore { text-align: center; padding: 1rem; background: linear-gradient(#fde9b8, #8fd3ea); font-weight: 800; color: #1b5e80; }
+.level-page { padding-top: .6rem; }
+.level-head { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; justify-content: center; background: var(--zc); color: var(--zi); border-radius: 99px; padding: .4rem 1rem; font-weight: 700; margin-bottom: .4rem; }
+.intro-card { text-align: center; display: grid; gap: .6rem; justify-items: center; }
+.intro-emoji { font-size: 6rem; line-height: 1.1; }
+.intro-en { font-size: 2.4rem; font-weight: 900; }
+.intro-id { font-size: 1.3rem; background: var(--sand); border-radius: 99px; padding: .3rem 1rem; }
+.rule-card h2 { margin: .2rem 0; }
+.rule-ex { display: grid; gap: .3rem; margin: .6rem 0; }
+.big-stars { font-size: 3rem; color: #e0a100; letter-spacing: .1em; }
+.level-result { background: linear-gradient(var(--zc), transparent 60%); border-radius: 24px; }

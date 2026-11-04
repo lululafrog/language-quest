@@ -176,7 +176,7 @@ export function Listen({ ex, onDone }) {
 const COMPONENTS = { mcq: MCQ, fill: Fill, build: Build, translate: Translate, speak: Speak, listen: Listen };
 
 // Enchaîne une liste d'exercices, affiche le score et propose de rejouer les erreurs.
-export function Session({ items, onFinish, onExit, finishLabel = T('Terminer', B('Selesai', 'Finish')), xp = 3 }) {
+export function Session({ items, onFinish, onExit, finishLabel = T('Terminer', B('Selesai', 'Finish')), xp = 3, extra = {} }) {
   const [list, setList] = useState(items);
   const [idx, setIdx] = useState(0);
   const [results, setResults] = useState([]);
@@ -206,7 +206,7 @@ export function Session({ items, onFinish, onExit, finishLabel = T('Terminer', B
   }
 
   const ex = list[idx];
-  const C = COMPONENTS[ex.kind];
+  const C = COMPONENTS[ex.kind] || extra[ex.kind];
   return html`<div>
     <div class="progress-top">
       <button class="x" onClick=${onExit} aria-label="Exit">✕</button>

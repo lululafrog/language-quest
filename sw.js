@@ -1,5 +1,5 @@
 // Service worker : tout est mis en cache pour fonctionner hors connexion.
-const CACHE = 'language-quest-v8';
+const CACHE = 'language-quest-v9';
 const ASSETS = [
   './',
   'icon-192.png',
@@ -14,6 +14,7 @@ const ASSETS = [
   'js/data/games.js',
   'js/data/grammar.js',
   'js/data/indonesian.js',
+  'js/data/path.js',
   'js/data/scenes.js',
   'js/exercises.js',
   'js/firebase-config.js',
@@ -26,6 +27,7 @@ const ASSETS = [
   'js/screens/flashcards.js',
   'js/screens/games.js',
   'js/screens/home.js',
+  'js/screens/island.js',
   'js/screens/learn.js',
   'js/screens/multiplayer.js',
   'js/screens/photo.js',

@@ -8,21 +8,13 @@ import { pictured } from '../gen.js';
 import { duelQuestions } from './multiplayer.js';
 import { Scene } from './touch.js';
 import { setUiLang } from '../i18n.js';
+import { DailyCard } from './island.js';
 import {
   hasConfig, useAuth, getClass, studentSignIn, signOut, useDoc, usePlayers, useMyMatches, usePresence, isOnline,
-  awardStars, updateMe, bump, missionOf, MISSION, createMatch, matchStep, matchResult, EMOJIS, AVATARS, STICKERS, STICKER_STEP,
+  awardStars, updateMe, bump, missionOf, MISSION, useStudent, createMatch, matchStep, matchResult, EMOJIS, AVATARS, STICKERS, STICKER_STEP,
 } from '../net/fb.js';
 
-// Session élève : classe + profil, en temps réel.
-export function useStudent() {
-  const auth = useAuth();
-  let code = null;
-  try { code = localStorage.getItem('lq-student'); } catch { /* rien */ }
-  const uid = auth.user?.uid;
-  const cls = useDoc(code && uid ? ['classes', code] : null);
-  const me = useDoc(code && uid ? ['classes', code, 'players', uid] : null);
-  return { auth, code, uid, cls, me: me && { ...me, uid } };
-}
+export { useStudent };
 
 const Wait = ({ text = 'Tunggu sebentar… (Please wait)' }) => html`<div class="page narrow center-page"><div class="giant spin">🌴</div><p class="muted">${text}</p></div>`;
 
@@ -119,7 +111,13 @@ export function StudentHome() {
   const players = usePlayers(cls ? code : null);
   const matches = useMyMatches(cls ? code : null, uid);
   const [pickAv, setPickAv] = useState(false);
-  useEffect(() => { if (!auth.loading && !auth.user) go('/s/login'); }, [auth.loading, auth.user]);
+  if (!auth.loading && (!auth.user || !code)) return html`<div class="page narrow student">
+    <h1>Halo! 👋</h1>
+    <${DailyCard} />
+    <div class="card"><b>👯 ${'Masuk untuk main dengan teman! (Log in to play with friends!)'}</b>
+      <p class="muted small">Tantang teman, kumpulkan bintang untuk timmu. (Challenge friends, collect stars for your team.)</p>
+      <button class="btn primary block" onClick=${() => go('/s/login')}>Masuk (Log in)</button></div>
+  </div>`;
   if (auth.loading || !cls || !me) return html`<${Wait} />`;
 
   const friends = players.filter((p) => p.uid !== uid).sort((a, b) => (isOnline(b) - isOnline(a)) || a.name.localeCompare(b.name));
@@ -136,6 +134,7 @@ export function StudentHome() {
       <div class="grow"><h1>Halo, ${me.name}!</h1><span class="muted small">${team.icon} Tim ${team.name}</span></div>
       <div class="me-stars"><b>⭐ ${me.stars}</b><small>${nextSticker} lagi → stiker baru (to a new sticker)</small></div>
     </div>
+    <${DailyCard} />
     ${pickAv && html`<div class="card av-pick">${AVATARS.map((a) => html`<button onClick=${() => { updateMe(code, uid, { avatar: a }); setPickAv(false); }}>${a}</button>`)}</div>`}
 
     ${invites.map((m) => { const o = m.uids[0]; return html`<button class="invite" onClick=${() => go('/s/race/' + m.id)}>
@@ -150,7 +149,7 @@ export function StudentHome() {
     <h2>👯 Teman-teman · tantang mereka! (Friends · challenge them!)</h2>
     <div class="friends">${friends.map((p) => html`<div class="friend">
       <span class="av">${p.avatar}${isOnline(p) && html`<i class="dot-on"></i>`}</span>
-      <span class="grow"><b>${p.name}</b><span class="small muted block">${isOnline(p) ? 'Online sekarang (Online now)' : `⭐ ${p.stars}`}</span></span>
+      <span class="grow"><b>${p.name}</b><span class="small muted block">${isOnline(p) ? 'Online sekarang (Online now)' : `⭐ ${p.stars}`} · 🏝️ Level ${(p.pathLevel || 0) + 1}${p.pathStreak ? ` · 🔥 ${p.pathStreak}` : ''}</span></span>
       <button class="btn primary sm" onClick=${() => go('/s/new/' + p.uid)}>⚔️ Tantang (Challenge)</button></div>`)}
       ${friends.length === 0 && html`<p class="muted">Teman-temanmu belum terdaftar. (Your friends are not registered yet.)</p>`}</div>
 

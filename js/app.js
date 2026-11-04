@@ -10,6 +10,7 @@ import { PhotoHome, PhotoCards, PhotoFind } from './screens/photo.js';
 import { ClassOnline } from './screens/classonline.js';
 import { StudentLogin, StudentHome, StudentPlay, StudentTeam, StudentNew, StudentRace, StudentBridge } from './screens/student.js';
 import { KIDS } from './i18n.js';
+import { IslandMap, LevelPlay } from './screens/island.js';
 import { useStore } from './store.js';
 import { deckStats } from './cards.js';
 import { go } from './ui.js';
@@ -27,8 +28,8 @@ const NAV = [
 
 const STUDENT_NAV = [
   { path: '/s', icon: '🏠', label: 'Beranda', short: 'Beranda' },
+  { path: '/s/island', icon: '🏝️', label: 'Pulau', short: 'Pulau' },
   { path: '/s/play', icon: '🎮', label: 'Main', short: 'Main' },
-  { path: '/photo', icon: '📸', label: 'Foto', short: 'Foto' },
   { path: '/s/team', icon: '🌟', label: 'Stiker & tim', short: 'Tim' },
 ];
 // Édition enfants : seules ces pages existent (le reste est la version française de la prof).
@@ -74,6 +75,8 @@ function route(path) {
     case 's':
       if (p[1] === 'login') return { el: html`<${StudentLogin} />`, bare: true };
       if (p[1] === 'play') return { el: html`<${StudentPlay} />` };
+      if (p[1] === 'island') return { el: html`<${IslandMap} />` };
+      if (p[1] === 'level') return { el: html`<${LevelPlay} key=${p[2]} n=${p[2]} />`, bare: true };
       if (p[1] === 'team') return { el: html`<${StudentTeam} />` };
       if (p[1] === 'new') return { el: html`<${StudentNew} key=${p[2]} friendUid=${p[2]} />` };
       if (p[1] === 'race') return { el: html`<${StudentRace} key=${p[2]} id=${p[2]} />`, bare: true };

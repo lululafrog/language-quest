@@ -189,6 +189,17 @@ export function useMyMatches(code, uid) {
   return v;
 }
 
+// Session élève : classe + profil, en temps réel.
+export function useStudent() {
+  const auth = useAuth();
+  let code = null;
+  try { code = localStorage.getItem('lq-student'); } catch { /* rien */ }
+  const uid = auth.user?.uid;
+  const cls = useDoc(code && uid ? ['classes', code] : null);
+  const me = useDoc(code && uid ? ['classes', code, 'players', uid] : null);
+  return { auth, code, uid, cls, me: me && { ...me, uid } };
+}
+
 // Présence : « en ligne » si vue il y a moins de 90 s.
 export const isOnline = (p) => p.lastSeen?.toMillis && Date.now() - p.lastSeen.toMillis() < 90000;
 export function usePresence(code, uid) {
@@ -225,7 +236,7 @@ export async function updateMe(code, uid, data) {
 
 export const MISSION = [
   { k: 'race', n: 1, icon: '⚔️', id: 'Tantang 1 teman (Challenge 1 friend)', fr: 'Défier 1 copine' },
-  { k: 'touch', n: 1, icon: '👆', id: 'Main 1 Touch it (Play 1 Touch it)', fr: 'Jouer 1 Touch it' },
+  { k: 'lesson', n: 1, icon: '🏝️', id: 'Selesaikan 1 pelajaran (Finish 1 lesson)', fr: 'Finir 1 leçon' },
   { k: 'photo', n: 3, icon: '📸', id: 'Foto 3 kata baru (Photo 3 new words)', fr: 'Photographier 3 mots' },
 ];
 export const missionOf = (p) => (p?.mission?.day === today() ? p.mission : { day: today(), race: 0, touch: 0, photo: 0, bonus: false });

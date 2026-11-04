@@ -24,6 +24,7 @@ const defaults = () => ({
     cards: [],
   },
   teams: null,
+  path: { done: {}, days: {} },  // niveau -> étoiles ; jour -> niveaux finis
   settings: { newPerDay: 10, rate: 0.85, unlockAll: false, showPron: true },
 });
 
@@ -162,6 +163,16 @@ export function importBackup(json) {
 }
 export function resetAll() {
   update(() => defaults());
+}
+
+export function completeLevel(n, stars) {
+  update((s) => {
+    touchDay(s);
+    s.path = s.path || { done: {}, days: {} };
+    s.path.done[n] = Math.max(stars, s.path.done[n] || 0);
+    s.path.days[today()] = (s.path.days[today()] || 0) + 1;
+    s.xp += 10 + stars * 5;
+  });
 }
 
 export const uid = () => Math.random().toString(36).slice(2, 10);

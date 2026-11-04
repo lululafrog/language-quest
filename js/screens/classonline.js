@@ -1,6 +1,9 @@
 // Espace prof : ma classe en ligne (élèves, codes emoji, équipes, bocal d'étoiles). Textes en indonésien (anglais).
 import { html, useState, useEffect } from '../vendor/preact-htm.js';
 import { Back, Empty } from '../ui.js';
+import { today } from '../store.js';
+
+const yesterday = () => { const d = new Date(); d.setDate(d.getDate() - 1); return today(d); };
 import { confirmBox, promptBox, notify } from '../dialog.js';
 import {
   hasConfig, useAuth, teacherSignIn, signOut, myClasses, createClass, addStudent, removeStudent, getPins,
@@ -112,7 +115,7 @@ function ClassAdmin({ code, onBack, email }) {
         return html`<div class="roster-row" style=${`--c:${t.color}`}>
           <span class="av">${p.avatar || r.avatar}</span>
           <span class="grow"><b>${r.name}</b> ${isOnline(p) ? html`<i class="dot-on" title="Online"></i>` : ''}
-            <span class="muted small block">${t.icon} ${t.name} · ⭐ ${p.stars || 0} · 🎟️ ${Math.floor((p.stars || 0) / STICKER_STEP)} · ⚔️ ${p.races || 0}${m.bonus ? ' · ✅ misi (mission)' : ''}</span>
+            <span class="muted small block">${t.icon} ${t.name} · ⭐ ${p.stars || 0} · 🎟️ ${Math.floor((p.stars || 0) / STICKER_STEP)} · ⚔️ ${p.races || 0} · 🏝️ Level ${p.pathLevel || 0} · 🔥 ${p.pathDay === today() || p.pathDay === yesterday() ? p.pathStreak || 0 : 0}${p.pathDay === today() ? ' · ✅ ' + 'hari ini (today)' : ''}${m.bonus ? ' · 🎯 misi (mission)' : ''}</span>
             ${showPins && html`<span class="pin-small">${pins[r.uid] || '—'}</span>`}</span>
           <button class="btn ghost sm" onClick=${async () => { if (await confirmBox(`Hapus ${r.name}? (Remove ${r.name}?)`)) removeStudent(code, r.uid).catch((e) => notify(e.message)); }} aria-label="Remove">✕</button>
         </div>`;
