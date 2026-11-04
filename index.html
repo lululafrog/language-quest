@@ -16,7 +16,10 @@
 <body>
   <div id="app"><p style="padding:2rem;text-align:center">🌴 Memuat… (Loading)</p></div>
   <noscript>Language Quest perlu JavaScript.</noscript>
-  <script>window.LQ_EDITION = 'kids';</script>
+  <script>window.LQ_EDITION = 'kids';
+    // Ancienne adresse GitHub : on renvoie vers le site officiel de la classe.
+    if (location.hostname === 'lululafrog.github.io') location.replace('https://bintang-lombok.web.app/' + location.hash);
+  </script>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>

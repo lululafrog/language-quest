@@ -1,5 +1,5 @@
 // QR code d'accès à la classe : une affiche à montrer ou imprimer.
-export const APP_URL = 'https://lululafrog.github.io/language-quest/';
+export const APP_URL = 'https://bintang-lombok.web.app/';
 export const joinUrl = (code) => `${APP_URL}#/s/join/${code}`;
 
 function loadLib() {
