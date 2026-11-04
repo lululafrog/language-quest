@@ -6,7 +6,8 @@ import { speak } from '../speech.js';
 import { Session, Match, chime } from '../exercises.js';
 import { EN_BY_ID } from '../data/english.js';
 import { SCENE_BY_ID, sayTouch, sceneWords } from '../data/scenes.js';
-import { ZONES, LEVELS_N, SUMMIT_M, altitude, levelInfo, buildLevel, starsFor, PASS } from '../data/path.js';
+import { ZONES, LEVELS_N, SUMMIT_M, altitude, levelInfo, buildLevel, starsFor, PASS, pathState } from '../data/path.js';
+import { SayEx } from './say.js';
 import { Scene } from './touch.js';
 import { B, progress } from '../i18n.js';
 import { useStudent, updateMe, awardStars } from '../net/fb.js';
@@ -19,19 +20,7 @@ const art = (name) => ({ __html: ART[name]() });
 
 const fmtM = (m) => m.toLocaleString('id-ID') + ' m';
 
-// ---------- Progression ----------
-export function pathState(s) {
-  const done = s.path?.done || {};
-  let cur = 1;
-  while (cur <= LEVELS_N && done[cur]) cur++;
-  const days = s.path?.days || {};
-  let streak = 0;
-  const d = new Date();
-  if (!days[today(d)]) d.setDate(d.getDate() - 1);
-  while (days[today(d)]) { streak++; d.setDate(d.getDate() - 1); }
-  const stars = Object.values(done).reduce((a, b) => a + b, 0);
-  return { done, cur: Math.min(cur, LEVELS_N), finished: cur > LEVELS_N, streak, todayDone: days[today()] || 0, stars, top: cur - 1 };
-}
+export { pathState };
 
 // ---------- Carte « leçon du jour » ----------
 export function DailyCard() {
@@ -190,7 +179,7 @@ function TouchEx({ ex, onDone }) {
   </div>`;
 }
 
-const EXTRA = { intro: Intro, rule: Rule, match: MatchEx, touch: TouchEx };
+const EXTRA = { intro: Intro, rule: Rule, match: MatchEx, touch: TouchEx, say: SayEx };
 
 // ---------- Écran de leçon ----------
 export function LevelPlay({ n }) {

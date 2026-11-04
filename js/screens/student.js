@@ -149,7 +149,7 @@ export function StudentLogin({ initial }) {
 }
 
 // ---------- PONT : missions et étoiles ----------
-const REWARD = { photo: 1, touch: 2, read: 2, review: 1 };
+const REWARD = { photo: 1, touch: 2, read: 2, review: 1, say: 2 };
 export function StudentBridge() {
   const { code, uid, me, cls } = useStudent();
   usePresence(code, uid);
@@ -253,6 +253,7 @@ export function StudentPlay() {
       ${tile('📸', 'Foto 5 kata', 'Foto benda di sekitarmu (Photo things around you)', '/photo')}
       ${tile('🃏', 'Kartu foto', 'Gambar → kata bahasa Inggris (Picture → English word)', '/photo/cards')}
       ${tile('🔎', 'Cari fotonya', 'Dengar kata, pilih foto (Listen, pick the photo)', '/photo/find')}
+      ${tile('🎙️', 'Ucapkan! (Say it!)', 'Ucapkan kata, aku mendengarkan (Say the word, I listen)', '/s/say')}
       ${tile('❓', 'Kuis (Quiz)', 'Pilih jawaban yang benar (Choose the right answer)', '/games/quiz')}
       ${tile('🔗', 'Cocokkan (Match)', 'Kata ↔ gambar (Word ↔ picture)', '/games/match')}
       ${tile('🧠', 'Memori (Memory)', 'Cari pasangan kartu (Find the pairs)', '/games/memory')}

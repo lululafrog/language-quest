@@ -9,6 +9,7 @@ import { confirmBox } from '../dialog.js';
 import { TEXTS, TEXT_BY_ID } from '../data/texts.js';
 import { DOMAINS, DOMAIN, lookup, tokens } from '../data/words.js';
 import { B, progress } from '../i18n.js';
+import { MicCheck, canSay } from './say.js';
 
 const KIND = { song: B('Lagu', 'Song'), story: B('Cerita', 'Story') };
 const dueWords = (s) => Object.keys(s.wordbank || {}).filter((w) => isDue(s.cards['w:' + w]) || !s.cards['w:' + w]);
@@ -43,6 +44,8 @@ export function Reader({ id }) {
   const [showId, setShowId] = useState(false);
   const [playing, setPlaying] = useState(-1);
   const [done, setDone] = useState(false);
+  const [micLine, setMicLine] = useState(-1);
+  const [hits, setHits] = useState({});
   const stop = useRef(false);
   useEffect(() => () => { stop.current = true; speechSynthesis?.cancel?.(); }, []);
   if (!t) return html`<div class="page narrow"><${Empty} icon="📚">?</${Empty}></div>`;
@@ -84,9 +87,11 @@ export function Reader({ id }) {
     <div class="text">${t.lines.map(([en, idl], li) => html`
       <p class=${'line' + (playing === li ? ' playing' : '')}>
         ${tokens(en).map((tk) => (tk.w
-          ? html`<span class=${'word' + (bank[lookup(tk.t)?.base] ? ' saved' : '') + (sel && sel.li === li && clean2(tk.t) === sel.word ? ' on' : '')} onClick=${() => tap(tk, li)}>${tk.t}</span>`
+          ? html`<span class=${'word' + (bank[lookup(tk.t)?.base] ? ' saved' : '') + (sel && sel.li === li && clean2(tk.t) === sel.word ? ' on' : '') + (hits[li] ? (hits[li].has(clean2(tk.t)) ? ' said' : ' missed') : '')} onClick=${() => tap(tk, li)}>${tk.t}</span>`
           : tk.t))}
         <button class="line-audio" onClick=${() => speak(en, 'en', 0.85)} aria-label="Listen">🔊</button>
+        ${canSay() && html`<button class="line-mic" onClick=${() => setMicLine(micLine === li ? -1 : li)} aria-label="Read aloud">🎙️</button>`}
+        ${micLine === li && html`<${MicCheck} text=${en} compact onResult=${(res) => setHits({ ...hits, [li]: res.hits })} />`}
         ${showId && html`<span class="line-id">🇮🇩 ${idl}</span>`}
       </p>`)}</div>
     ${!done ? html`<button class="btn coral lg block" onClick=${finish}>✅ ${B('Selesai membaca', 'I finished reading')}</button>`

@@ -804,3 +804,25 @@ body[data-universe="student"] { --accent: #8b5cf6; --accent-2: #ef6c4d; }
 .join-card { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; border-left: 6px solid #e11d48; }
 .join-card.open { border-left-color: #22c55e; }
 .join-card .grow { min-width: 0; flex: 1 1 200px; }
+
+/* ---------- Prononciation ---------- */
+.mic-check { display: grid; gap: .6rem; justify-items: center; margin: .6rem 0; }
+.mic-btn { display: grid; justify-items: center; gap: .3rem; width: 132px; height: 132px; border-radius: 50%; border: 0; font-size: 2.8rem; color: #fff;
+  background: radial-gradient(circle at 35% 30%, #ffb199, #ef6c4d 70%); box-shadow: 0 6px 0 #c4502f; align-content: center; }
+.mic-btn span { font-size: .75rem; font-weight: 800; max-width: 110px; line-height: 1.15; }
+.mic-btn.on { animation: pulse-mic 1s ease-in-out infinite; background: radial-gradient(circle at 35% 30%, #c4b5fd, #8b5cf6 70%); box-shadow: 0 6px 0 #6d3fd0; }
+@keyframes pulse-mic { 50% { transform: scale(1.08); box-shadow: 0 6px 0 #6d3fd0, 0 0 0 14px rgba(139, 92, 246, .2); } }
+.mic-res { display: grid; gap: .15rem; text-align: center; border-radius: 16px; padding: .5rem .9rem; }
+.mic-res.ok { background: #dcfce7; color: #166534; }
+.mic-res.ko { background: #ffe4e6; color: #9f1239; }
+.mic-res b { font-size: 1.3rem; }
+.mic-check.compact { justify-items: start; margin: .5rem 0 0; }
+.mic-check.compact .mic-btn { width: auto; height: auto; border-radius: 99px; padding: .5rem 1rem; font-size: 1.2rem; display: flex; gap: .4rem; align-items: center; }
+.mic-check.compact .mic-btn span { max-width: none; font-size: .85rem; }
+.line-mic { position: absolute; right: .4rem; top: 2.3rem; border: 0; background: none; font-size: 1.1rem; }
+.line .word.said { background: #bbf7d0; border-bottom-color: #16a34a; }
+.line .word.missed { background: #fee2e2; border-bottom-color: #f87171; }
+.say-card { display: grid; gap: .6rem; justify-items: center; text-align: center; background: #fff; border-radius: 26px; padding: 1.2rem 1rem; box-shadow: var(--shadow); margin: .8rem 0; }
+.say-recap { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.say-recap span { background: #fff; border-radius: 99px; padding: .25rem .7rem; box-shadow: var(--shadow); font-weight: 700; }
+.say-recap span { color: var(--ink); }

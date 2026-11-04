@@ -6,6 +6,7 @@ import { duelQuestions } from '../screens/multiplayer.js';
 import { shuffle, sample } from '../ui.js';
 import { distractors } from '../gen.js';
 import { B } from '../i18n.js';
+import { today } from '../store.js';
 
 export const SUMMIT_M = 3726;
 export const LEVELS_N = 100;
@@ -108,6 +109,8 @@ const spell = (w) => ({ kind: 'translate', kindLabel: B('Tulis dalam bahasa Ingg
 const recog = (w, pool) => (pic(w) ? mcqPic(w, pool) : mcqId(w, pool));
 const matchOf = (words) => ({ kind: 'match', pairs: words.slice(0, 5).map((w) => [w.en, pic(w) ? w.emoji : w.id]), big: words.slice(0, 5).every(pic) });
 const mix = (w, pool, i) => [recog, mcqEn, listen, mcqId][i % 4](w, pool);
+const micOk = () => typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition) && window.top === window;
+const say = (w) => ({ kind: 'say', w });
 
 function lessonExercises(zone) {
   const L = EN_BY_ID[zone.grammar];
@@ -145,6 +148,7 @@ export function buildLevel(n) {
     if (chunk.length >= 3) items.push(matchOf(shuffle(chunk)));
     const sp = chunk.filter(short);
     if (sp.length) items.push(spell(sp[0]));
+    if (micOk()) items.push(say(chunk[chunk.length - 1]));
     const old = known.filter((w) => !chunk.includes(w)).concat(sample(prevZones, 2));
     items.push(...sample(old, chunk.length < 3 ? 5 : 2).map((w, i) => mix(w, pool, i + 1)));
   } else if (type === 'practice') {
@@ -158,7 +162,7 @@ export function buildLevel(n) {
     items = [...sentenceItems(zone, 4), ...sample(known, 4).map((w, i) => mix(w, pool, i + 2))];
   } else if (type === 'review') {
     const ws = sample(zoneWords, 10);
-    items = [...ws.slice(0, 6).map((w, i) => mix(w, pool, i)), ...ws.filter(short).slice(0, 3).map(spell), ...drill(zone, 2), ...sample(lessonExercises(zone), 1)];
+    items = [...ws.slice(0, 6).map((w, i) => mix(w, pool, i)), ...ws.filter(short).slice(0, 3).map(spell), ...drill(zone, 2), ...sample(lessonExercises(zone), 1), ...(micOk() ? [say(ws[0])] : [])];
   } else {
     // Gerbang : un peu de tout. Au sommet : révision de toute l'île.
     const big = zone.final ? [...prevZones, ...zoneWords] : zoneWords;
@@ -173,3 +177,18 @@ export function buildLevel(n) {
 
 export const PASS = { boss: 70 };
 export const starsFor = (pct) => (pct >= 90 ? 3 : pct >= 70 ? 2 : 1);
+
+// ---------- Progression ----------
+export function pathState(s) {
+  const done = s.path?.done || {};
+  let cur = 1;
+  while (cur <= LEVELS_N && done[cur]) cur++;
+  const days = s.path?.days || {};
+  let streak = 0;
+  const d = new Date();
+  if (!days[today(d)]) d.setDate(d.getDate() - 1);
+  while (days[today(d)]) { streak++; d.setDate(d.getDate() - 1); }
+  const stars = Object.values(done).reduce((a, b) => a + b, 0);
+  return { done, cur: Math.min(cur, LEVELS_N), finished: cur > LEVELS_N, streak, todayDone: days[today()] || 0, stars, top: cur - 1 };
+}
+
