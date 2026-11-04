@@ -2,6 +2,8 @@
 import { html, useState, useEffect } from '../vendor/preact-htm.js';
 import { Back, Empty } from '../ui.js';
 import { today } from '../store.js';
+import { useRef } from '../vendor/preact-htm.js';
+import { drawPoster, joinUrl } from '../qr.js';
 
 const yesterday = () => { const d = new Date(); d.setDate(d.getDate() - 1); return today(d); };
 import { confirmBox, promptBox, notify } from '../dialog.js';
@@ -79,6 +81,8 @@ function ClassAdmin({ code, onBack, email }) {
     <h1>🏫 ${c.name}</h1>
     <div class="hero-card teal"><div><small>Kode kelas (Class code)</small><div class="big-num code">${code}</div><span class="small">Murid mengetiknya sekali di HP mereka (Students type it once on their phone)</span></div></div>
 
+    <${ClassQR} code=${code} name=${c.name} />
+
     <h2>🫙 Toples bintang (Star jar)</h2>
     <div class="card">
       <div class="jar"><i style=${`width:${Math.min(100, (c.jar / c.jarGoal) * 100)}%`}></i><span>⭐ ${c.jar} / ${c.jarGoal}</span></div>
@@ -128,4 +132,22 @@ function ClassAdmin({ code, onBack, email }) {
       <li>Tips: « Tambahkan ke layar utama » (Add to home screen).</li>
     </ol></div>
   </div>`;
+}
+
+// QR code : les élèves scannent et arrivent directement sur la connexion de la classe.
+function ClassQR({ code, name }) {
+  const ref = useRef(null);
+  const [url, setUrl] = useState('');
+  const [err, setErr] = useState(false);
+  useEffect(() => {
+    drawPoster(ref.current, code, name).then((cv) => setUrl(cv.toDataURL('image/png'))).catch(() => setErr(true));
+  }, [code, name]);
+  return html`<h2>📲 Kode QR (QR code)</h2>
+    <div class="card qr-card">
+      <canvas ref=${ref} class="qr-poster" aria-label="QR code"></canvas>
+      ${err && html`<p class="muted">QR tidak bisa dibuat tanpa internet. (No internet: QR unavailable.)</p>`}
+      <p class="small">Murid scan dengan kamera HP → langsung ke kelas ${code}. (Students scan with the phone camera → straight to the class.)</p>
+      <code class="small">${joinUrl(code)}</code>
+      ${url && html`<a class="btn primary block" href=${url} download=${`qr-kelas-${code}.png`}>⬇️ Unduh poster (Download poster)</a>`}
+    </div>`;
 }

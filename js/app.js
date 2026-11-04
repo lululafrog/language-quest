@@ -74,6 +74,7 @@ function route(path) {
       return { el: html`<${PhotoHome} />` };
     case 's':
       if (p[1] === 'login') return { el: html`<${StudentLogin} />`, bare: true };
+      if (p[1] === 'join') return { el: html`<${StudentLogin} key=${p[2]} initial=${p[2]} />`, bare: true };
       if (p[1] === 'play') return { el: html`<${StudentPlay} />` };
       if (p[1] === 'island') return { el: html`<${IslandMap} />` };
       if (p[1] === 'level') return { el: html`<${LevelPlay} key=${p[2]} n=${p[2]} />`, bare: true };

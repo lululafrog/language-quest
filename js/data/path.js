@@ -11,17 +11,29 @@ export const SUMMIT_M = 3726;
 export const LEVELS_N = 100;
 export const altitude = (n) => Math.round((SUMMIT_M * n) / LEVELS_N);
 
+// Progression : se présenter → moi et ma famille → l'école → le marché → animaux et loisirs → le corps
+// → ma journée (présent) → maintenant (-ing) → hier (passé) → demain (futur) et grande révision.
 export const ZONES = [
-  { name: 'Pantai Kuta', en: 'Kuta Beach', icon: '🏖️', color: '#fde9b8', ink: '#8a5a1f', lessons: ['en-intro', 'en-numbers'], grammar: 'en-intro' },
-  { name: 'Desa Sasak', en: 'Sasak Village', icon: '🛖', color: '#f8dcc4', ink: '#8a4a26', lessons: ['en-family', 'en-pronouns'], grammar: 'en-pronouns', scene: 'family' },
-  { name: 'Pasar', en: 'Market', icon: '🧺', color: '#ffe0d6', ink: '#9a3b26', lessons: ['en-food', 'en-colors'], scene: 'food', scene2: 'colors' },
-  { name: 'Sekolah', en: 'School', icon: '🏫', color: '#e6e1fb', ink: '#4c3a99', lessons: ['en-school', 'en-feelings'], grammar: 'en-feelings', scene: 'classroom' },
-  { name: 'Sawah', en: 'Rice Fields', icon: '🌾', color: '#e1f3c8', ink: '#3f6b16', lessons: ['en-animals', 'en-hobbies'], grammar: 'en-hobbies', scene: 'animals' },
-  { name: 'Hutan', en: 'Forest', icon: '🌳', color: '#cdebd3', ink: '#1d6b3a', lessons: ['en-body'], scene: 'body', scene2: 'face' },
-  { name: 'Air Terjun Sendang Gile', en: 'Waterfall', icon: '💦', color: '#cfeaf6', ink: '#1b5e80', lessons: ['en-present', 'verbs:0-25'], grammar: 'en-present', drill: 'verbs-he' },
-  { name: 'Pos Pendakian', en: 'Base Camp', icon: '⛺', color: '#dfe6ee', ink: '#334155', lessons: ['en-continuous', 'verbs:25-50'], grammar: 'en-continuous', drill: 'verbs-ing' },
-  { name: 'Danau Segara Anak', en: 'Crater Lake', icon: '🏞️', color: '#d3e3f7', ink: '#23468a', lessons: ['en-past'], grammar: 'en-past', drill: 'verbs-past' },
-  { name: 'Puncak Rinjani', en: 'Rinjani Summit', icon: '🌋', color: '#eadfd6', ink: '#5b3a2a', lessons: ['en-future'], grammar: 'en-future', drill: 'verbs-past', final: true },
+  { name: 'Pantai Kuta', en: 'Kuta Beach', icon: '🏖️', color: '#fde9b8', ink: '#8a5a1f', theme: 'Halo, namaku… (Hello, my name is…)', guard: '🦀', guardName: 'Kepiting (Crab)',
+    lessons: ['en-intro', 'en-numbers'], grammar: 'en-intro', deco: [['🌴', 6, 12, 3.6], ['🐚', 84, 30, 2], ['🌴', 88, 62, 3.2], ['⛱️', 10, 70, 2.6], ['🐠', 80, 88, 2]] },
+  { name: 'Desa Sasak', en: 'Sasak Village', icon: '🛖', color: '#f8dcc4', ink: '#8a4a26', theme: 'Aku dan keluargaku (Me and my family)', guard: '🐓', guardName: 'Ayam jago (Rooster)',
+    lessons: ['en-pronouns', 'en-family'], grammar: 'en-pronouns', scene: 'family', deco: [['🛖', 8, 14, 3.4], ['🐐', 86, 34, 2.2], ['🛖', 84, 66, 3], ['🧺', 10, 80, 2.2]] },
+  { name: 'Sekolah', en: 'School', icon: '🏫', color: '#e6e1fb', ink: '#4c3a99', theme: 'Di sekolah (At school)', guard: '🦉', guardName: 'Burung hantu (Owl)',
+    lessons: ['en-school', 'en-feelings'], grammar: 'en-feelings', scene: 'classroom', deco: [['🏫', 8, 16, 3.4], ['✏️', 86, 32, 2.2], ['📚', 84, 68, 2.4], ['🎒', 10, 78, 2.4]] },
+  { name: 'Pasar', en: 'Market', icon: '🧺', color: '#ffe0d6', ink: '#9a3b26', theme: 'Di pasar (At the market)', guard: '🦜', guardName: 'Burung beo (Parrot)',
+    lessons: ['en-food', 'en-colors'], scene: 'food', scene2: 'colors', deco: [['🍌', 8, 14, 2.6], ['🥥', 86, 28, 2.4], ['🥭', 10, 56, 2.4], ['🧺', 84, 70, 3], ['🍉', 12, 86, 2.2]] },
+  { name: 'Sawah', en: 'Rice Fields', icon: '🌾', color: '#e1f3c8', ink: '#3f6b16', theme: 'Binatang & hobiku (Animals & my hobbies)', guard: '🐃', guardName: 'Kerbau (Buffalo)',
+    lessons: ['en-animals', 'en-hobbies'], grammar: 'en-hobbies', scene: 'animals', deco: [['🌾', 6, 12, 3], ['🐃', 84, 30, 3], ['🌾', 88, 60, 3], ['🦆', 10, 74, 2.2], ['🌾', 14, 90, 2.4]] },
+  { name: 'Hutan', en: 'Forest', icon: '🌳', color: '#cdebd3', ink: '#1d6b3a', theme: 'Tubuhku (My body)', guard: '🐒', guardName: 'Monyet (Monkey)',
+    lessons: ['en-body'], scene: 'body', scene2: 'face', deco: [['🌳', 4, 10, 3.8], ['🐒', 86, 26, 2.4], ['🌲', 88, 58, 3.6], ['🍄', 10, 72, 2], ['🌳', 6, 88, 3]] },
+  { name: 'Air Terjun Sendang Gile', en: 'Waterfall', icon: '💦', color: '#cfeaf6', ink: '#1b5e80', theme: 'Hari-hariku (My day)', guard: '🐸', guardName: 'Katak (Frog)',
+    lessons: ['en-present', 'verbs:0-25'], grammar: 'en-present', drill: 'verbs-he', deco: [['💦', 8, 14, 3.2], ['🪨', 86, 30, 2.4], ['🌿', 84, 64, 2.6], ['🐸', 10, 80, 2.2]] },
+  { name: 'Pos Pendakian', en: 'Base Camp', icon: '⛺', color: '#dfe6ee', ink: '#334155', theme: 'Sekarang aku sedang… (Right now I am…)', guard: '🦅', guardName: 'Elang (Eagle)',
+    lessons: ['en-continuous', 'verbs:25-50'], grammar: 'en-continuous', drill: 'verbs-ing', deco: [['⛺', 8, 16, 3], ['🔥', 86, 34, 2.2], ['🌲', 84, 66, 2.8], ['☁️', 10, 82, 3]] },
+  { name: 'Danau Segara Anak', en: 'Crater Lake', icon: '🏞️', color: '#d3e3f7', ink: '#23468a', theme: 'Kemarin (Yesterday)', guard: '🐉', guardName: 'Naga danau (Lake dragon)',
+    lessons: ['en-past'], grammar: 'en-past', drill: 'verbs-past', deco: [['☁️', 6, 12, 3.4], ['🏞️', 84, 30, 3], ['♨️', 10, 60, 2.4], ['☁️', 86, 80, 3.2]] },
+  { name: 'Puncak Rinjani', en: 'Rinjani Summit', icon: '🌋', color: '#eadfd6', ink: '#5b3a2a', theme: 'Besok & mimpiku (Tomorrow & my dreams)', guard: '🧚‍♀️', guardName: 'Dewi Anjani',
+    lessons: ['en-future'], grammar: 'en-future', drill: 'verbs-past', final: true, deco: [['☁️', 4, 10, 3.6], ['❄️', 88, 24, 2], ['🌅', 10, 56, 2.8], ['☁️', 84, 76, 3.4]] },
 ];
 
 // Mots de chaque zone, sans doublon d'une zone à l'autre.

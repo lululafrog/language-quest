@@ -4,7 +4,26 @@ import { speak, canSpeak, canListen, listen, normalize, similarity } from './spe
 import { recordAnswer, addStudyTime } from './store.js';
 import { T, B } from './i18n.js';
 
+// Petit son de réussite ou d'erreur (si le téléphone n'est pas en silencieux).
+export function chime(ok) {
+  try {
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    (ok ? [660, 990] : [330, 247]).forEach((f, i) => {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = ok ? 'triangle' : 'sine'; o.frequency.value = f;
+      o.connect(g); g.connect(ac.destination);
+      const t = ac.currentTime + i * 0.11;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.16, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+      o.start(t); o.stop(t + 0.3);
+    });
+    setTimeout(() => ac.close(), 900);
+  } catch { /* pas de son */ }
+}
+
 function Feedback({ ok, answer, why, onNext }) {
+  useEffect(() => { chime(ok); }, []);
   return html`<div class=${'feedback ' + (ok ? 'ok' : 'ko')}>
     <div class="fb-title">${ok ? T('✨ Bravo !', B('✨ Hebat!', 'Great!')) : T('💡 Presque !', B('💡 Hampir!', 'Almost!'))}</div>
     ${!ok && answer && html`<div>${T('Réponse', B('Jawaban', 'Answer'))} : <b>${answer}</b></div>`}

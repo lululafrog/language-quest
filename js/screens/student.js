@@ -19,9 +19,9 @@ export { useStudent };
 const Wait = ({ text = 'Tunggu sebentar… (Please wait)' }) => html`<div class="page narrow center-page"><div class="giant spin">🌴</div><p class="muted">${text}</p></div>`;
 
 // ---------- CONNEXION ----------
-export function StudentLogin() {
+export function StudentLogin({ initial }) {
   const [step, setStep] = useState('code');
-  const [code, setCode] = useState(() => { try { return localStorage.getItem('lq-last-class') || ''; } catch { return ''; } });
+  const [code, setCode] = useState(() => { if (initial) return initial.toUpperCase(); try { return localStorage.getItem('lq-last-class') || ''; } catch { return ''; } });
   const [cls, setCls] = useState(null);
   const [who, setWho] = useState(null);
   const [pin, setPin] = useState([]);
@@ -31,8 +31,9 @@ export function StudentLogin() {
   if (!hasConfig()) return html`<div class="page narrow"><h1>👧 Masuk murid (Student login)</h1><div class="card"><p>Kelas online belum aktif. (The online class is not active yet.)</p><p class="muted small">Tanya gurumu. (Ask your teacher.)</p></div>
     <button class="btn coral xl block" onClick=${() => go('/s/play')}>🎮 Main sekarang (Play now)</button></div>`;
 
+  useEffect(() => { if (initial && hasConfig()) findClass(); }, []);
   const findClass = async (e) => {
-    e.preventDefault(); setErr(''); setBusy(true);
+    e?.preventDefault(); setErr(''); setBusy(true);
     try {
       const c = await getClass(code);
       if (!c) setErr('Kode kelas tidak ditemukan. Coba lagi! (Class code not found. Try again!)');

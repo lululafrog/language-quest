@@ -3,7 +3,7 @@ import { html, useState, useEffect, useMemo } from '../vendor/preact-htm.js';
 import { useStore, completeLevel, today } from '../store.js';
 import { go, AudioBtn, Confetti } from '../ui.js';
 import { speak } from '../speech.js';
-import { Session, Match } from '../exercises.js';
+import { Session, Match, chime } from '../exercises.js';
 import { EN_BY_ID } from '../data/english.js';
 import { SCENE_BY_ID, sayTouch, sceneWords } from '../data/scenes.js';
 import { ZONES, LEVELS_N, SUMMIT_M, altitude, levelInfo, buildLevel, starsFor, PASS } from '../data/path.js';
@@ -42,7 +42,8 @@ export function DailyCard() {
       <span class="daily-icon">${z.icon}</span>
       <div class="grow"><small>${p.todayDone ? B('Target hari ini tercapai! ✅', 'Today\'s goal done!') : B('Pelajaran hari ini', 'Today\'s lesson')}</small>
         <b>Level ${p.cur} · ${info.icon} ${info.label}</b>
-        <span class="small block">${z.name} (${z.en}) · ${fmtM(info.alt)}</span></div>
+        <span class="small block">${z.icon} ${z.theme}</span>
+        <span class="small block">${z.name} · ⛰️ ${fmtM(info.alt)}${info.type === 'boss' ? ` · ${B('Lawan', 'Beat')} ${z.guard} ${z.guardName}!` : ''}</span></div>
     </div>
     <div class="alt-bar"><i style=${`width:${(p.top / LEVELS_N) * 100}%`}></i></div>
     <div class="row">
@@ -53,50 +54,91 @@ export function DailyCard() {
 }
 
 // ---------- Carte de l'île ----------
+const ROW = 96;
+const xOf = (n) => Math.round(Math.sin(n * 0.85) * 30);
+const CHEERS = ['Ayo naik! (Let\'s climb!)', 'Kamu hebat! (You\'re great!)', 'Sedikit lagi! (Almost there!)', 'Semangat! (You can do it!)', 'Pemandangannya indah! (What a view!)'];
+
+function ZoneBand({ zi, p, avatar }) {
+  const z = ZONES[zi];
+  const above = ZONES[zi + 1];
+  const levels = Array.from({ length: 10 }, (_, i) => zi * 10 + 10 - i);
+  const H = levels.length * ROW;
+  const pt = (n, i) => [50 + xOf(n), i * ROW + ROW / 2];
+  // Sentier : un segment par paire de niveaux, plein s'il est déjà parcouru.
+  const segs = [];
+  levels.forEach((n, i) => {
+    const [x, y] = pt(n, i);
+    const [x2, y2] = i < levels.length - 1 ? pt(levels[i + 1], i + 1) : [50 + xOf(n - 1), H + ROW / 2];
+    segs.push({ d: `M${x},${y} C${x},${y + ROW / 2} ${x2},${y2 - ROW / 2} ${x2},${y2}`, done: n <= p.cur });
+  });
+  if (zi < ZONES.length - 1) {
+    const [x, y] = pt(levels[0], 0);
+    segs.push({ d: `M${50 + xOf(levels[0] + 1)},${-ROW / 2} C${50 + xOf(levels[0] + 1)},0 ${x},${y - ROW / 2} ${x},${y}`, done: levels[0] + 1 <= p.cur });
+  }
+  return html`<section class="zone-band" style=${`--zc:${z.color};--zn:${above ? above.color : '#cfe9f7'};--zi:${z.ink}`}>
+    ${z.deco.map(([e, x, y, sz]) => html`<span class="deco" style=${`left:${x}%;top:${y}%;font-size:${sz}rem`}>${e}</span>`)}
+    <div class="trail-box" style=${`height:${H}px`}>
+      <svg class="trail" viewBox=${`0 0 100 ${H}`} preserveAspectRatio="none" aria-hidden="true">
+        ${segs.map((g) => html`<path d=${g.d} class=${g.done ? 'done' : ''} vector-effect="non-scaling-stroke" />`)}
+      </svg>
+      ${levels.map((n, i) => {
+        const done = p.done[n];
+        const open = n <= p.cur;
+        const boss = n % 10 === 0;
+        const info = levelInfo(n);
+        const x = xOf(n);
+        return html`<div class="lvl-spot" style=${`left:${50 + x}%;top:${i * ROW + ROW / 2}px`}>
+          ${n === p.cur && !p.finished && html`<span class="go-bubble">${B('Mulai!', 'Start!')}</span>`}
+          <button id=${'lvl-' + n} class=${'lvl' + (done ? ' done' : '') + (n === p.cur ? ' cur' : '') + (!open ? ' locked' : '') + (boss ? ' boss' : '')}
+            disabled=${!open} onClick=${() => go('/s/level/' + n)} aria-label=${'Level ' + n}>
+            <span class="lvl-ic">${boss ? (n === LEVELS_N ? '🏁' : z.guard) : !open ? '🔒' : info.icon}</span>
+            <span class="lvl-n">${n}</span>
+          </button>
+          ${done ? html`<span class="lvl-stars">${[1, 2, 3].map((k) => html`<i class=${k <= done ? 'on' : ''}>★</i>`)}</span>` : ''}
+          ${n === p.cur && !p.finished && html`<span class=${'me-pin' + (x > 0 ? ' left' : '')}>${avatar}</span>`}
+        </div>`;
+      })}
+    </div>
+    <div class="zone-label">
+      <span class="zl-icon">${z.icon}</span>
+      <div><b>${zi + 1}. ${z.name}</b><span>${z.theme}</span><small>⛰️ ${fmtM(altitude(zi * 10))} – ${fmtM(altitude(zi * 10 + 10))} · ${B('Penjaga', 'Guardian')}: ${z.guard} ${z.guardName}</small></div>
+    </div>
+  </section>`;
+}
+
 export function IslandMap() {
   const s = useStore();
   const p = pathState(s);
   const st = useStudent();
-  const avatar = st.me?.avatar || '🧒';
+  const avatar = st.me?.avatar || '🐢';
   useEffect(() => {
     const el = document.getElementById('lvl-' + p.cur);
-    if (el) setTimeout(() => el.scrollIntoView({ block: 'center' }), 50);
+    if (el) setTimeout(() => el.scrollIntoView({ block: 'center' }), 60);
   }, []);
-  const node = (n) => {
-    const done = p.done[n];
-    const open = n <= p.cur;
-    const boss = n % 10 === 0;
-    const x = Math.round(Math.sin(n * 0.85) * 34);
-    const info = levelInfo(n);
-    return html`<div class="lvl-row" style=${`--x:${x}%`}>
-      <button id=${'lvl-' + n} class=${'lvl' + (done ? ' done' : '') + (n === p.cur ? ' cur' : '') + (!open ? ' locked' : '') + (boss ? ' boss' : '')}
-        disabled=${!open} onClick=${() => go('/s/level/' + n)} aria-label=${'Level ' + n}>
-        <span class="lvl-ic">${!open ? '🔒' : boss ? (n === LEVELS_N ? '🏁' : '🚩') : info.icon}</span>
-        <span class="lvl-n">${n}</span>
-        ${done ? html`<span class="lvl-stars">${'★'.repeat(done)}${'☆'.repeat(3 - done)}</span>` : ''}
-      </button>
-      ${n === p.cur && !p.finished && html`<span class=${'me-pin' + (x > 0 ? ' left' : '')}>${avatar}<small>${B('Kamu', 'You')}</small></span>`}
-    </div>`;
-  };
+  const cheer = CHEERS[(p.top + new Date().getDate()) % CHEERS.length];
   return html`<div class="isle">
-    <div class="alt-meter"><span>⛰️ <b>${fmtM(altitude(p.top))}</b> / ${fmtM(SUMMIT_M)}</span><span>🔥 ${p.streak}</span><span>⭐ ${p.stars}</span></div>
-    <div class="summit">
-      <svg viewBox="0 0 320 150" aria-hidden="true">
-        <path d="M0,150 L110,40 L140,62 L170,18 L205,58 L230,44 L320,150 Z" fill="#8d6e63"/>
-        <path d="M150,40 L170,18 L188,40 L178,36 L170,44 L160,36 Z" fill="#fff"/>
-        <path d="M110,40 L124,54 L116,52 L104,48 Z" fill="#fff" opacity=".8"/>
-        <line x1="170" y1="18" x2="170" y2="-4" stroke="#334155" stroke-width="3"/><path d="M170,-4 L192,3 L170,10 Z" fill="#ef6c4d"/>
-        <ellipse cx="170" cy="120" rx="46" ry="10" fill="#5bc0eb" opacity=".8"/>
-      </svg>
-      <b>Puncak Rinjani · ${fmtM(SUMMIT_M)}</b><span>${B('Tujuan akhir', 'Final goal')} 🏁</span>
+    <div class="alt-meter">
+      <span>⛰️ <b>${fmtM(altitude(p.top))}</b></span>
+      <span class="alt-track"><i style=${`width:${(p.top / LEVELS_N) * 100}%`}></i></span>
+      <span>🔥 ${p.streak}</span><span>⭐ ${p.stars}</span>
     </div>
-    ${[...ZONES].map((z, zi) => ({ z, zi })).reverse().map(({ z, zi }) => html`
-      <section class="zone-band" style=${`--zc:${z.color};--zi:${z.ink}`}>
-        <span class="zone-deco l">${z.icon}</span><span class="zone-deco r">${z.icon}</span>
-        ${Array.from({ length: 10 }, (_, i) => zi * 10 + 10 - i).map(node)}
-        <div class="zone-label"><span>${z.icon}</span><div><b>${z.name}</b><small>${z.en} · ${fmtM(altitude(zi * 10))} – ${fmtM(altitude(zi * 10 + 10))}</small></div></div>
-      </section>`)}
-    <div class="shore">🌊 ${B('Mulai di sini', 'Start here')} · 0 m 🌊</div>
+    <div class="summit">
+      <span class="cloud c1">☁️</span><span class="cloud c2">☁️</span><span class="cloud c3">☁️</span>
+      <svg viewBox="0 0 320 160" aria-hidden="true">
+        <defs><linearGradient id="mtn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9c7b6b"/><stop offset="1" stop-color="#6d4c41"/></linearGradient></defs>
+        <path d="M0,160 L60,110 L95,70 L120,84 L150,40 L170,22 L192,44 L215,60 L240,52 L320,160 Z" fill="url(#mtn)"/>
+        <path d="M152,40 L170,22 L190,42 L180,38 L171,48 L161,38 Z" fill="#fff"/>
+        <path d="M95,70 L106,80 L100,79 L90,76 Z" fill="#fff" opacity=".85"/>
+        <ellipse cx="205" cy="118" rx="40" ry="9" fill="#5bc0eb"/>
+        <path d="M60,110 C90,120 120,112 150,124 C190,138 250,120 320,140 L320,160 L0,160 Z" fill="#7cb342" opacity=".55"/>
+        <line x1="170" y1="22" x2="170" y2="-6" stroke="#334155" stroke-width="3"/><path d="M170,-6 L194,1 L170,8 Z" fill="#ef6c4d"/>
+      </svg>
+      <b>Puncak Rinjani · ${fmtM(SUMMIT_M)}</b>
+      <span>${B('Penjaga terakhir', 'Final guardian')}: 🧚‍♀️ Dewi Anjani</span>
+    </div>
+    ${ZONES.map((_, zi) => zi).reverse().map((zi) => html`<${ZoneBand} key=${zi} zi=${zi} p=${p} avatar=${avatar} />`)}
+    <div class="shore"><span class="wave">🌊</span> ${B('Mulai di sini', 'Start here')} · 0 m <span class="wave">🌊</span></div>
+    <div class="mascot"><span>🐢</span><p>${cheer}</p></div>
   </div>`;
 }
 
@@ -134,7 +176,7 @@ function TouchEx({ ex, onDone }) {
   const [res, setRes] = useState(null);
   const say = sayTouch(sc, ex.target, 'en');
   useEffect(() => { speak(say, 'en'); }, [ex]);
-  const tap = (w) => { if (res === null) setRes(w); };
+  const tap = (w) => { if (res === null) { setRes(w); chime(w === ex.target); } };
   const ok = res === ex.target;
   const marks = res === null ? {} : ok ? { [res]: 'ok' } : { [res]: 'ko', [ex.target]: 'ok' };
   const word = sceneWords(sc)[ex.target];
@@ -184,8 +226,9 @@ export function LevelPlay({ n }) {
     return html`<div class="page narrow center-page level-result" style=${`--zc:${z.color};--zi:${z.ink}`}>
       ${result.passed && html`<${Confetti} />`}
       ${result.passed ? html`
-        <div class="giant">${result.zoneDone ? (n === LEVELS_N ? '🏁' : '🚩') : z.icon}</div>
+        <div class="giant">${result.zoneDone ? (n === LEVELS_N ? '🏆' : '🚩') : z.icon}</div>
         <h1>${n === LEVELS_N ? B('Kamu sampai di puncak Rinjani!', 'You reached the top of Rinjani!') : result.zoneDone ? B('Gerbang terbuka!', 'Gate open!') : B('Level selesai!', 'Level complete!')}</h1>
+        ${result.zoneDone && html`<p class="huge-ish">${z.guard} ${B(`${z.guardName} kalah!`, 'Guardian beaten!')}</p>`}
         <div class="big-stars">${'★'.repeat(result.stars)}${'☆'.repeat(3 - result.stars)}</div>
         <p class="huge-ish">⛰️ ${fmtM(altitude(n))}</p>
         <p class="muted">${B('Kamu naik terus!', 'You keep climbing!')} ${result.pct} % ${B('benar', 'correct')}</p>
@@ -202,6 +245,7 @@ export function LevelPlay({ n }) {
 
   return html`<div class="page narrow level-page" style=${`--zc:${lvl.zone.color};--zi:${lvl.zone.ink}`}>
     <div class="level-head"><span>${lvl.zone.icon}</span><b>Level ${n}</b><span>${lvl.icon} ${lvl.label}</span><span class="muted">⛰️ ${fmtM(lvl.alt)}</span></div>
+    ${lvl.type === 'boss' && html`<div class="guardian"><span>${lvl.zone.guard}</span><p><b>${lvl.zone.guardName}</b> ${B('menjaga gerbang. Jawab 70% dengan benar untuk lewat!', 'guards the gate. Get 70% right to pass!')}</p></div>`}
     <${Session} key=${n + ':' + round} items=${lvl.items} extra=${EXTRA} onExit=${() => go('/s/island')}
       finishLabel=${B('Lihat hasil', 'See result') + ' →'} onFinish=${finish} />
   </div>`;
