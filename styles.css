@@ -656,3 +656,38 @@ body[data-universe="student"] { --accent: #8b5cf6; --accent-2: #ef6c4d; }
 .mascot p { animation: bubble-out .5s 5s forwards; }
 .mascot span { animation: bob 2s ease-in-out infinite; }
 @keyframes bubble-out { to { opacity: 0; transform: scale(.8); } }
+
+/* ---------- Décor kawaii ---------- */
+.zone-band { background: linear-gradient(to bottom, var(--zn), var(--zc) 18%, var(--zc)); }
+.deco { opacity: 1; filter: drop-shadow(0 4px 0 rgba(74, 52, 40, .08)); }
+.deco svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.deco.bounce { animation: bounce-soft 3.2s ease-in-out infinite; }
+.deco.sway { animation: sway 4s ease-in-out infinite; transform-origin: 50% 100%; }
+.deco.twinkle { animation: twinkle 2.2s ease-in-out infinite; }
+@keyframes bounce-soft { 0%, 100% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, calc(-50% - 6px)); } }
+@keyframes sway { 0%, 100% { transform: translate(-50%, -50%) rotate(-4deg); } 50% { transform: translate(-50%, -50%) rotate(4deg); } }
+@keyframes twinkle { 0%, 100% { transform: translate(-50%, -50%) scale(.6); opacity: .4; } 50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; } }
+.hills { position: absolute; left: 0; right: 0; bottom: 0; height: 110px; pointer-events: none; }
+.hills svg { width: 100%; height: 100%; display: block; }
+.trail-box, .zone-label { z-index: 1; }
+.trail path { stroke: #fff; stroke-dasharray: 1 13; stroke-width: 8; opacity: .95; }
+.trail path.done { stroke: #ffc94a; stroke-dasharray: none; stroke-width: 11; opacity: 1; }
+.lvl { border: 4px solid #fff; }
+.lvl.done { border-color: #fff6d6; }
+.lvl.cur { border-color: #fff; }
+.lvl.locked { border-color: rgba(255, 255, 255, .7); background: rgba(255, 255, 255, .7); }
+.zone-label { border: 3px solid #fff; background: rgba(255, 255, 255, .92); border-radius: 22px; }
+.summit { padding-top: 1.6rem; background: linear-gradient(#bfe6fb, #e8f6fd 60%, var(--sky-end, #f1e8e1)); }
+.summit .mtn { width: 300px; max-width: 86%; }
+.summit .mtn svg { width: 100%; height: auto; display: block; overflow: visible; }
+.cloud { width: 78px; height: 78px; font-size: 0; }
+.cloud svg { width: 100%; height: 100%; }
+.cloud.c3 { width: 56px; height: 56px; left: auto; right: 10%; top: 6%; }
+.mascot .turtle { width: 62px; height: 62px; display: block; animation: bob 2s ease-in-out infinite; }
+.mascot .turtle svg { width: 100%; height: 100%; }
+.mascot p { border: 2px solid #c6eac4; }
+.me-pin { filter: drop-shadow(0 3px 0 rgba(0, 0, 0, .12)); }
+.go-bubble { border: 2px solid #ffd2c4; }
+.landscape { position: absolute; inset: 0; pointer-events: none; }
+.landscape svg { width: 100%; height: 100%; display: block; }
+.zone-band .deco { z-index: 0; }

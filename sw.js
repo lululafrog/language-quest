@@ -1,5 +1,5 @@
 // Service worker : tout est mis en cache pour fonctionner hors connexion.
-const CACHE = 'language-quest-v10';
+const CACHE = 'language-quest-v12';
 const ASSETS = [
   './',
   'icon-192.png',
@@ -10,7 +10,9 @@ const ASSETS = [
   'js/cards.js',
   'js/csv.js',
   'js/dialog.js',
+  'js/data/decor.js',
   'js/data/english.js',
+  'js/data/landscape.js',
   'js/data/games.js',
   'js/data/grammar.js',
   'js/data/indonesian.js',
@@ -54,7 +56,7 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET' || !e.request.url.startsWith(self.location.origin)) return;
   e.respondWith(
-    fetch(e.request)
+    fetch(e.request, { cache: 'no-cache' })
       .then((res) => {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(e.request, copy));

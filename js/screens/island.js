@@ -10,6 +10,12 @@ import { ZONES, LEVELS_N, SUMMIT_M, altitude, levelInfo, buildLevel, starsFor, P
 import { Scene } from './touch.js';
 import { B, progress } from '../i18n.js';
 import { useStudent, updateMe, awardStars } from '../net/fb.js';
+import { ART, TURTLE, MOUNTAIN } from '../data/decor.js';
+import { landscape } from '../data/landscape.js';
+
+const CUTE = ['sparkle', 'sun', 'starfish', 'flower', 'frog', 'heart', 'mango', 'coconut', 'book', 'pencil'];
+
+const art = (name) => ({ __html: ART[name]() });
 
 const fmtM = (m) => m.toLocaleString('id-ID') + ' m';
 
@@ -55,7 +61,7 @@ export function DailyCard() {
 
 // ---------- Carte de l'île ----------
 const ROW = 96;
-const xOf = (n) => Math.round(Math.sin(n * 0.85) * 30);
+const xOf = (n) => Math.round(Math.sin(n * 0.85) * 24);
 const CHEERS = ['Ayo naik! (Let\'s climb!)', 'Kamu hebat! (You\'re great!)', 'Sedikit lagi! (Almost there!)', 'Semangat! (You can do it!)', 'Pemandangannya indah! (What a view!)'];
 
 function ZoneBand({ zi, p, avatar }) {
@@ -76,7 +82,8 @@ function ZoneBand({ zi, p, avatar }) {
     segs.push({ d: `M${50 + xOf(levels[0] + 1)},${-ROW / 2} C${50 + xOf(levels[0] + 1)},0 ${x},${y - ROW / 2} ${x},${y}`, done: levels[0] + 1 <= p.cur });
   }
   return html`<section class="zone-band" style=${`--zc:${z.color};--zn:${above ? above.color : '#cfe9f7'};--zi:${z.ink}`}>
-    ${z.deco.map(([e, x, y, sz]) => html`<span class="deco" style=${`left:${x}%;top:${y}%;font-size:${sz}rem`}>${e}</span>`)}
+    <div class="landscape" dangerouslySetInnerHTML=${{ __html: landscape(zi) }}></div>
+    ${z.deco.filter(([a]) => CUTE.includes(a)).map(([a, x, y, sz], k) => html`<span class=${'deco' + (a === 'sparkle' ? ' twinkle' : k % 2 ? ' sway' : ' bounce')} style=${`left:${x}%;top:${y}%;width:min(${sz}px,19vw);height:min(${sz}px,19vw);animation-delay:${k * 0.7}s`} dangerouslySetInnerHTML=${art(a)}></span>`)}
     <div class="trail-box" style=${`height:${H}px`}>
       <svg class="trail" viewBox=${`0 0 100 ${H}`} preserveAspectRatio="none" aria-hidden="true">
         ${segs.map((g) => html`<path d=${g.d} class=${g.done ? 'done' : ''} vector-effect="non-scaling-stroke" />`)}
@@ -123,22 +130,14 @@ export function IslandMap() {
       <span>🔥 ${p.streak}</span><span>⭐ ${p.stars}</span>
     </div>
     <div class="summit">
-      <span class="cloud c1">☁️</span><span class="cloud c2">☁️</span><span class="cloud c3">☁️</span>
-      <svg viewBox="0 0 320 160" aria-hidden="true">
-        <defs><linearGradient id="mtn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9c7b6b"/><stop offset="1" stop-color="#6d4c41"/></linearGradient></defs>
-        <path d="M0,160 L60,110 L95,70 L120,84 L150,40 L170,22 L192,44 L215,60 L240,52 L320,160 Z" fill="url(#mtn)"/>
-        <path d="M152,40 L170,22 L190,42 L180,38 L171,48 L161,38 Z" fill="#fff"/>
-        <path d="M95,70 L106,80 L100,79 L90,76 Z" fill="#fff" opacity=".85"/>
-        <ellipse cx="205" cy="118" rx="40" ry="9" fill="#5bc0eb"/>
-        <path d="M60,110 C90,120 120,112 150,124 C190,138 250,120 320,140 L320,160 L0,160 Z" fill="#7cb342" opacity=".55"/>
-        <line x1="170" y1="22" x2="170" y2="-6" stroke="#334155" stroke-width="3"/><path d="M170,-6 L194,1 L170,8 Z" fill="#ef6c4d"/>
-      </svg>
+      <span class="cloud c1" dangerouslySetInnerHTML=${art('cloud')}></span><span class="cloud c2" dangerouslySetInnerHTML=${art('cloud')}></span><span class="cloud c3" dangerouslySetInnerHTML=${art('sun')}></span>
+      <div class="mtn" dangerouslySetInnerHTML=${{ __html: MOUNTAIN }}></div>
       <b>Puncak Rinjani · ${fmtM(SUMMIT_M)}</b>
       <span>${B('Penjaga terakhir', 'Final guardian')}: 🧚‍♀️ Dewi Anjani</span>
     </div>
     ${ZONES.map((_, zi) => zi).reverse().map((zi) => html`<${ZoneBand} key=${zi} zi=${zi} p=${p} avatar=${avatar} />`)}
     <div class="shore"><span class="wave">🌊</span> ${B('Mulai di sini', 'Start here')} · 0 m <span class="wave">🌊</span></div>
-    <div class="mascot"><span>🐢</span><p>${cheer}</p></div>
+    <div class="mascot"><span class="turtle" dangerouslySetInnerHTML=${{ __html: TURTLE }}></span><p>${cheer}</p></div>
   </div>`;
 }
 
