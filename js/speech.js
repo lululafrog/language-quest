@@ -32,6 +32,7 @@ function langVoices(lang) {
 export function voiceScore(v) {
   let sc = 0;
   const id = `${v.name} ${v.voiceURI || ''}`;
+  if (/moira/i.test(id)) sc += 100; // voix préférée de la prof : douce, accent irlandais
   if (NATURAL.test(id)) sc += 50;
   if (FEMALE.test(id)) sc += 30;
   if (MALE.test(id) && !/female/i.test(id)) sc -= 40;
