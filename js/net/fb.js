@@ -89,7 +89,7 @@ export async function createClass(name, nTeams) {
   await f.fs.setDoc(ref(f, 'classes', code), {
     name, ownerUid: f.A.currentUser.uid, createdAt: f.fs.serverTimestamp(),
     teams: TEAMS.slice(0, nTeams), roster: [], memberUids: [],
-    jar: 0, jarGoal: 150, reward: 'Sore bermain (Game afternoon) 🎉', t0: 0, t1: 0, t2: 0, t3: 0,
+    jar: 0, jarGoal: 150, reward: 'Sore bermain (Game afternoon) 🎉', t0: 0, t1: 0, t2: 0, t3: 0, openJoin: true,
   });
   return code;
 }
@@ -150,6 +150,26 @@ export async function studentSignIn(code, rid, pin) {
   try { localStorage.setItem('lq-student', code); } catch { /* rien */ }
   try { await f.auth.signInWithEmailAndPassword(f.A, email(code, rid), password(code, pin)); }
   catch (e) { try { localStorage.removeItem('lq-student'); } catch { /* rien */ } throw e; }
+}
+
+// Inscription autonome : l'élève crée son compte, rejoint l'équipe la moins nombreuse.
+export async function selfJoin(code, name, pin, avatar) {
+  const f = await fb();
+  const c = await getClass(code);
+  if (!c?.openJoin) throw new Error('closed');
+  if (c.roster.some((r) => r.name.trim().toLowerCase() === name.trim().toLowerCase())) throw new Error('taken');
+  const counts = c.teams.map((_, i) => c.roster.filter((r) => r.team === i).length);
+  const team = counts.indexOf(Math.min(...counts));
+  const rid = rand(8, 'abcdefghijkmnpqrstuvwxyz23456789');
+  try { localStorage.setItem('lq-student', c.code); } catch { /* rien */ }
+  const { user } = await f.auth.createUserWithEmailAndPassword(f.A, email(c.code, rid), password(c.code, pin));
+  await f.fs.setDoc(ref(f, 'classes', c.code, 'players', user.uid), { name, team, rid, avatar, stars: 0, lastSeen: null, mission: null, wins: 0, races: 0 });
+  await f.fs.updateDoc(ref(f, 'classes', c.code), {
+    roster: f.fs.arrayUnion({ uid: user.uid, rid, name, avatar, team }),
+    memberUids: f.fs.arrayUnion(user.uid),
+  });
+  await f.fs.setDoc(ref(f, 'classes', c.code, 'private', 'pins'), { [user.uid]: pinText(pin) }, { merge: true });
+  return { team: c.teams[team] };
 }
 
 // ---------- Abonnements temps réel ----------

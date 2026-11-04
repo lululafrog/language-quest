@@ -16,11 +16,22 @@ service cloud.firestore {
       allow update: if isOwner(code)
         || (isMember(code)
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['jar', 't0', 't1', 't2', 't3'])
-          && upBy('jar', 30) && upBy('t0', 30) && upBy('t1', 30) && upBy('t2', 30) && upBy('t3', 30));
+          && upBy('jar', 30) && upBy('t0', 30) && upBy('t1', 30) && upBy('t2', 30) && upBy('t3', 30))
+        // Inscription autonome : une élève s'ajoute elle-même, une seule fois, si la prof a ouvert les inscriptions.
+        || (signedIn() && resource.data.get('openJoin', false) == true
+          && !(request.auth.uid in resource.data.memberUids)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['roster', 'memberUids'])
+          && request.resource.data.memberUids.size() == resource.data.memberUids.size() + 1
+          && request.resource.data.memberUids.hasAll(resource.data.memberUids)
+          && request.auth.uid in request.resource.data.memberUids
+          && request.resource.data.roster.size() == resource.data.roster.size() + 1);
 
       match /players/{uid} {
         allow read: if isMember(code) || isOwner(code);
-        allow create, delete: if isOwner(code);
+        allow create: if isOwner(code)
+          || (signedIn() && request.auth.uid == uid && cls(code).get('openJoin', false) == true
+            && request.resource.data.stars == 0 && request.resource.data.team is int && request.resource.data.team < cls(code).teams.size());
+        allow delete: if isOwner(code);
         allow update: if isOwner(code)
           || (signedIn() && request.auth.uid == uid
             && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['name', 'team', 'rid'])
@@ -43,6 +54,8 @@ service cloud.firestore {
       // Codes emoji des élèves : seulement la prof.
       match /private/{doc} {
         allow read, write: if isOwner(code);
+        // Une élève inscrite enregistre son propre code (pour que la prof puisse l'aider si elle l'oublie).
+        allow update: if doc == 'pins' && isMember(code) && request.resource.data.diff(resource.data).affectedKeys().hasOnly([request.auth.uid]);
       }
     }
   }

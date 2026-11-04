@@ -797,3 +797,10 @@ body[data-universe="student"] { --accent: #8b5cf6; --accent-2: #ef6c4d; }
 .stk-big.on { animation: stk-wiggle 2.4s ease-in-out infinite; }
 @keyframes stk-pop { from { transform: scale(.6) rotate(-10deg); } 70% { transform: scale(1.1) rotate(4deg); } }
 @keyframes stk-wiggle { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg) scale(1.03); } }
+.av-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; max-width: 340px; }
+.av-grid button { font-size: 2.2rem; padding: .4rem 0; border: 3px solid transparent; border-radius: 16px; background: var(--card); box-shadow: var(--shadow); }
+.av-grid button.on { border-color: #8b5cf6; background: #f5f1ff; }
+#new-name { text-align: center; font-size: 1.6rem; max-width: 300px; }
+.join-card { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; border-left: 6px solid #e11d48; }
+.join-card.open { border-left-color: #22c55e; }
+.join-card .grow { min-width: 0; flex: 1 1 200px; }

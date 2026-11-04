@@ -24,7 +24,7 @@ function WordsCard() {
     <span class="muted small block">${all.length ? (due ? `${due} kata untuk diulang hari ini (to review today)` : 'Semua sudah diulang! (All reviewed!)') : 'Lagu & cerita rakyat Indonesia (Songs & Indonesian folk tales)'}</span></span><span class="go">▶</span></button>`;
 }
 import {
-  hasConfig, useAuth, getClass, studentSignIn, signOut, useDoc, usePlayers, useMyMatches, usePresence, isOnline,
+  hasConfig, useAuth, getClass, studentSignIn, selfJoin, signOut, useDoc, usePlayers, useMyMatches, usePresence, isOnline,
   awardStars, updateMe, bump, missionOf, MISSION, useStudent, createMatch, matchStep, matchResult, EMOJIS, AVATARS, STICKERS, STICKER_STEP,
 } from '../net/fb.js';
 
@@ -41,6 +41,7 @@ export function StudentLogin({ initial }) {
   const [pin, setPin] = useState([]);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  const [nw, setNw] = useState({ name: '', avatar: '🐢', pin: [], team: null });
 
   if (!hasConfig()) return html`<div class="page narrow"><h1>👧 Masuk murid (Student login)</h1><div class="card"><p>Kelas online belum aktif. (The online class is not active yet.)</p><p class="muted small">Tanya gurumu. (Ask your teacher.)</p></div>
     <button class="btn coral xl block" onClick=${() => go('/s/play')}>🎮 Main sekarang (Play now)</button></div>`;
@@ -71,8 +72,40 @@ export function StudentLogin({ initial }) {
     setBusy(false);
   };
 
+  // Inscription : prénom → avatar → code (deux fois) → bienvenue.
+  const BACK = { pin: 'name', name: 'code', newname: 'name', newavatar: 'newname', newpin: 'newavatar', newpin2: 'newpin' };
+  const tapNew = async (i) => {
+    setErr('');
+    if (step === 'newpin') {
+      const p = [...nw.pin, i];
+      setNw({ ...nw, pin: p });
+      if (p.length === 4) { setPin([]); setStep('newpin2'); }
+      return;
+    }
+    const p = [...pin, i];
+    setPin(p);
+    if (p.length < 4) return;
+    if (p.join() !== nw.pin.join()) { setErr('Kodenya berbeda. Coba lagi! (The codes don\'t match. Try again!)'); setPin([]); setNw({ ...nw, pin: [] }); setStep('newpin'); return; }
+    setBusy(true);
+    try {
+      const r = await selfJoin(cls.code, nw.name.trim(), p, nw.avatar);
+      setUiLang('id');
+      setNw({ ...nw, team: r.team });
+      setStep('welcome');
+    } catch (e2) {
+      setErr(e2.message === 'taken' ? 'Nama ini sudah ada. Tambahkan huruf, contoh: Siti A. (This name is taken. Add a letter, e.g. Siti A.)'
+        : e2.message === 'closed' ? 'Pendaftaran ditutup. Tanya gurumu. (Sign-up is closed. Ask your teacher.)'
+        : 'Gagal. Ada internet? Coba lagi. (It failed. Internet? Try again.)');
+      setPin([]); setNw({ ...nw, pin: [] }); setStep(e2.message === 'taken' ? 'newname' : 'newpin');
+    }
+    setBusy(false);
+  };
+  const pad = (cur, onTap) => html`
+    <div class="pin-slots">${[0, 1, 2, 3].map((k) => html`<span class=${cur[k] != null ? 'on' : ''}>${cur[k] != null ? EMOJIS[cur[k]] : ''}</span>`)}</div>
+    <div class="emoji-pad">${EMOJIS.map((e, i) => html`<button disabled=${busy} onClick=${() => onTap(i)}>${e}</button>`)}</div>`;
+
   return html`<div class="page narrow student-login">
-    ${step !== 'code' && html`<button class="btn ghost sm" onClick=${() => (step === 'pin' ? setStep('name') : setStep('code'))}>← Kembali (Back)</button>`}
+    ${BACK[step] && html`<button class="btn ghost sm" onClick=${() => { setErr(''); setPin([]); if (step === 'newpin2') setNw({ ...nw, pin: [] }); setStep(BACK[step] === 'newpin2' ? 'newpin' : BACK[step]); }}>← Kembali (Back)</button>`}
     ${step === 'code' && html`<form class="center-page" onSubmit=${findClass}>
       <div class="giant">🏫</div><h1>Halo! Masukkan kode kelas</h1><p class="muted">(Hello! Enter your class code)</p>
       <input id="class-code" class="input big code" value=${code} onInput=${(e) => setCode(e.target.value.toUpperCase())} maxlength="8" autocapitalize="characters" autocomplete="off" placeholder="ABC123" />
@@ -82,7 +115,30 @@ export function StudentLogin({ initial }) {
       <button type="button" class="btn link" onClick=${() => go('/guru')}>👩‍🏫 Guru (Teacher)</button></form>`}
     ${step === 'name' && html`<div class="center-page"><h1>Siapa namamu? (What's your name?)</h1><p class="muted">${cls.name}</p>
       <div class="name-grid">${[...cls.roster].sort((a, b) => a.name.localeCompare(b.name)).map((r) => html`<button class="name-btn" onClick=${() => { setWho(r); setPin([]); setStep('pin'); }}><span>${r.avatar}</span>${r.name}</button>`)}</div>
-      ${cls.roster.length === 0 && html`<p class="muted">Belum ada murid. Tanya gurumu! (No students yet. Ask your teacher!)</p>`}</div>`}
+      ${cls.roster.length === 0 && html`<p class="muted">${cls.openJoin ? 'Belum ada murid. Kamu yang pertama! (No students yet. You\'re the first!)' : 'Belum ada murid. Tanya gurumu! (No students yet. Ask your teacher!)'}</p>`}
+      ${cls.openJoin && html`<button class="btn coral xl" onClick=${() => { setErr(''); setStep('newname'); }}>✨ Aku murid baru (I'm new here)</button>
+        <p class="muted small">Belum ada namamu di atas? Daftar di sini! (Your name isn't above? Sign up here!)</p>`}</div>`}
+    ${step === 'newname' && html`<form class="center-page" onSubmit=${(e) => { e.preventDefault(); if (nw.name.trim().length >= 2) { setErr(''); setStep('newavatar'); } }}>
+      <div class="giant">✨</div><h1>Siapa namamu? (What's your name?)</h1>
+      <input id="new-name" class="input big" value=${nw.name} maxlength="20" autocomplete="off" placeholder="Siti" onInput=${(e) => setNw({ ...nw, name: e.target.value })} />
+      <button class="btn coral xl" disabled=${nw.name.trim().length < 2}>Lanjut (Next) →</button>
+      ${err && html`<p class="ko-text">${err}</p>`}</form>`}
+    ${step === 'newavatar' && html`<div class="center-page"><h1>Pilih hewanmu! (Choose your animal!)</h1>
+      <div class="giant">${nw.avatar}</div>
+      <div class="av-grid">${AVATARS.map((a) => html`<button class=${nw.avatar === a ? 'on' : ''} onClick=${() => setNw({ ...nw, avatar: a })}>${a}</button>`)}</div>
+      <button class="btn coral xl" onClick=${() => { setNw({ ...nw, pin: [] }); setStep('newpin'); }}>Lanjut (Next) →</button></div>`}
+    ${step === 'newpin' && html`<div class="center-page"><div class="giant">${nw.avatar}</div>
+      <h1>Buat kode rahasiamu (Make your secret code)</h1><p class="muted">Pilih 4 emoji dan ingat baik-baik! (Pick 4 emojis and remember them well!)</p>
+      ${pad(nw.pin, tapNew)}${err && html`<p class="ko-text">${err}</p>`}</div>`}
+    ${step === 'newpin2' && html`<div class="center-page"><div class="giant">${nw.avatar}</div>
+      <h1>Ulangi kodemu (Repeat your code)</h1><p class="muted">Supaya kamu ingat! (So you remember it!)</p>
+      ${pad(pin, tapNew)}${busy && html`<p class="muted">Membuat akunmu… (Creating your account…)</p>`}${err && html`<p class="ko-text">${err}</p>`}</div>`}
+    ${step === 'welcome' && html`<div class="center-page"><${Confetti} /><div class="giant">${nw.avatar}</div>
+      <h1>Selamat datang, ${nw.name}! (Welcome!)</h1>
+      ${nw.team && html`<p class="huge-ish" style=${`color:${nw.team.color}`}>${nw.team.icon} Tim ${nw.team.name}</p>`}
+      <p>Kode rahasiamu (Your secret code):</p><div class="pin-big">${nw.pin.map((i) => html`<span>${EMOJIS[i]}</span>`)}</div>
+      <p class="muted small">Ingat kodenya! Kamu perlu kode ini untuk masuk lagi. (Remember it! You need it to log in again.)</p>
+      <button class="btn coral xl" onClick=${() => go('/s')}>🏝️ Ayo mulai! (Let's start!)</button></div>`}
     ${step === 'pin' && html`<div class="center-page"><div class="giant">${who.avatar}</div><h1>Halo ${who.name}! Kode rahasiamu? (Your secret code?)</h1>
       <div class="pin-slots">${[0, 1, 2, 3].map((k) => html`<span class=${pin[k] != null ? 'on' : ''}>${pin[k] != null ? EMOJIS[pin[k]] : ''}</span>`)}</div>
       <div class="emoji-pad">${EMOJIS.map((e, i) => html`<button disabled=${busy} onClick=${() => tapEmoji(i)}>${e}</button>`)}</div>

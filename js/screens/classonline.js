@@ -81,6 +81,12 @@ function ClassAdmin({ code, onBack, email }) {
     <h1>🏫 ${c.name}</h1>
     <div class="hero-card teal"><div><small>Kode kelas (Class code)</small><div class="big-num code">${code}</div><span class="small">Murid mengetiknya sekali di HP mereka (Students type it once on their phone)</span></div></div>
 
+    <div class=${'card join-card' + (c.openJoin ? ' open' : '')}>
+      <div class="grow"><b>${c.openJoin ? '🟢 Pendaftaran terbuka (Sign-up open)' : '🔴 Pendaftaran ditutup (Sign-up closed)'}</b>
+        <span class="small muted block">${c.openJoin ? 'Murid bisa mendaftar sendiri dengan kode kelas. (Students can sign up themselves with the class code.)' : 'Hanya kamu yang bisa menambah murid. (Only you can add students.)'}</span></div>
+      <button class=${'btn sm ' + (c.openJoin ? 'ghost' : 'primary')} onClick=${() => updateClass(code, { openJoin: !c.openJoin })}>${c.openJoin ? 'Tutup (Close)' : 'Buka (Open)'}</button>
+    </div>
+
     <${ClassQR} code=${code} name=${c.name} />
 
     <h2>🫙 Toples bintang (Star jar)</h2>
