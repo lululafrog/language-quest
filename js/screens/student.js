@@ -9,6 +9,7 @@ import { duelQuestions } from './multiplayer.js';
 import { Scene } from './touch.js';
 import { setUiLang } from '../i18n.js';
 import { DailyCard, pathState } from './island.js';
+import { STICKER_ART } from '../data/stickers.js';
 import { isDue } from '../fsrs.js';
 import { useStore } from '../store.js';
 
@@ -229,7 +230,7 @@ export function StudentTeam() {
       <div class="card"><b>⭐ ${stars} bintang dari pulau (stars from the island)</b>
         <div class="jar small-jar"><i style=${`width:${((stars % STICKER_STEP) / STICKER_STEP) * 100}%`}></i><span>Stiker berikutnya (next sticker): ${stars % STICKER_STEP}/${STICKER_STEP}</span></div></div>
       <h2>📒 Album stikerku (My sticker album)</h2>
-      <div class="album">${STICKERS.map((st, i) => html`<span class=${i < got ? 'on' : ''}>${i < got ? st : '?'}</span>`)}</div>
+      <${StickerAlbum} got=${got} stars=${stars} />
       <p class="muted small">Selesaikan level di 🏝️ Pulau untuk mendapat bintang! (Finish levels on the 🏝️ Island to earn stars!)</p>
       <button class="btn ghost block" onClick=${() => go('/s/voice')}>🎙️ Pilih suara (Choose a voice)</button>
     </div>`;
@@ -241,7 +242,7 @@ export function StudentTeam() {
     <div class="card"><b>⭐ ${me.stars} bintang (stars)</b> · ${got} stiker · 🏆 ${me.wins || 0} menang (wins) / ⚔️ ${me.races || 0} tantangan (challenges)
       <div class="jar small-jar"><i style=${`width:${((me.stars % STICKER_STEP) / STICKER_STEP) * 100}%`}></i><span>Stiker berikutnya (next sticker): ${me.stars % STICKER_STEP}/${STICKER_STEP}</span></div></div>
     <h2>📒 Album stikerku (My sticker album)</h2>
-    <div class="album">${STICKERS.map((s, i) => html`<span class=${i < got ? 'on' : ''}>${i < got ? s : '?'}</span>`)}</div>
+    <${StickerAlbum} got=${got} stars=${me.stars} />
     <${ClassJar} cls=${cls} />
     <button class="btn ghost block" onClick=${() => go('/s/voice')}>🎙️ Pilih suara (Choose a voice)</button>
     <button class="btn ghost block" onClick=${async () => { await signOut(); setUiLang('fr'); go('/s/login'); }}>🚪 Keluar (Log out)</button>
@@ -396,4 +397,23 @@ function TouchQ({ scId, target, onAnswer }) {
     <${Scene} sc=${sc} marks=${marks} labels=${labels} onTap=${tap} />
     <p class="muted center small">🇮🇩 ${done ? sceneWords(sc)[target].id : '…'}</p>
   </div>`;
+}
+
+// Album : autocollants découpés ; les autres en silhouette. Toucher → la carte de l'autocollant.
+function StickerAlbum({ got, stars }) {
+  const [open, setOpen] = useState(null);
+  const k = open;
+  return html`<div class="album stickers">${STICKER_ART.map((st, i) => html`
+      <button class=${'stk' + (i < got ? ' on' : ' locked')} onClick=${() => setOpen(i)} aria-label=${st.en}>
+        <span class="stk-art" dangerouslySetInnerHTML=${{ __html: st.svg }}></span>
+        ${i >= got && html`<span class="stk-lock">${(i + 1) * STICKER_STEP}⭐</span>`}
+      </button>`)}</div>
+    ${k !== null && html`<div class="sheet-bg" onClick=${() => setOpen(null)}>
+      <div class="sheet stk-card" onClick=${(e) => e.stopPropagation()}>
+        <span class=${'stk-big' + (k < got ? ' on' : ' locked')} dangerouslySetInnerHTML=${{ __html: STICKER_ART[k].svg }}></span>
+        <b class="huge-ish">${k < got ? STICKER_ART[k].id : '???'}</b>
+        <span class="muted">${k < got ? `(${STICKER_ART[k].en})` : ''}</span>
+        <p>${k < got ? '🎉 Stiker ini milikmu! (This sticker is yours!)' : `🔒 ${(k + 1) * STICKER_STEP - stars} bintang lagi untuk membukanya! (${(k + 1) * STICKER_STEP - stars} more stars to unlock it!)`}</p>
+        <button class="btn primary block" onClick=${() => setOpen(null)}>OK</button>
+      </div></div>`}`;
 }
