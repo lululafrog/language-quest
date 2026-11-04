@@ -773,3 +773,11 @@ body[data-universe="student"] { --accent: #8b5cf6; --accent-2: #ef6c4d; }
 .voice-slider { display: flex; align-items: center; gap: .6rem; font-weight: 700; }
 .voice-slider input { flex: 1; }
 .voice-tip p { font-size: .9rem; }
+.me-card h1 { font-size: 1.25rem; line-height: 1.2; overflow-wrap: anywhere; }
+.me-card .grow span { display: block; }
+.invite { flex-wrap: wrap; }
+.invite .grow { flex: 1 1 160px; }
+.invite > .btn { margin-left: auto; white-space: nowrap; }
+.friend b { font-size: 1rem; }
+.friend .btn { flex: none; white-space: nowrap; }
+.friend .small { line-height: 1.35; }

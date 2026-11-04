@@ -165,7 +165,7 @@ export function StudentHome() {
     <div class="friends">${friends.map((p) => html`<div class="friend">
       <span class="av">${p.avatar}${isOnline(p) && html`<i class="dot-on"></i>`}</span>
       <span class="grow"><b>${p.name}</b><span class="small muted block">${isOnline(p) ? 'Online sekarang (Online now)' : `⭐ ${p.stars}`} · 🏝️ Level ${(p.pathLevel || 0) + 1}${p.pathStreak ? ` · 🔥 ${p.pathStreak}` : ''}</span></span>
-      <button class="btn primary sm" onClick=${() => go('/s/new/' + p.uid)}>⚔️ Tantang (Challenge)</button></div>`)}
+      <button class="btn primary sm" onClick=${() => go('/s/new/' + p.uid)}>⚔️ Tantang</button></div>`)}
       ${friends.length === 0 && html`<p class="muted">Teman-temanmu belum terdaftar. (Your friends are not registered yet.)</p>`}</div>
 
     ${waiting.length > 0 && html`<h3>⏳ Menunggu (Waiting)</h3>${waiting.map((m) => { const o = m.uids.find((u) => u !== uid); return html`<button class="todo" onClick=${() => go('/s/race/' + m.id)}><span class="todo-ic">${m.avatars[o]}</span><span class="grow"><b>${m.names[o]}</b><span class="muted small block">${m.title} · skormu (your score) ${m.p[uid].score}</span></span></button>`; })}`}
