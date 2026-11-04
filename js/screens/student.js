@@ -8,7 +8,7 @@ import { pictured } from '../gen.js';
 import { duelQuestions } from './multiplayer.js';
 import { Scene } from './touch.js';
 import { setUiLang } from '../i18n.js';
-import { DailyCard } from './island.js';
+import { DailyCard, pathState } from './island.js';
 import { isDue } from '../fsrs.js';
 import { useStore } from '../store.js';
 
@@ -214,7 +214,26 @@ export function StudentPlay() {
 
 // ---------- ÉQUIPE ET AUTOCOLLANTS ----------
 export function StudentTeam() {
-  const { cls, me } = useStudent();
+  const { auth, code, cls, me } = useStudent();
+  const local = useStore();
+  // Pas connectée : on explique la page et on montre l'album avec les étoiles de l'île.
+  if (!auth.loading && (!auth.user || !code)) {
+    const stars = pathState(local).stars;
+    const got = Math.floor(stars / STICKER_STEP);
+    return html`<div class="page narrow student">
+      <h1>🌟 Stiker & tim (Stickers & team)</h1>
+      <div class="card"><p><b>Di sini kamu melihat stikermu, timmu, dan toples bintang kelas.</b></p>
+        <p class="muted small">(Here you see your stickers, your team and the class star jar.)</p>
+        <p>👯 Masuk dengan kode kelas untuk bergabung dengan timmu! (Log in with your class code to join your team!)</p>
+        <button class="btn primary block" onClick=${() => go('/s/login')}>Masuk (Log in)</button></div>
+      <div class="card"><b>⭐ ${stars} bintang dari pulau (stars from the island)</b>
+        <div class="jar small-jar"><i style=${`width:${((stars % STICKER_STEP) / STICKER_STEP) * 100}%`}></i><span>Stiker berikutnya (next sticker): ${stars % STICKER_STEP}/${STICKER_STEP}</span></div></div>
+      <h2>📒 Album stikerku (My sticker album)</h2>
+      <div class="album">${STICKERS.map((st, i) => html`<span class=${i < got ? 'on' : ''}>${i < got ? st : '?'}</span>`)}</div>
+      <p class="muted small">Selesaikan level di 🏝️ Pulau untuk mendapat bintang! (Finish levels on the 🏝️ Island to earn stars!)</p>
+      <button class="btn ghost block" onClick=${() => go('/s/voice')}>🎙️ Pilih suara (Choose a voice)</button>
+    </div>`;
+  }
   if (!cls || !me) return html`<${Wait} />`;
   const got = Math.floor(me.stars / STICKER_STEP);
   return html`<div class="page narrow student">
