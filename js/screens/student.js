@@ -125,7 +125,7 @@ export function StudentBridge() {
 export function StudentHome() {
   const { auth, code, uid, cls, me } = useStudent();
   const players = usePlayers(cls ? code : null);
-  const matches = useMyMatches(cls ? code : null, uid);
+  const matches = useMyMatches(cls ? code : null, uid).filter((m) => m.p?.[uid] && m.uids?.includes(uid));
   const [pickAv, setPickAv] = useState(false);
   if (!auth.loading && (!auth.user || !code)) return html`<div class="page narrow student">
     <h1>Halo! 👋</h1>

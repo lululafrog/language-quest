@@ -179,6 +179,7 @@ export function usePlayers(code) {
 export function useMyMatches(code, uid) {
   const [v, setV] = useState([]);
   useEffect(() => {
+    setV([]);
     if (!code || !uid) return;
     let off = () => {};
     fb().then((f) => {
