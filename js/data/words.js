@@ -90,6 +90,19 @@ const CORE = {
   itsy: ['kecil sekali', 'de'], bitsy: ['kecil sekali', 'de'], putih: ['putih', 'de'], merah: ['merah', 'de'], lazy: ['malas', 'de'], nice: ['baik, menyenangkan', 'de'],
   full: ['penuh', 'de'], honest: ['jujur', 'de'], sticky: ['lengket', 'de'], stuck: ['menempel, tersangkut', 'de'], red: ['merah', 'de'],
   la: ['(bunyi lagu)', 'ot'], oh: ['oh, aduh', 'ot'], party: ['pesta', 'ot'], promise: ['janji', 'ot'], hello: ['halo', 'ot'],
+  // Ajouts : Gagak dan Rubah, Keong Mas, Lutung Kasarung
+  who: ['yang, siapa', 'sm'], than: ['daripada', 'sm'], under: ['di bawah', 'sm'], everyone: ['semua orang', 'sm'], "don't": ['jangan, tidak', 'sm'],
+  sing: ['bernyanyi', 'ac'], believe: ['percaya', 'ac'], hide: ['bersembunyi', 'ac'], stop: ['berhenti', 'ac'], send: ['mengirim, menyuruh pergi', 'ac'],
+  meet: ['bertemu', 'ac'], pray: ['berdoa', 'ac'], cook: ['memasak', 'ac'], watch: ['menonton, mengamati', 'ac'],
+  crow: ['burung gagak', 'an'], fox: ['rubah', 'an'], snail: ['keong, siput', 'an'], monkey: ['monyet, lutung', 'an'], lutung: ['lutung (monyet hitam)', 'an'],
+  beak: ['paruh', 'bo'], feather: ['bulu (burung)', 'bo'], voice: ['suara', 'bo'], heart: ['hati, jantung', 'bo'],
+  cheese: ['keju', 'fo'], food: ['makanan', 'fo'],
+  branch: ['dahan, cabang', 'na'], moon: ['bulan', 'na'], pool: ['kolam', 'na'],
+  piece: ['sepotong, bagian', 'pl'], jar: ['guci, toples', 'pl'], table: ['meja', 'pl'], thing: ['barang, hal', 'pl'],
+  witch: ['penyihir', 'fa'], candra: ['Candra (nama)', 'fa'], kirana: ['Kirana (nama)', 'fa'], purbasari: ['Purbasari (nama)', 'fa'], purbararang: ['Purbararang (nama)', 'fa'], kasarung: ['Kasarung (nama)', 'fa'],
+  shiny: ['berkilau', 'de'], lovely: ['indah, merdu', 'de'], proud: ['bangga', 'de'], jealous: ['iri', 'de'], bad: ['jahat, buruk', 'de'], delicious: ['enak, lezat', 'de'],
+  gentle: ['lembut', 'de'], handsome: ['tampan', 'de'], sorry: ['maaf', 'de'], good: ['baik', 'de'], black: ['hitam', 'de'], surprised: ['terkejut', 'de'],
+  song: ['lagu', 'ot'], caw: ['(suara gagak)', 'an'], magic: ['sihir', 'ot'], friend: ['teman', 'fa'],
   // Autres
   life: ['hidup, kehidupan', 'ot'], dream: ['mimpi', 'ot'], idea: ['ide', 'ot'], line: ['barisan, garis', 'ot'], name: ['nama', 'ot'],
   festival: ['festival, pesta', 'ot'], bau: ['Bau (menangkap, bahasa Sasak)', 'ot'], 'e-i-e-i-o': ['(bunyi lagu)', 'ot'],
@@ -99,7 +112,7 @@ const CORE = {
 const IRREG = {
   am: 'be', is: 'be', are: 'be', was: 'be', were: 'be', has: 'have', had: 'have', did: 'do', does: 'do', went: 'go', came: 'come',
   saw: 'see', said: 'say', says: 'say', gave: 'give', ran: 'run', threw: 'throw', grew: 'grow', became: 'become', could: 'can',
-  took: 'take', ate: 'eat', fell: 'fall', found: 'find', caught: 'catch', spoke: 'speak', sat: 'sit', made: 'make', put: 'put', children: 'child', people: 'people', women: 'woman', mice: 'mouse', feet: 'foot', teeth: 'tooth',
+  took: 'take', ate: 'eat', fell: 'fall', found: 'find', caught: 'catch', spoke: 'speak', sat: 'sit', made: 'make', put: 'put', hid: 'hide', sent: 'send', met: 'meet', children: 'child', people: 'people', women: 'woman', mice: 'mouse', feet: 'foot', teeth: 'tooth',
 };
 
 // Mots des leçons (domaine selon la leçon) et des 50 verbes.
@@ -127,7 +140,7 @@ export function lookup(raw) {
   if (w.endsWith('ied')) tries.push(w.slice(0, -3) + 'y');
   if (w.endsWith('s')) tries.push(w.slice(0, -1));
   if (w.endsWith('es')) tries.push(w.slice(0, -2));
-  if (w.endsWith('ed')) tries.push(w.slice(0, -2), w.slice(0, -1));
+  if (w.endsWith('ed')) tries.push(w.slice(0, -2), w.slice(0, -1), w.slice(0, -3));
   if (w.endsWith('ing')) tries.push(w.slice(0, -3), w.slice(0, -3) + 'e', w.slice(0, -4));
   if (w.endsWith('ly')) tries.push(w.slice(0, -2));
   const base = tries.find((t) => t && DICT[t]);
