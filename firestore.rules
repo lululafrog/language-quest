@@ -1,0 +1,43 @@
+rules_version = '2';
+// Language Quest : une classe = un document, avec ses élèves et ses défis.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function cls(code) { return get(/databases/$(database)/documents/classes/$(code)).data; }
+    function isOwner(code) { return signedIn() && cls(code).ownerUid == request.auth.uid; }
+    function isMember(code) { return signedIn() && request.auth.uid in cls(code).memberUids; }
+    function upBy(k, max) { return request.resource.data.get(k, 0) >= resource.data.get(k, 0) && request.resource.data.get(k, 0) <= resource.data.get(k, 0) + max; }
+
+    match /classes/{code} {
+      // Lisible avec le code de classe : nom de la classe, prénoms et avatars (pour choisir son prénom).
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
+      allow delete: if isOwner(code);
+      allow update: if isOwner(code)
+        || (isMember(code)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['jar', 't0', 't1', 't2', 't3'])
+          && upBy('jar', 30) && upBy('t0', 30) && upBy('t1', 30) && upBy('t2', 30) && upBy('t3', 30));
+
+      match /players/{uid} {
+        allow read: if isMember(code) || isOwner(code);
+        allow create, delete: if isOwner(code);
+        allow update: if isOwner(code)
+          || (signedIn() && request.auth.uid == uid
+            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['name', 'team', 'rid'])
+            && upBy('stars', 30));
+      }
+
+      match /matches/{mid} {
+        allow read: if isOwner(code) || (signedIn() && request.auth.uid in resource.data.uids);
+        allow create: if isMember(code) && request.resource.data.uids.size() == 2 && request.auth.uid == request.resource.data.uids[0];
+        allow update: if signedIn() && request.auth.uid in resource.data.uids && request.resource.data.uids == resource.data.uids;
+        allow delete: if isOwner(code);
+      }
+
+      // Codes emoji des élèves : seulement la prof.
+      match /private/{doc} {
+        allow read, write: if isOwner(code);
+      }
+    }
+  }
+}
