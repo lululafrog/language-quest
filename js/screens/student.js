@@ -9,6 +9,18 @@ import { duelQuestions } from './multiplayer.js';
 import { Scene } from './touch.js';
 import { setUiLang } from '../i18n.js';
 import { DailyCard } from './island.js';
+import { isDue } from '../fsrs.js';
+import { useStore } from '../store.js';
+
+// Raccourci « mots à revoir » sur l'accueil.
+function WordsCard() {
+  const s = useStore();
+  const all = Object.keys(s.wordbank || {});
+  const due = all.filter((w) => !s.cards['w:' + w] || isDue(s.cards['w:' + w])).length;
+  return html`<button class="todo words-cta" onClick=${() => go(all.length ? '/s/words' : '/s/read')}>
+    <span class="todo-ic">📚</span><span class="grow"><b>${all.length ? `Kata-kataku (My words) · ${all.length}` : 'Baca cerita (Read a story)'}</b>
+    <span class="muted small block">${all.length ? (due ? `${due} kata untuk diulang hari ini (to review today)` : 'Semua sudah diulang! (All reviewed!)') : 'Lagu & cerita rakyat Indonesia (Songs & Indonesian folk tales)'}</span></span><span class="go">▶</span></button>`;
+}
 import {
   hasConfig, useAuth, getClass, studentSignIn, signOut, useDoc, usePlayers, useMyMatches, usePresence, isOnline,
   awardStars, updateMe, bump, missionOf, MISSION, useStudent, createMatch, matchStep, matchResult, EMOJIS, AVATARS, STICKERS, STICKER_STEP,
@@ -79,7 +91,7 @@ export function StudentLogin({ initial }) {
 }
 
 // ---------- PONT : missions et étoiles ----------
-const REWARD = { photo: 1, touch: 2 };
+const REWARD = { photo: 1, touch: 2, read: 2, review: 1 };
 export function StudentBridge() {
   const { code, uid, me, cls } = useStudent();
   usePresence(code, uid);
@@ -115,6 +127,7 @@ export function StudentHome() {
   if (!auth.loading && (!auth.user || !code)) return html`<div class="page narrow student">
     <h1>Halo! 👋</h1>
     <${DailyCard} />
+    <${WordsCard} />
     <div class="card"><b>👯 ${'Masuk untuk main dengan teman! (Log in to play with friends!)'}</b>
       <p class="muted small">Tantang teman, kumpulkan bintang untuk timmu. (Challenge friends, collect stars for your team.)</p>
       <button class="btn primary block" onClick=${() => go('/s/login')}>Masuk (Log in)</button></div>
@@ -136,6 +149,7 @@ export function StudentHome() {
       <div class="me-stars"><b>⭐ ${me.stars}</b><small>${nextSticker} lagi → stiker baru (to a new sticker)</small></div>
     </div>
     <${DailyCard} />
+    <${WordsCard} />
     ${pickAv && html`<div class="card av-pick">${AVATARS.map((a) => html`<button onClick=${() => { updateMe(code, uid, { avatar: a }); setPickAv(false); }}>${a}</button>`)}</div>`}
 
     ${invites.map((m) => { const o = m.uids[0]; return html`<button class="invite" onClick=${() => go('/s/race/' + m.id)}>

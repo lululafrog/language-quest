@@ -1,0 +1,143 @@
+// Bibliothèque « Baca » : comptines anglaises du domaine public et légendes indonésiennes
+// réécrites en anglais simple (adaptations originales). Chaque ligne : [anglais, indonésien].
+
+export const TEXTS = [
+  {
+    id: 'twinkle', kind: 'song', level: 1, cover: '⭐', color: '#e6e1fb', title: 'Twinkle, Twinkle, Little Star', titleId: 'Bintang Kecil yang Berkelip',
+    lines: [
+      ['Twinkle, twinkle, little star,', 'Kelap-kelip, bintang kecil,'],
+      ['How I wonder what you are!', 'Aku ingin tahu, siapakah kamu!'],
+      ['Up above the world so high,', 'Jauh di atas dunia, tinggi sekali,'],
+      ['Like a diamond in the sky.', 'Seperti berlian di langit.'],
+      ['Twinkle, twinkle, little star,', 'Kelap-kelip, bintang kecil,'],
+      ['How I wonder what you are!', 'Aku ingin tahu, siapakah kamu!'],
+    ],
+  },
+  {
+    id: 'head', kind: 'song', level: 1, cover: '🙆‍♀️', color: '#ffe3ea', title: 'Head, Shoulders, Knees and Toes', titleId: 'Kepala, Pundak, Lutut, Kaki',
+    lines: [
+      ['Head, shoulders, knees and toes, knees and toes.', 'Kepala, pundak, lutut, jari kaki, lutut, jari kaki.'],
+      ['Head, shoulders, knees and toes, knees and toes.', 'Kepala, pundak, lutut, jari kaki, lutut, jari kaki.'],
+      ['And eyes and ears and mouth and nose.', 'Dan mata dan telinga dan mulut dan hidung.'],
+      ['Head, shoulders, knees and toes, knees and toes!', 'Kepala, pundak, lutut, jari kaki, lutut, jari kaki!'],
+    ],
+  },
+  {
+    id: 'row', kind: 'song', level: 1, cover: '🛶', color: '#dbf1fb', title: 'Row, Row, Row Your Boat', titleId: 'Dayung Perahumu',
+    lines: [
+      ['Row, row, row your boat', 'Dayung, dayung, dayung perahumu'],
+      ['Gently down the stream.', 'Pelan-pelan menyusuri sungai.'],
+      ['Merrily, merrily, merrily, merrily,', 'Gembira, gembira, gembira, gembira,'],
+      ['Life is but a dream.', 'Hidup hanyalah sebuah mimpi.'],
+    ],
+  },
+  {
+    id: 'mountain', kind: 'song', level: 1, cover: '🌋', color: '#e8f7d4', title: 'Up to the Mountain Top', titleId: 'Naik-Naik ke Puncak Gunung',
+    note: 'Lagu rakyat Indonesia, versi bahasa Inggris (Indonesian folk song, English version)',
+    lines: [
+      ['Up, up, to the mountain top,', 'Naik, naik, ke puncak gunung,'],
+      ['So high, so very high!', 'Tinggi, tinggi sekali!'],
+      ['On the left and on the right,', 'Kiri, kanan,'],
+      ['I see so many green trees.', 'Kulihat saja banyak pohon cemara.'],
+      ['Up, up, to the mountain top,', 'Naik, naik, ke puncak gunung,'],
+      ['So high, so very high!', 'Tinggi, tinggi sekali!'],
+    ],
+  },
+  {
+    id: 'farm', kind: 'song', level: 1, cover: '🐄', color: '#fff1cf', title: 'Old MacDonald Had a Farm', titleId: 'Pak MacDonald Punya Peternakan',
+    lines: [
+      ['Old MacDonald had a farm, E-I-E-I-O!', 'Pak MacDonald punya peternakan, E-I-E-I-O!'],
+      ['And on his farm he had a cow, E-I-E-I-O!', 'Dan di peternakannya ada seekor sapi, E-I-E-I-O!'],
+      ['With a moo moo here, and a moo moo there,', 'Dengan "moo moo" di sini, dan "moo moo" di sana,'],
+      ['Here a moo, there a moo, everywhere a moo moo!', 'Di sini "moo", di sana "moo", di mana-mana "moo moo"!'],
+      ['And on his farm he had a duck, E-I-E-I-O!', 'Dan di peternakannya ada seekor bebek, E-I-E-I-O!'],
+      ['With a quack quack here, and a quack quack there!', 'Dengan "kwek kwek" di sini, dan "kwek kwek" di sana!'],
+    ],
+  },
+  {
+    id: 'kancil', kind: 'story', level: 2, cover: '🦌', color: '#d9f2de', title: 'Kancil and the Crocodiles', titleId: 'Si Kancil dan Buaya',
+    lines: [
+      ['Kancil is a small mouse deer.', 'Kancil adalah seekor pelanduk kecil.'],
+      ['He lives in the forest.', 'Dia tinggal di hutan.'],
+      ['One day, Kancil is very hungry.', 'Suatu hari, Kancil sangat lapar.'],
+      ['He sees sweet fruits on the other side of the river.', 'Dia melihat buah-buahan manis di seberang sungai.'],
+      ['But the river is big, and there are many crocodiles!', 'Tetapi sungainya besar, dan ada banyak buaya!'],
+      ['Kancil has a clever idea.', 'Kancil punya ide yang cerdik.'],
+      ['"Crocodiles! The king wants to count you," he says.', '"Buaya! Raja ingin menghitung kalian," katanya.'],
+      ['"Please make a line across the river."', '"Tolong berbaris menyeberangi sungai."'],
+      ['The crocodiles make a long line.', 'Buaya-buaya membuat barisan yang panjang.'],
+      ['Kancil jumps on their backs: "One, two, three, four, five!"', 'Kancil melompat di punggung mereka: "Satu, dua, tiga, empat, lima!"'],
+      ['He jumps to the other side and eats the fruits.', 'Dia melompat ke seberang dan makan buah-buahan itu.'],
+      ['"Thank you, crocodiles!" Kancil laughs.', '"Terima kasih, buaya!" Kancil tertawa.'],
+      ['The crocodiles are angry, but Kancil is happy.', 'Buaya-buaya marah, tetapi Kancil senang.'],
+    ],
+  },
+  {
+    id: 'mandalika', kind: 'story', level: 2, cover: '🌊', color: '#fff1cf', title: 'Princess Mandalika', titleId: 'Putri Mandalika',
+    note: 'Legenda Lombok (A legend from Lombok)',
+    lines: [
+      ['A long time ago, a beautiful princess lived in Lombok.', 'Dahulu kala, seorang putri cantik tinggal di Lombok.'],
+      ['Her name was Mandalika.', 'Namanya Mandalika.'],
+      ['She was kind, smart and friendly.', 'Dia baik hati, pintar, dan ramah.'],
+      ['Many princes wanted to marry her.', 'Banyak pangeran ingin menikahinya.'],
+      ['But Mandalika did not want the princes to fight.', 'Tetapi Mandalika tidak ingin para pangeran berkelahi.'],
+      ['She went to the beach and looked at the sea.', 'Dia pergi ke pantai dan melihat laut.'],
+      ['"I love all the people of Lombok," she said.', '"Aku menyayangi semua orang Lombok," katanya.'],
+      ['Then she jumped into the sea and disappeared.', 'Lalu dia melompat ke laut dan menghilang.'],
+      ['The next morning, people saw many colorful sea worms.', 'Keesokan paginya, orang-orang melihat banyak cacing laut berwarna-warni.'],
+      ['They called them "nyale".', 'Mereka menyebutnya "nyale".'],
+      ['Every year, people go to the beach to look for nyale.', 'Setiap tahun, orang-orang pergi ke pantai untuk mencari nyale.'],
+      ['This is the Bau Nyale festival!', 'Inilah festival Bau Nyale!'],
+    ],
+  },
+  {
+    id: 'timun', kind: 'story', level: 2, cover: '🥒', color: '#e8f7d4', title: 'Timun Mas, the Golden Cucumber', titleId: 'Timun Mas',
+    lines: [
+      ['A kind woman wanted a child very much.', 'Seorang ibu yang baik sangat ingin punya anak.'],
+      ['A giant gave her a cucumber seed.', 'Seorang raksasa memberinya biji mentimun.'],
+      ['From a golden cucumber came a baby girl: Timun Mas!', 'Dari mentimun emas lahir seorang bayi perempuan: Timun Mas!'],
+      ['But the giant said, "When she is big, I will take her."', 'Tetapi raksasa berkata, "Kalau dia sudah besar, aku akan mengambilnya."'],
+      ['The mother was sad. She gave Timun Mas four little bags.', 'Ibunya sedih. Dia memberi Timun Mas empat kantong kecil.'],
+      ['One day, the giant came, and Timun Mas ran away.', 'Suatu hari, raksasa datang, dan Timun Mas lari.'],
+      ['She threw cucumber seeds: a big forest grew!', 'Dia melempar biji mentimun: hutan besar tumbuh!'],
+      ['She threw needles: tall bamboo grew!', 'Dia melempar jarum: bambu tinggi tumbuh!'],
+      ['She threw salt: a big sea came!', 'Dia melempar garam: laut besar muncul!'],
+      ['Then she threw shrimp paste: hot mud!', 'Lalu dia melempar terasi: lumpur panas!'],
+      ['The giant could not go on.', 'Raksasa tidak bisa melanjutkan.'],
+      ['Timun Mas went home to her mother, and they lived happily.', 'Timun Mas pulang ke ibunya, dan mereka hidup bahagia.'],
+    ],
+  },
+  {
+    id: 'malin', kind: 'story', level: 3, cover: '⛵', color: '#dde9fb', title: 'Malin Kundang', titleId: 'Malin Kundang',
+    lines: [
+      ['Malin lived with his mother near the sea.', 'Malin tinggal bersama ibunya di dekat laut.'],
+      ['They were poor, but they loved each other.', 'Mereka miskin, tetapi saling menyayangi.'],
+      ['One day, Malin went away on a big ship.', 'Suatu hari, Malin pergi dengan kapal besar.'],
+      ['Many years later, he was rich.', 'Bertahun-tahun kemudian, dia kaya.'],
+      ['He came back with a beautiful wife.', 'Dia kembali dengan istri yang cantik.'],
+      ['His old mother ran to the ship: "Malin, my son!"', 'Ibunya yang sudah tua berlari ke kapal: "Malin, anakku!"'],
+      ['But Malin said, "You are not my mother!"', 'Tetapi Malin berkata, "Kamu bukan ibuku!"'],
+      ['His mother cried and cried.', 'Ibunya menangis dan menangis.'],
+      ['A big storm came, and Malin became a stone.', 'Badai besar datang, dan Malin menjadi batu.'],
+      ['Remember: always love and respect your mother.', 'Ingat: selalu sayangi dan hormati ibumu.'],
+    ],
+  },
+  {
+    id: 'anjani', kind: 'story', level: 3, cover: '🧚‍♀️', color: '#f1e8e1', title: 'Dewi Anjani, Queen of Rinjani', titleId: 'Dewi Anjani, Ratu Rinjani',
+    note: 'Legenda Lombok (A legend from Lombok)',
+    lines: [
+      ['Rinjani is the big mountain of Lombok.', 'Rinjani adalah gunung besar di Lombok.'],
+      ['People say a queen lives on the mountain.', 'Orang bilang seorang ratu tinggal di gunung itu.'],
+      ['Her name is Dewi Anjani.', 'Namanya Dewi Anjani.'],
+      ['She is kind and very strong.', 'Dia baik hati dan sangat kuat.'],
+      ['She takes care of the forest, the animals and the lake.', 'Dia menjaga hutan, binatang, dan danau.'],
+      ['The lake on the mountain is blue and beautiful.', 'Danau di gunung itu biru dan indah.'],
+      ['When people climb Rinjani, they must be polite.', 'Kalau orang mendaki Rinjani, mereka harus sopan.'],
+      ['They must not throw rubbish.', 'Mereka tidak boleh membuang sampah.'],
+      ['Then Dewi Anjani is happy, and the mountain is safe.', 'Maka Dewi Anjani senang, dan gunung itu aman.'],
+      ['Let\'s take care of our island, too!', 'Ayo kita jaga pulau kita juga!'],
+    ],
+  },
+];
+
+export const TEXT_BY_ID = Object.fromEntries(TEXTS.map((t) => [t.id, t]));

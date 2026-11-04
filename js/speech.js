@@ -28,16 +28,16 @@ export function voiceFor(lang) {
 export const canSpeak = (lang) => !!voiceFor(lang);
 
 // Ne parle jamais avec une voix d'une autre langue : sans voix adaptée, on ne fait rien.
-export function speak(text, lang = 'id') {
+export function speak(text, lang = 'id', rate) {
   const v = voiceFor(lang);
   if (!v) return false;
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text.replace(/\.\.\.|…|___/g, ' '));
   u.voice = v;
   u.lang = v.lang;
-  u.rate = getState().settings.rate || 0.85;
+  u.rate = rate || getState().settings.rate || 0.85;
   speechSynthesis.speak(u);
-  return true;
+  return u;
 }
 
 const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;

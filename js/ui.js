@@ -27,9 +27,9 @@ export function AudioBtn({ text, lang = 'id', big = false }) {
   const ok = canSpeak(lang);
   const label = lang === 'id' ? 'indonésienne' : lang === 'en' ? 'anglaise' : 'française';
   return html`<button class=${'audio' + (big ? ' big' : '') + (ok ? '' : ' off')}
-    title=${ok ? 'Écouter' : `Aucune voix ${label} installée sur cet appareil (voir Réglages)`}
-    aria-label="Écouter"
-    onClick=${(e) => { e.stopPropagation(); if (!speak(text, lang)) notify(`Aucune voix ${label} n'est installée sur cet appareil.\nRéglages → « Voix » pour savoir comment l'ajouter.`); }}>🔊</button>`;
+    title=${ok ? T('Écouter', 'Dengar (Listen)') : T(`Aucune voix ${label} installée sur cet appareil (voir Réglages)`, 'Suara belum ada di HP ini (No voice on this phone)')}
+    aria-label="Listen"
+    onClick=${(e) => { e.stopPropagation(); if (!speak(text, lang)) notify(T(`Aucune voix ${label} n'est installée sur cet appareil.\nRéglages → « Voix » pour savoir comment l'ajouter.`, 'Suara bahasa Inggris belum ada di HP ini. (No English voice on this phone.)')); }}>🔊</button>`;
 }
 
 export function FavBtn({ id }) {

@@ -25,6 +25,8 @@ const defaults = () => ({
   },
   teams: null,
   path: { done: {}, days: {} },  // niveau -> étoiles ; jour -> niveaux finis
+  wordbank: {},  // mot (base) -> { id, d, src, line, added } : mots touchés en lisant
+  reads: {},     // texte -> date de lecture complète
   settings: { newPerDay: 10, rate: 0.85, unlockAll: false, showPron: true },
 });
 
@@ -163,6 +165,19 @@ export function importBackup(json) {
 }
 export function resetAll() {
   update(() => defaults());
+}
+
+export function saveWord(base, info) {
+  update((s) => {
+    s.wordbank = s.wordbank || {};
+    if (!s.wordbank[base]) s.wordbank[base] = { ...info, added: Date.now() };
+  });
+}
+export function removeWord(base) {
+  update((s) => { delete s.wordbank?.[base]; delete s.cards['w:' + base]; });
+}
+export function markRead(id) {
+  update((s) => { s.reads = s.reads || {}; s.reads[id] = today(); s.xp += 10; });
 }
 
 export function completeLevel(n, stars) {
