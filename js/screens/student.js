@@ -36,7 +36,8 @@ export function StudentLogin() {
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
 
-  if (!hasConfig()) return html`<div class="page narrow"><h1>👧 Masuk murid (Student login)</h1><div class="card"><p>Kelas online belum aktif. (The online class is not active yet.)</p><p class="muted small">Tanya gurumu. (Ask your teacher.)</p></div></div>`;
+  if (!hasConfig()) return html`<div class="page narrow"><h1>👧 Masuk murid (Student login)</h1><div class="card"><p>Kelas online belum aktif. (The online class is not active yet.)</p><p class="muted small">Tanya gurumu. (Ask your teacher.)</p></div>
+    <button class="btn coral xl block" onClick=${() => go('/s/play')}>🎮 Main sekarang (Play now)</button></div>`;
 
   const findClass = async (e) => {
     e.preventDefault(); setErr(''); setBusy(true);
