@@ -1,5 +1,5 @@
 // Service worker : tout est mis en cache pour fonctionner hors connexion.
-const CACHE = 'language-quest-v12';
+const CACHE = 'language-quest-v13';
 const ASSETS = [
   './',
   'icon-192.png',

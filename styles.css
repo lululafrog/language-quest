@@ -691,3 +691,35 @@ body[data-universe="student"] { --accent: #8b5cf6; --accent-2: #ef6c4d; }
 .landscape { position: absolute; inset: 0; pointer-events: none; }
 .landscape svg { width: 100%; height: 100%; display: block; }
 .zone-band .deco { z-index: 0; }
+
+/* ---------- Animations du paysage ---------- */
+.landscape svg [class^="a-"] { transform-box: fill-box; }
+.a-fly { animation: fly 22s linear infinite; }
+.a-flap { animation: flap .5s ease-in-out infinite alternate; transform-origin: center; }
+.a-float { animation: float 6s ease-in-out infinite; }
+.a-sway { animation: sway-l 4s ease-in-out infinite; transform-origin: 50% 100%; }
+.a-sway-s { animation: sway-l 3s ease-in-out infinite; transform-origin: 50% 0%; }
+.a-swing { animation: sway-l 2.4s ease-in-out infinite; transform-origin: 50% 0%; }
+.a-bob { animation: bob 2s ease-in-out infinite; }
+.a-rise { animation: rise 4s ease-out infinite; }
+.a-twinkle { animation: tw 2.4s ease-in-out infinite; }
+.a-wave { animation: wave 5s ease-in-out infinite; }
+.a-wave-r { animation: wave 6s ease-in-out infinite reverse; }
+.a-scuttle { animation: scuttle 5s ease-in-out infinite; }
+.a-waddle { animation: waddle 12s linear infinite; }
+.a-trot { animation: bob .6s ease-in-out infinite; }
+.a-jump { animation: jump 3s ease-in-out infinite; }
+.a-flow { animation: flow 1s linear infinite; }
+.a-glow { animation: tw 4s ease-in-out infinite; }
+@keyframes fly { from { transform: translateX(-220px); } to { transform: translateX(260px); } }
+@keyframes flap { to { transform: scaleX(.35); } }
+@keyframes float { 0%, 100% { transform: translate(0, 0); } 33% { transform: translate(14px, -10px); } 66% { transform: translate(-10px, 6px); } }
+@keyframes sway-l { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+@keyframes rise { from { transform: translateY(0) scale(.6); opacity: .8; } to { transform: translateY(-46px) scale(1.4); opacity: 0; } }
+@keyframes tw { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
+@keyframes wave { 0%, 100% { transform: translateX(-10px); } 50% { transform: translateX(10px); } }
+@keyframes scuttle { 0%, 100% { transform: translateX(-14px); } 50% { transform: translateX(14px); } }
+@keyframes waddle { from { transform: translateX(-60px); } to { transform: translateX(80px); } }
+@keyframes jump { 0%, 60%, 100% { transform: translateY(14px) rotate(20deg); opacity: 0; } 70% { opacity: 1; } 80% { transform: translateY(-22px) rotate(-10deg); opacity: 1; } 90% { transform: translateY(6px) rotate(30deg); opacity: 1; } }
+@keyframes flow { from { transform: translateY(0); } to { transform: translateY(260px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .landscape svg *, .deco, .mascot * { animation: none !important; } }

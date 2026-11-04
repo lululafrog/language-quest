@@ -1,6 +1,8 @@
 // Paysages de chaque zone de l'île, inspirés de Lombok. Un SVG par zone (viewBox 400 × 1060),
 // les éléments hauts restent sur les bords pour laisser le sentier lisible au centre.
-import { face } from './decor.js';
+import { face, ART } from './decor.js';
+
+const ART_FROG = ART.frog().replace(/^<svg[^>]*>|<\/svg>$/g, '').replace(/^/, '<g transform="translate(-50 -80)">') + '</g>';
 
 const W = 400, H = 1060;
 const g = (x, y, s, body, flip = false) => `<g transform="translate(${x} ${y}) scale(${flip ? -s : s} ${s})">${body}</g>`;
@@ -148,7 +150,91 @@ const SCENES = [
     ${edgeRow((x, y) => grass(x, y, 1.3, '#b5a37f'), [150, 300, 460, 620, 780])}`,
 ];
 
+// ---------- Détails animés (classes a-* dans styles.css) ----------
+const A = (cls, body) => `<g class="${cls}">${body}</g>`;
+const bird = (x, y, s = 1, c = '#5b6b7a', d = 0) => A('a-fly', g(x, y, s, `<g style="animation-delay:${d}s" class="a-flap"><path d="M-12,0 Q-6,-8 0,0 Q6,-8 12,0" stroke="${c}" stroke-width="3" fill="none" stroke-linecap="round"/></g>`));
+const butterfly = (x, y, s = 1, c = '#ff9eb0', d = 0) => A('a-float', g(x, y, s, `<g class="a-flap" style="animation-delay:${d}s"><ellipse cx="-7" cy="-4" rx="7" ry="9" fill="${c}"/><ellipse cx="7" cy="-4" rx="7" ry="9" fill="${c}"/><ellipse cx="-5" cy="6" rx="5" ry="6" fill="${c}" opacity=".8"/><ellipse cx="5" cy="6" rx="5" ry="6" fill="${c}" opacity=".8"/></g><rect x="-1.5" y="-10" width="3" height="20" rx="1.5" fill="#4a3428"/>`));
+const crab = (x, y, s = 1) => A('a-scuttle', g(x, y, s, `<ellipse cx="0" cy="-10" rx="16" ry="11" fill="#ff7a6b"/><path d="M-16,-12 C-26,-20 -28,-30 -20,-32 C-22,-26 -18,-22 -14,-18 M16,-12 C26,-20 28,-30 20,-32 C22,-26 18,-22 14,-18" stroke="#ff7a6b" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M-12,-2 L-18,4 M-6,0 L-10,6 M12,-2 L18,4 M6,0 L10,6" stroke="#ff7a6b" stroke-width="3" stroke-linecap="round"/>${face(0, -12, 14)}`));
+const islet = (x, y, w = 60) => `<path d="M${x - w / 2},${y} C${x - w / 4},${y - 22} ${x + w / 4},${y - 26} ${x + w / 2},${y} Z" fill="#9fdc9a"/><path d="M${x - w / 2 + 6},${y} L${x + w / 2 - 6},${y}" stroke="#fbe3b0" stroke-width="4"/>`;
+const footprints = (x, y, n = 6) => Array.from({ length: n }, (_, i) => `<ellipse cx="${x + (i % 2 ? 8 : -8) + Math.sin(i) * 6}" cy="${y - i * 26}" rx="4" ry="6" fill="#ecc98e"/>`).join('');
+const sandcastle = (x, y, s = 1) => g(x, y, s, `<rect x="-24" y="-20" width="48" height="20" fill="#f2cf8f"/><rect x="-14" y="-38" width="28" height="18" fill="#f2cf8f"/><path d="M-24,-20 l6,-6 l6,6 l6,-6 l6,6 l6,-6 l6,6 l6,-6 l6,6" fill="#f2cf8f"/><line x1="0" y1="-38" x2="0" y2="-54" stroke="#9a6a43" stroke-width="2"/><path d="M0,-54 L12,-50 L0,-46 Z" fill="#ff7a8a"/>`);
+const kite = (x, y, s = 1, c = '#ff7a8a') => A('a-sway', g(x, y, s, `<path d="M0,-30 L20,0 L0,30 L-20,0 Z" fill="${c}"/><path d="M0,-30 L0,30 M-20,0 L20,0" stroke="#fff" stroke-width="2"/><path d="M0,30 C10,50 -10,60 4,80 C14,94 0,104 6,120" stroke="#fff" stroke-width="2" fill="none"/>${[50, 70, 90].map((yy) => `<path d="M-4,${yy} l8,4 l-8,4 Z" fill="#ffd166"/>`).join('')}`));
+const laundry = (x1, x2, y) => `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y + 6}" stroke="#9a6a43" stroke-width="2"/>${Array.from({ length: 4 }, (_, i) => { const xx = x1 + 10 + i * ((x2 - x1 - 20) / 3); return `<g class="a-sway-s"><rect x="${xx - 8}" y="${y + 2}" width="16" height="${20 + (i % 2) * 8}" rx="3" fill="${['#ef6c4d', '#7cc6f2', '#ffd166', '#b48cf2'][i]}"/></g>`; }).join('')}`;
+const smoke = (x, y, s = 1) => g(x, y, s, [0, 1, 2].map((i) => `<circle class="a-rise" style="animation-delay:${i * 1.3}s" cx="0" cy="0" r="${6 + i * 2}" fill="#fff" opacity=".7"/>`).join(''));
+const goat = (x, y, s = 1, flip) => g(x, y, s, `<ellipse cx="0" cy="-16" rx="18" ry="11" fill="#f5efe6"/><rect x="-12" y="-8" width="4" height="10" fill="#d9cfc0"/><rect x="8" y="-8" width="4" height="10" fill="#d9cfc0"/><circle cx="18" cy="-26" r="8" fill="#f5efe6"/><path d="M14,-32 L10,-40 M20,-33 L22,-41" stroke="#b9a68c" stroke-width="3" stroke-linecap="round"/><path d="M18,-20 L18,-14" stroke="#d9cfc0" stroke-width="3"/>${face(19, -27, 8)}`, flip);
+const cat = (x, y, s = 1) => g(x, y, s, `<ellipse cx="0" cy="-10" rx="14" ry="10" fill="#ffb347"/><circle cx="0" cy="-26" r="10" fill="#ffb347"/><path d="M-8,-32 L-8,-40 L-2,-34 M8,-32 L8,-40 L2,-34" fill="#ffb347"/><path d="M14,-8 C24,-10 24,-24 18,-26" stroke="#ffb347" stroke-width="4" fill="none" stroke-linecap="round" class="a-sway-s"/>${face(0, -26, 10)}`);
+const swing = (x, y, s = 1) => g(x, y, s, `<path d="M-30,0 L-24,-60 L24,-60 L30,0" stroke="#9a6a43" stroke-width="5" fill="none"/><g class="a-swing"><line x1="-8" y1="-60" x2="-8" y2="-20" stroke="#8a5a3b" stroke-width="2"/><line x1="8" y1="-60" x2="8" y2="-20" stroke="#8a5a3b" stroke-width="2"/><rect x="-12" y="-22" width="24" height="5" rx="2" fill="#ef6c4d"/></g>`);
+const welcome = (x, y, s = 1) => g(x, y, s, `<rect x="-3" y="-30" width="6" height="30" fill="#9a6a43"/><rect x="-40" y="-62" width="80" height="34" rx="6" fill="#2f6b4f" stroke="#9a6a43" stroke-width="4"/><text x="0" y="-40" font-size="13" text-anchor="middle" fill="#fff" font-family="Comic Sans MS, Chalkboard, cursive">Welcome!</text>`);
+const scooter = (x, y, s = 1, c = '#7cc6f2', flip) => g(x, y, s, `<circle cx="-18" cy="-8" r="8" fill="#4a3428"/><circle cx="18" cy="-8" r="8" fill="#4a3428"/><circle cx="-18" cy="-8" r="3" fill="#ccc"/><circle cx="18" cy="-8" r="3" fill="#ccc"/><path d="M-26,-14 C-24,-28 6,-30 10,-16 L22,-16 L18,-34 L24,-36" fill="${c}" stroke="${c}" stroke-width="4" stroke-linejoin="round"/><rect x="-22" y="-28" width="20" height="5" rx="2" fill="#4a3428"/>`, flip);
+// Cidomo : la carriole à cheval de Lombok.
+const cidomo = (x, y, s = 1, flip) => g(x, y, s, `<g class="a-trot"><ellipse cx="44" cy="-30" rx="16" ry="10" fill="#b07a4f"/><rect x="34" y="-22" width="4" height="22" fill="#9a6a43"/><rect x="50" y="-22" width="4" height="22" fill="#9a6a43"/><path d="M56,-36 L64,-52 L72,-44 L64,-30 Z" fill="#b07a4f"/><path d="M62,-52 L60,-58" stroke="#b07a4f" stroke-width="3"/>${face(66, -44, 8)}</g>
+  <line x1="10" y1="-26" x2="34" y2="-30" stroke="#8a5a3b" stroke-width="3"/><rect x="-30" y="-36" width="44" height="20" rx="4" fill="#ffd166"/><path d="M-34,-36 Q-8,-66 18,-36 Z" fill="#ef6c4d"/>
+  <circle cx="-8" cy="-12" r="12" fill="none" stroke="#8a5a3b" stroke-width="4"/><path d="M-8,-24 L-8,0 M-20,-12 L4,-12" stroke="#8a5a3b" stroke-width="2"/>`, flip);
+const sack = (x, y, s = 1) => g(x, y, s, `<path d="M-14,0 C-18,-20 -12,-30 0,-30 C12,-30 18,-20 14,0 Z" fill="#e9dcc4"/><path d="M-6,-30 L0,-36 L6,-30" stroke="#c4b08c" stroke-width="3" fill="none"/><text x="0" y="-10" font-size="7" text-anchor="middle" fill="#9a6a43" font-family="sans-serif" font-weight="700">BERAS</text>`);
+const lantern = (x, y, c = '#ef6c4d') => `<g class="a-sway-s"><line x1="${x}" y1="${y - 14}" x2="${x}" y2="${y - 4}" stroke="#9a6a43"/><ellipse cx="${x}" cy="${y + 6}" rx="8" ry="11" fill="${c}"/><rect x="${x - 5}" y="${y - 6}" width="10" height="3" fill="#ffd166"/></g>`;
+const duckRow = (x, y, n = 4, s = 1) => A('a-waddle', g(x, y, s, Array.from({ length: n }, (_, i) => { const big = i === 0, k = big ? 1 : 0.6, dx = -i * 24; return `<g transform="translate(${dx} 0) scale(${k})"><ellipse cx="0" cy="-10" rx="12" ry="9" fill="${big ? '#fff' : '#ffe27a'}"/><circle cx="9" cy="-20" r="7" fill="${big ? '#fff' : '#ffe27a'}"/><path d="M15,-20 L22,-18 L15,-16 Z" fill="#ffb347"/><circle cx="10" cy="-21" r="1.5" fill="#4a3428"/></g>`; }).join('')));
+const dragonfly = (x, y, s = 1) => A('a-float', g(x, y, s, `<rect x="-1.5" y="-14" width="3" height="28" rx="1.5" fill="#4fa8de"/><g class="a-flap"><ellipse cx="-10" cy="-6" rx="10" ry="3" fill="#bfe7f5" opacity=".9"/><ellipse cx="10" cy="-6" rx="10" ry="3" fill="#bfe7f5" opacity=".9"/><ellipse cx="-9" cy="0" rx="8" ry="3" fill="#bfe7f5" opacity=".9"/><ellipse cx="9" cy="0" rx="8" ry="3" fill="#bfe7f5" opacity=".9"/></g>`));
+const scarecrow = (x, y, s = 1) => A('a-sway', g(x, y, s, `<line x1="0" y1="0" x2="0" y2="-70" stroke="#9a6a43" stroke-width="4"/><line x1="-24" y1="-48" x2="24" y2="-48" stroke="#9a6a43" stroke-width="4"/><rect x="-14" y="-56" width="28" height="26" rx="4" fill="#7cc6f2"/><circle cx="0" cy="-66" r="9" fill="#f2d2b0"/><path d="M-22,-68 L0,-84 L22,-68 Z" fill="#e7c06a"/>${face(0, -64, 9)}`));
+const vine = (x, y, len = 160) => `<path class="a-sway-s" d="M${x},${y} C${x + 10},${y + len / 3} ${x - 10},${y + (2 * len) / 3} ${x + 4},${y + len}" stroke="#4e9e4e" stroke-width="3" fill="none"/>${[0.25, 0.5, 0.75].map((t) => `<ellipse cx="${x + 6}" cy="${y + len * t}" rx="7" ry="4" fill="#6bbf6a"/>`).join('')}`;
+const fireflies = (n, x1, x2, y1, y2, seed) => Array.from({ length: n }, (_, i) => { const a = Math.sin((i + 3) * 91.7 * seed) * 999, b = Math.sin((i + 5) * 37.3 * seed) * 999; return `<circle class="a-twinkle" style="animation-delay:${(i % 5) * 0.6}s" cx="${x1 + (a - Math.floor(a)) * (x2 - x1)}" cy="${y1 + (b - Math.floor(b)) * (y2 - y1)}" r="3" fill="#fff6a8"/>`; }).join('');
+const rainbow = (x, y, r = 80) => `<g opacity=".55">${['#ff7a8a', '#ffb347', '#ffd166', '#7cc65c', '#7cc6f2', '#b48cf2'].map((c, i) => `<path d="M${x - r + i * 6},${y} A${r - i * 6},${r - i * 6} 0 0 1 ${x + r - i * 6},${y}" stroke="${c}" stroke-width="6" fill="none"/>`).join('')}</g>`;
+const lily = (x, y, s = 1, flower = false) => g(x, y, s, `<path d="M0,0 m-16,0 a16,8 0 1,0 32,0 a16,8 0 1,0 -32,0 M0,0 L14,-4" fill="#6bbf6a"/>${flower ? `<circle cx="-4" cy="-4" r="5" fill="#ffd3de"/>` : ''}`);
+const edelweiss = (x, y, s = 1) => g(x, y, s, `<line x1="0" y1="0" x2="0" y2="-16" stroke="#9fb39a" stroke-width="2"/>${[0, 45, 90, 135, 180, 225, 270, 315].map((a) => `<ellipse cx="0" cy="-26" rx="3" ry="8" fill="#f4f6f2" stroke="#dfe5dc" transform="rotate(${a} 0 -20)"/>`).join('')}<circle cx="0" cy="-20" r="4" fill="#e8e0a0"/>`);
+const backpack = (x, y, s = 1, c = '#ef6c4d') => g(x, y, s, `<rect x="-12" y="-30" width="24" height="30" rx="8" fill="${c}"/><rect x="-8" y="-16" width="16" height="10" rx="3" fill="#00000022"/><rect x="-10" y="-36" width="20" height="8" rx="4" fill="#4a3428"/>`);
+const thiefMonkey = (x, y, s = 1) => A('a-bob', g(x, y, s, `<circle cx="0" cy="-8" r="11" fill="#a8774e"/><circle cx="0" cy="-26" r="10" fill="#a8774e"/><ellipse cx="0" cy="-24" rx="6" ry="5" fill="#f2d2b0"/>${face(0, -26, 9)}<rect x="8" y="-16" width="14" height="10" rx="2" fill="#ffd166" transform="rotate(-15 15 -11)"/><text x="15" y="-9" font-size="5" text-anchor="middle" fill="#ef6c4d" font-family="sans-serif" transform="rotate(-15 15 -11)">MIE</text>`));
+const fishJump = (x, y, s = 1) => g(x, y, s, `<g class="a-jump"><path d="M-10,0 C-4,-8 8,-8 12,0 C8,8 -4,8 -10,0 Z M-10,0 L-18,-6 L-18,6 Z" fill="#ffb347"/><circle cx="6" cy="-1" r="1.5" fill="#4a3428"/></g><ellipse cx="0" cy="16" rx="14" ry="4" fill="none" stroke="#fff" stroke-width="2" opacity=".7"/>`);
+const rod = (x, y, s = 1) => g(x, y, s, `<line x1="0" y1="0" x2="50" y2="-50" stroke="#8a5a3b" stroke-width="3"/><path d="M50,-50 C60,-40 62,-10 60,6" stroke="#fff" stroke-width="1.5" fill="none"/><circle cx="60" cy="6" r="3" fill="#ef6c4d" class="a-bob"/>`);
+const sunrise = (x, y, r = 46) => `<g class="a-glow"><circle cx="${x}" cy="${y}" r="${r * 1.7}" fill="#ffe7a8" opacity=".5"/>${Array.from({ length: 9 }, (_, i) => { const a = Math.PI + (i * Math.PI) / 8; return `<line x1="${x + Math.cos(a) * r * 1.2}" y1="${y + Math.sin(a) * r * 1.2}" x2="${x + Math.cos(a) * r * 1.6}" y2="${y + Math.sin(a) * r * 1.6}" stroke="#ffc94a" stroke-width="5" stroke-linecap="round"/>`; }).join('')}</g><circle cx="${x}" cy="${y}" r="${r}" fill="#ffb347"/>${face(x, y - 6, r)}`;
+const summitSign = (x, y, s = 1) => g(x, y, s, `<rect x="-3" y="-50" width="6" height="50" fill="#9a6a43"/><rect x="-40" y="-70" width="80" height="26" rx="5" fill="#c49a63"/><text x="0" y="-52" font-size="12" text-anchor="middle" fill="#fff" font-family="sans-serif" font-weight="800">3.726 m</text>`);
+const pebbles = (n, x1, x2, y1, y2, seed, c = '#d9cfc0') => dots(n, x1, x2, y1, y2, c, 3, seed);
+const tufts = (list, c) => list.map(([x, y, s]) => grass(x, y, s || 1, c)).join('');
+
+const EXTRA = [
+  // Kuta
+  () => `${islet(300, 1010, 70)}${islet(360, 1030, 40)}
+    <g class="a-wave">${wavesLine(890, '#fff')}</g><g class="a-wave-r">${wavesLine(945, '#fff')}</g>
+    ${footprints(150, 850, 8)}${sandcastle(250, 820, 1)}${crab(320, 870, 0.9)}${crab(120, 640, 0.7)}
+    ${bird(120, 200, 1, '#fff', 0)}${bird(160, 230, 0.8, '#fff', 0.4)}${bird(260, 160, 0.9, '#fff', 0.8)}
+    ${dots(20, 20, 380, 620, 860, '#fff', 3, 7)}${flower(40, 560, 1.2, '#ffd3de')}${tufts([[80, 140], [330, 150], [120, 120]], '#6fbf55')}`,
+  // Desa Sasak
+  () => `${kite(300, 80, 1, '#ff7a8a')}${kite(110, 150, 0.7, '#7cc6f2')}${laundry(10, 120, 560)}${smoke(60, 220, 1)}${smoke(345, 545, 0.8)}
+    ${goat(320, 330, 1, true)}${cat(80, 890, 0.9)}${pebbles(30, 150, 250, 100, 1000, 8, '#e3c39c')}
+    ${tufts([[110, 400], [300, 460], [90, 700], [310, 860], [140, 980]], '#9ccf7a')}${butterfly(260, 260, 0.9, '#ffd166', 0)}${butterfly(140, 760, 0.8, '#ff9eb0', 0.5)}`,
+  // Sekolah
+  () => `${welcome(330, 480, 1)}${swing(60, 420, 1)}${backpack(110, 760, 1, '#7cc6f2')}${backpack(300, 330, 0.9, '#ff7a8a')}
+    ${butterfly(150, 210, 0.9, '#b48cf2', 0)}${butterfly(260, 860, 0.9, '#ffd166', 0.6)}${butterfly(320, 640, 0.7, '#ff9eb0', 0.3)}
+    ${bird(200, 120, 0.9, '#5b6b7a', 0)}${bird(230, 140, 0.7, '#5b6b7a', 0.5)}${Array.from({ length: 8 }, (_, i) => flower(20 + i * 50, 1040, 1.1, i % 2 ? '#fff' : '#ffd3de')).join('')}`,
+  // Pasar
+  () => `${cidomo(70, 1000, 0.8)}${scooter(300, 1040, 1, '#ff7a8a', true)}${scooter(60, 470, 0.9, '#7cc65c')}
+    ${sack(330, 300, 1.1)}${sack(355, 310, 0.9)}${sack(70, 860, 1)}
+    ${[60, 120, 180, 240, 300, 350].map((x, i) => lantern(x, 120 + (i % 2) * 10, ['#ef6c4d', '#ffd166', '#7cc6f2'][i % 3])).join('')}
+    ${cat(330, 700, 0.8)}${chicken(250, 960, 0.8)}${pebbles(20, 150, 260, 150, 1000, 9, '#f4c9d4')}`,
+  // Sawah
+  () => `${duckRow(200, 420, 4, 1)}${duckRow(280, 820, 3, 0.9)}${scarecrow(330, 600, 1)}${scarecrow(60, 300, 0.9)}
+    <path d="M0,700 C120,690 260,720 ${W},700" stroke="#8fd3ea" stroke-width="10" fill="none" opacity=".8"/>
+    ${dragonfly(120, 640, 1)}${dragonfly(300, 230, 0.9)}${bird(160, 100, 1, '#5b6b7a', 0)}${bird(200, 130, 0.8, '#5b6b7a', 0.4)}${butterfly(80, 980, 0.8, '#ffd166', 0.3)}`,
+  // Hutan
+  () => `${vine(110, 0, 180)}${vine(300, 0, 220)}${vine(70, 520, 150)}${vine(340, 600, 160)}${fireflies(18, 40, 360, 100, 1000, 3)}
+    ${butterfly(150, 300, 0.9, '#7cc6f2', 0)}${butterfly(260, 760, 0.9, '#ffb347', 0.4)}${pebbles(16, 140, 260, 300, 1000, 10, '#b7d9bd')}
+    ${mushroom(140, 980, 1.1)}${mushroom(270, 420, 1)}${bush(200, 1060, 1.4, '#6bbd7c')}`,
+  // Sendang Gile
+  () => `${rainbow(80, 360, 100)}<g class="a-flow">${[64, 74, 84, 92].map((x) => `<line x1="${x}" y1="60" x2="${x}" y2="90" stroke="#fff" stroke-width="4" stroke-linecap="round"/>`).join('')}</g>
+    ${fireflies(10, 30, 170, 360, 440, 4)}${lily(200, 640, 1, true)}${lily(250, 720, 0.9)}${lily(290, 900, 1, true)}${g(200, 636, 0.5, ART_FROG)}
+    ${bird(250, 140, 1, '#4fa8de', 0)}${dragonfly(300, 820, 0.9)}${butterfly(330, 420, 0.8, '#ff9eb0', 0.2)}${fern(170, 470, 1)}`,
+  // Pos Pendakian
+  () => `${Array.from({ length: 7 }, (_, i) => edelweiss(30 + (i % 2) * 330 + (i % 3) * 14, 170 + i * 130, 1.1)).join('')}
+    ${backpack(70, 430, 1, '#7cc65c')}${backpack(290, 600, 0.9, '#ffd166')}${thiefMonkey(95, 440, 1.1)}${thiefMonkey(300, 980, 0.9)}
+    ${smoke(140, 385, 0.8)}${bird(250, 120, 1.2, '#5b6b7a', 0)}${pebbles(24, 120, 280, 200, 1000, 11, '#c4ccd8')}`,
+  // Segara Anak
+  () => `${fishJump(150, 520, 1)}${fishJump(260, 680, 0.9)}${rod(330, 760, 1)}${smoke(358, 548, 1.1)}${smoke(60, 970, 0.9)}
+    ${lily(120, 640, 0.9)}${lily(280, 450, 0.8, true)}${duckRow(230, 600, 3, 0.8)}
+    ${tufts([[40, 400], [360, 380], [30, 760], [370, 820]], '#8fbf7a')}${bird(150, 150, 1, '#5b6b7a', 0)}${bird(190, 175, 0.8, '#5b6b7a', 0.4)}`,
+  // Puncak
+  () => `${sunrise(330, 160, 40)}${summitSign(70, 200, 1.1)}${Array.from({ length: 5 }, (_, i) => edelweiss(i % 2 ? 360 : 40, 300 + i * 130, 1)).join('')}
+    ${bird(150, 120, 1.4, '#5b6b7a', 0)}<g class="a-wave">${cloud(200, 900, 1.4)}</g><g class="a-wave-r">${cloud(80, 860, 1)}</g>${fireflies(10, 40, 360, 80, 700, 6)}`,
+];
+
 const cache = {};
 export function landscape(zi) {
-  return (cache[zi] ||= `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">${SCENES[zi]()}</svg>`);
+  return (cache[zi] ||= `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">${SCENES[zi]()}${EXTRA[zi]()}</svg>`);
 }
