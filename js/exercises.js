@@ -106,7 +106,7 @@ export function Translate({ ex, onDone }) {
   };
   return html`<form class="ex" onSubmit=${check}>
     <div class="ex-kind">${ex.kindLabel || T('Traduis en indonésien', B('Terjemahkan', 'Translate'))}</div>
-    <div class="ex-prompt">${ex.fr}</div>
+    <div class="ex-prompt">${ex.fr}${ex.audio && html` <${AudioBtn} text=${ex.audio.text} lang=${ex.audio.lang} />`}</div>
     <input class="input big" value=${val} onInput=${(e) => setVal(e.target.value)} disabled=${res != null}
       placeholder=${T('Écris ta réponse…', B('Tulis jawabanmu', 'Write your answer') + '…')} autocapitalize="off" autocomplete="off" spellcheck="false" />
     ${res == null

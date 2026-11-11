@@ -86,14 +86,12 @@ export function levelInfo(n) {
 }
 
 // ---------- Générateurs d'exercices ----------
-const pic = (w) => !w.abstract && w.emoji;
+// Pas d'émojis dans les questions du chemin : les enfants ne devinaient pas ce qu'ils représentaient.
 const short = (w) => /^[a-z]+$/i.test(w.en) && w.en.length <= 9;
-const sub = (w) => `🇮🇩 ${w.id}`;
+// Réponses indonésiennes acceptées : « saya / aku » → saya, aku ; « dia (perempuan) » → dia.
+const idAnswers = (w) => w.id.replace(/\([^)]*\)/g, '').split(/[\/,]/).map((a) => a.replace(/^\s*-/, '').trim()).filter(Boolean);
+const writableId = (w) => !w.id.includes('…') && idAnswers(w).every((a) => a.length <= 16);
 
-function mcqPic(w, pool) {
-  const opts = [w.en, ...distractors(pool.filter(pic).map((x) => x.en), w.en)];
-  return { kind: 'mcq', emoji: w.emoji, prompt: '', kindLabel: B('Apa ini?', 'What is it?'), options: opts, answer: w.en, why: `${w.en} = ${w.id}` };
-}
 function mcqId(w, pool) {
   return { kind: 'mcq', prompt: w.id, kindLabel: B('Bahasa Inggrisnya?', 'In English?'), options: [w.en, ...distractors(pool.map((x) => x.en), w.en)], answer: w.en, why: `${w.id} = ${w.en}` };
 }
@@ -101,13 +99,19 @@ function mcqEn(w, pool) {
   return { kind: 'mcq', prompt: w.en, audio: { text: w.en, lang: 'en' }, kindLabel: B('Artinya?', 'What does it mean?'), options: [w.id, ...distractors(pool.map((x) => x.id), w.id)], answer: w.id, why: `${w.en} = ${w.id}` };
 }
 function listen(w, pool) {
-  const usePic = pic(w) && pool.filter(pic).length >= 4;
-  const key = (x) => (usePic ? x.emoji : x.id);
-  return { kind: 'listen', prompt: '', audio: { text: w.en, lang: 'en' }, options: [key(w), ...distractors(pool.filter((x) => !usePic || pic(x)).map(key), key(w))], answer: key(w), why: `${w.en} = ${w.id}` };
+  return { kind: 'listen', prompt: '', audio: { text: w.en, lang: 'en' }, options: [w.id, ...distractors(pool.map((x) => x.id), w.id)], answer: w.id, why: `${w.en} = ${w.id}` };
 }
-const spell = (w) => ({ kind: 'translate', kindLabel: B('Tulis dalam bahasa Inggris', 'Write in English'), fr: `${pic(w) ? w.emoji + ' ' : ''}${w.id}`, a: [w.en] });
-const recog = (w, pool) => (pic(w) ? mcqPic(w, pool) : mcqId(w, pool));
-const matchOf = (words) => ({ kind: 'match', pairs: words.slice(0, 5).map((w) => [w.en, pic(w) ? w.emoji : w.id]), big: words.slice(0, 5).every(pic) });
+// Écrire le mot : de l'indonésien vers l'anglais, et l'inverse.
+const spell = (w) => ({ kind: 'translate', kindLabel: B('Tulis dalam bahasa Inggris', 'Write in English'), fr: w.id, a: [w.en] });
+const spellId = (w) => ({ kind: 'translate', kindLabel: B('Tulis dalam bahasa Indonesia', 'Write in Indonesian'), fr: w.en, audio: { text: w.en, lang: 'en' }, a: idAnswers(w) });
+// Un mot à écrire dans chaque sens, si possible deux mots différents.
+const writeBoth = (ws) => {
+  const en = ws.find(short);
+  const id = ws.find((w) => writableId(w) && w !== en) || ws.find(writableId);
+  return [...(en ? [spell(en)] : []), ...(id ? [spellId(id)] : [])];
+};
+const recog = mcqId;
+const matchOf = (words) => ({ kind: 'match', pairs: words.slice(0, 5).map((w) => [w.en, w.id]) });
 const mix = (w, pool, i) => [recog, mcqEn, listen, mcqId][i % 4](w, pool);
 const micOk = () => typeof window !== 'undefined' && !!getState().settings.mic && !!(window.SpeechRecognition || window.webkitSpeechRecognition) && window.top === window;
 const say = (w) => ({ kind: 'say', w });
@@ -115,16 +119,16 @@ const say = (w) => ({ kind: 'say', w });
 function lessonExercises(zone) {
   const L = EN_BY_ID[zone.grammar];
   return (L?.exercises || []).map((e) => (e.type === 'fill'
-    ? { kind: 'fill', s: e.s, opts: e.opts, a: e.a, why: `🇮🇩 ${e.why.id} (${e.why.en})` }
-    : { kind: 'build', a: e.a, fr: '🇮🇩 ' + e.id }));
+    ? { kind: 'fill', s: e.s, opts: e.opts, a: e.a, why: `${e.why.id} (${e.why.en})` }
+    : { kind: 'build', a: e.a, fr: e.id }));
 }
 function sentenceItems(zone, n) {
   const all = zone.lessons.flatMap((id) => EN_BY_ID[id]?.sentences || []);
-  return sample(all, n).map((s) => ({ kind: 'build', a: s.en.replace(/[.!?]$/, ''), fr: '🇮🇩 ' + s.id }));
+  return sample(all, n).map((s) => ({ kind: 'build', a: s.en.replace(/[.!?]$/, ''), fr: s.id }));
 }
 function drill(zone, n) {
   if (!zone.drill) return [];
-  return duelQuestions(zone.drill, n).map((q) => ({ kind: 'mcq', emoji: q.emoji, prompt: q.prompt, options: q.options, answer: q.a, kindLabel: B('Kata kerja', 'Verbs') }));
+  return duelQuestions(zone.drill, n).map((q) => ({ kind: 'mcq', prompt: q.prompt, options: q.options, answer: q.a, kindLabel: B('Kata kerja', 'Verbs') }));
 }
 function touchItems(zone, known, n) {
   const ids = [zone.scene, zone.scene2].filter(Boolean);
@@ -146,14 +150,13 @@ export function buildLevel(n) {
     items.push(...chunk.map((w) => ({ kind: 'intro', w })));
     items.push(...shuffle(chunk).map((w, i) => mix(w, pool, i)));
     if (chunk.length >= 3) items.push(matchOf(shuffle(chunk)));
-    const sp = chunk.filter(short);
-    if (sp.length) items.push(spell(sp[0]));
+    items.push(...writeBoth(shuffle(chunk)));
     if (micOk()) items.push(say(chunk[chunk.length - 1]));
     const old = known.filter((w) => !chunk.includes(w)).concat(sample(prevZones, 2));
     items.push(...sample(old, chunk.length < 3 ? 5 : 2).map((w, i) => mix(w, pool, i + 1)));
   } else if (type === 'practice') {
     const ws = sample(known.length >= 4 ? known : pool, 8);
-    items = [matchOf(ws.slice(0, 4)), ...ws.slice(0, 6).map((w, i) => mix(w, pool, i)), ...ws.filter(short).slice(0, 2).map(spell), ...drill(zone, 2)];
+    items = [matchOf(ws.slice(0, 4)), ...ws.slice(0, 6).map((w, i) => mix(w, pool, i)), ...writeBoth(ws), ...drill(zone, 2)];
   } else if (type === 'touch') {
     items = [...touchItems(zone, known, 7), ...sample(known, 2).map((w) => recog(w, pool))];
   } else if (type === 'grammar') {
@@ -162,12 +165,12 @@ export function buildLevel(n) {
     items = [...sentenceItems(zone, 4), ...sample(known, 4).map((w, i) => mix(w, pool, i + 2))];
   } else if (type === 'review') {
     const ws = sample(zoneWords, 10);
-    items = [...ws.slice(0, 6).map((w, i) => mix(w, pool, i)), ...ws.filter(short).slice(0, 3).map(spell), ...drill(zone, 2), ...sample(lessonExercises(zone), 1), ...(micOk() ? [say(ws[0])] : [])];
+    items = [...ws.slice(0, 6).map((w, i) => mix(w, pool, i)), ...writeBoth(ws), ...writeBoth(ws.slice().reverse()), ...drill(zone, 2), ...sample(lessonExercises(zone), 1), ...(micOk() ? [say(ws[0])] : [])];
   } else {
     // Gerbang : un peu de tout. Au sommet : révision de toute l'île.
     const big = zone.final ? [...prevZones, ...zoneWords] : zoneWords;
     const ws = sample(big, 9);
-    items = [...ws.slice(0, 6).map((w, i) => mix(w, big, i)), ...ws.filter(short).slice(0, 2).map(spell), ...sample(lessonExercises(zone), 2), ...drill(zone, 2)];
+    items = [...ws.slice(0, 6).map((w, i) => mix(w, big, i)), ...writeBoth(ws), ...sample(lessonExercises(zone), 2), ...drill(zone, 2)];
   }
   // Les intros restent en tête ; le reste est mélangé légèrement.
   const intros = items.filter((x) => x.kind === 'intro' || x.kind === 'rule');

@@ -136,10 +136,9 @@ function Intro({ ex, onDone }) {
   useEffect(() => { speak(w.en, 'en'); }, [w]);
   return html`<div class="ex intro-card">
     <div class="ex-kind">✨ ${B('Kata baru', 'New word')}</div>
-    ${!w.abstract && html`<div class="intro-emoji">${w.emoji}</div>`}
     <div class="intro-en">${w.en} <${AudioBtn} text=${w.en} lang="en" /></div>
     ${w.forms && html`<div class="muted">${w.forms}</div>`}
-    <div class="intro-id">🇮🇩 ${w.id}</div>
+    <div class="intro-id">${w.id}</div>
     <button class="btn primary lg block" autofocus onClick=${() => onDone(null)}>${B('Lanjut', 'Next')} →</button>
   </div>`;
 }
