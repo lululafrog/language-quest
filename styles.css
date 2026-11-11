@@ -826,3 +826,31 @@ body[data-universe="student"] { --accent: #8b5cf6; --accent-2: #ef6c4d; }
 .say-recap { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 .say-recap span { background: #fff; border-radius: 99px; padding: .25rem .7rem; box-shadow: var(--shadow); font-weight: 700; }
 .say-recap span { color: var(--ink); }
+
+/* Puzzle : une pièce gagnée par bonne réponse */
+.pz-album { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; margin: .8rem 0; }
+.pz-tile { background: #fff; border: 0; border-radius: 18px; padding: .5rem; box-shadow: var(--shadow); display: grid; justify-items: center; gap: .2rem; }
+.pz-tile small { font-weight: 700; font-size: .72rem; }
+.pz-thumb { width: 64px; height: 64px; display: block; }
+.pz-thumb svg { width: 100%; height: 100%; }
+.pz-tile:not(.done) .pz-thumb { filter: blur(5px) grayscale(.4); opacity: .55; }
+.pz-tile.locked { opacity: .5; }
+.pz-tile.done { outline: 3px solid var(--ok); }
+.pz-page { max-width: 460px; }
+.pz-board { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); width: min(100%, 300px); aspect-ratio: 1; margin: 0 auto 1rem; background: #fff; border-radius: 20px; box-shadow: var(--shadow); overflow: hidden; }
+.pz-ghost { position: absolute; inset: 0; opacity: .12; filter: grayscale(1); pointer-events: none; }
+.pz-ghost svg { width: 100%; height: 100%; display: block; }
+.pz-slot { position: relative; border: 1px dashed rgba(31, 42, 55, .18); background: transparent; padding: 0; transition: transform .2s; }
+.pz-slot.filled { border: 0; animation: pz-in .35s ease-out; }
+.pz-slot.target { background: rgba(255, 122, 89, .08); cursor: pointer; }
+.pz-slot.shake { animation: shake .35s; background: rgba(225, 29, 72, .18); }
+.pz-slot.hint { animation: pz-blink 1s infinite; }
+.pz-board.complete .pz-slot { border: 0; }
+.pz-board.complete { animation: pz-in .5s ease-out; }
+.pz-piece { width: 84px; height: 84px; flex-shrink: 0; border-radius: 14px; box-shadow: var(--shadow); background-color: #fff; display: block; animation: pz-in .35s ease-out; }
+.pz-piece.locked { width: 44px; height: 44px; background: repeating-linear-gradient(45deg, #ffe3d8, #ffe3d8 6px, #fff 6px, #fff 12px); animation: none; }
+.pz-hold { display: flex; align-items: center; gap: 1rem; background: #fff; border-radius: 20px; padding: 1rem; box-shadow: var(--shadow); }
+.pz-ask-head { display: flex; align-items: center; gap: .6rem; margin-bottom: .4rem; }
+@keyframes pz-in { from { transform: scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes pz-blink { 50% { background: rgba(22, 163, 74, .3); } }
+@media (prefers-reduced-motion: reduce) { .pz-slot, .pz-piece, .pz-board { animation: none !important; } }

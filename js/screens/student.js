@@ -250,6 +250,7 @@ export function StudentPlay() {
   return html`<div class="page narrow student">
     <h1>🎮 Main (Play)</h1>
     <div class="game-grid">
+      ${tile('🧩', 'Puzzle', 'Jawab bahasa Inggris, dapat potongan (Answer in English, win a piece)', '/s/puzzle')}
       ${tile('👆', 'Touch it!', 'Sentuh tangan, hidung, pintu… (Touch the hand, the nose…)', '/games/touch')}
       ${tile('📸', 'Foto 5 kata', 'Foto benda di sekitarmu (Photo things around you)', '/photo')}
       ${tile('🃏', 'Kartu foto', 'Gambar → kata bahasa Inggris (Picture → English word)', '/photo/cards')}

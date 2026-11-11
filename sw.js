@@ -1,5 +1,5 @@
 // Service worker : tout est mis en cache pour fonctionner hors connexion.
-const CACHE = 'language-quest-v30';
+const CACHE = 'language-quest-v31';
 const ASSETS = [
   './',
   'icon-192.png',
@@ -38,6 +38,7 @@ const ASSETS = [
   'js/screens/learn.js',
   'js/screens/multiplayer.js',
   'js/screens/photo.js',
+  'js/screens/puzzle.js',
   'js/screens/read.js',
   'js/screens/say.js',
   'js/screens/student.js',

@@ -14,6 +14,7 @@ import { IslandMap, LevelPlay } from './screens/island.js';
 import { Library, Reader, MyWords, WordReview } from './screens/read.js';
 import { VoiceScreen } from './screens/voice.js';
 import { SayGame } from './screens/say.js';
+import { PuzzleHome, PuzzlePlay } from './screens/puzzle.js';
 import { useStore } from './store.js';
 import { deckStats } from './cards.js';
 import { go } from './ui.js';
@@ -83,6 +84,7 @@ function route(path) {
       if (p[1] === 'read') return { el: p[2] ? html`<${Reader} key=${p[2]} id=${p[2]} />` : html`<${Library} />` };
       if (p[1] === 'words') return { el: p[2] === 'review' ? html`<${WordReview} />` : html`<${MyWords} />` };
       if (p[1] === 'say') return { el: html`<${SayGame} />` };
+      if (p[1] === 'puzzle') return p[2] ? { el: html`<${PuzzlePlay} key=${p[2]} arg=${p[2]} />`, bare: true } : { el: html`<${PuzzleHome} />` };
       if (p[1] === 'voice') return { el: html`<${VoiceScreen} />` };
       if (p[1] === 'island') return { el: html`<${IslandMap} />` };
       if (p[1] === 'level') return { el: html`<${LevelPlay} key=${p[2]} n=${p[2]} />`, bare: true };
