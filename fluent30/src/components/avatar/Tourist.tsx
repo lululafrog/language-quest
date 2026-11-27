@@ -3,10 +3,13 @@ import { useId, type ReactNode } from "react";
 import { SHOP_BY_ID, type Spec } from "@/lib/data/shop";
 import type { Appearance, AvatarSlot } from "@/lib/types";
 
-const O = "#2E2A6B"; // outline ink
-const W = 2.4; // outline width
+const O = "#3A3352"; // soft outline ink
+const W = 1.9; // outline width
+// The head is drawn in its own coordinate space, then scaled down onto the neck (more human proportions).
+const HEAD_T = "translate(100 94) scale(0.78) translate(-100 -108)";
+const FACE = "M62 62 Q62 24 100 24 Q138 24 138 62 Q138 86 126 98 Q114 108 100 108 Q86 108 74 98 Q62 86 62 62Z";
 
-export const DEFAULT_APPEARANCE: Appearance = { skin: "#F9CFA8", hair: "short", hairColor: "#6B4226", eyes: "round", beard: false };
+export const DEFAULT_APPEARANCE: Appearance = { skin: "#F9CFA8", hair: "short", hairColor: "#6B4226", eyes: "round", eyeColor: "#5D4037", beard: false };
 
 type Equipped = Partial<Record<AvatarSlot, string>>;
 
@@ -50,24 +53,30 @@ export function Tourist({ equipped = {}, appearance, className, animate = true, 
         {renderBackground(bg, uid)}
         <ellipse cx="100" cy="226" rx="50" ry="7" fill="#000" opacity="0.13" />
         <g className={animate ? "tourist-bob" : undefined}>
+          <g transform="translate(0 -10)">
           {bag?.k === "backpack" && backpackBack(bag)}
           {hand?.k === "suitcase" && handItem(hand)}
           {hand?.k === "umbrella" && handItem(hand)}
-          {hairBack(a)}
+          <g transform={HEAD_T}>{hairBack(a)}</g>
+          </g>
+          {/* longer legs: stretched from the ground up */}
+          <g transform="translate(0 214) scale(1 1.22) translate(0 -214)">
           {/* legs */}
-          <Limb d={LEG_L} w={17} color={a.skin} />
-          <Limb d={LEG_R} w={17} color={a.skin} />
+          <Limb d={LEG_L} w={15} color={a.skin} />
+          <Limb d={LEG_R} w={15} color={a.skin} />
           {!dress && renderBottom(bottom ?? { k: "shorts", c: "#7AA6C2" }, ctx)}
+          </g>
           {renderShoes(shoes ?? { k: "sneakers", c: "#FFFFFF", c2: "#CFCCFF" })}
+          <g transform="translate(0 -10)">
           {dress?.k === "dressLong" && renderDress(dress, ctx)}
           {/* arms */}
-          <Limb d={ARM_L} w={16} color={a.skin} />
-          <Limb d={ARM_R} w={16} color={a.skin} />
+          <Limb d={ARM_L} w={13} color={a.skin} />
+          <Limb d={ARM_R} w={13} color={a.skin} />
           <path d="M64 124 Q59 136 57 150" stroke="#fff" strokeWidth="2.5" opacity="0.28" fill="none" strokeLinecap="round" />
           {sleeveColor && !longSleeves && (
             <>
-              <Limb d={SLEEVE_L} w={21} color={sleeveColor} />
-              <Limb d={SLEEVE_R} w={21} color={sleeveColor} />
+              <Limb d={SLEEVE_L} w={18} color={sleeveColor} />
+              <Limb d={SLEEVE_R} w={18} color={sleeveColor} />
             </>
           )}
           {dress ? (dress.k !== "dressLong" ? renderDress(dress, ctx) : null) : renderTop(topSpec, ctx)}
@@ -78,16 +87,22 @@ export function Tourist({ equipped = {}, appearance, className, animate = true, 
           {bag?.k === "backpack" && <path d="M80 104 L82 150 M120 104 L118 150" stroke={shade(bag.c ?? "#FF7043", -0.35)} strokeWidth={6} strokeLinecap="round" />}
           {hand?.k === "duck" && handItem(hand)}
           {neck && renderNeck(neck)}
-          {/* head */}
-          <rect x="91" y="94" width="18" height="16" rx="6" fill={ctx.skinShade} />
-          <circle cx="62" cy="70" r="8.5" fill={`url(#${uid}skin)`} stroke={O} strokeWidth={W} />
-          <circle cx="138" cy="70" r="8.5" fill={`url(#${uid}skin)`} stroke={O} strokeWidth={W} />
-          <ellipse cx="100" cy="66" rx="38" ry="36" fill={`url(#${uid}skin)`} stroke={O} strokeWidth={W} />
-          {renderFace(a, face, ctx)}
-          {hairFront(a)}
-          {glasses && renderGlasses(glasses)}
-          {hat && renderHat(hat, ctx)}
+          {/* neck + head */}
+          <path d="M91 84 L109 84 L110 104 Q100 110 90 104Z" fill={a.skin} stroke={O} strokeWidth={W} />
+          <path d="M91 92 Q100 100 109 92 L109 98 Q100 104 91 98Z" fill={ctx.skinShade} opacity="0.7" />
+          <g transform={HEAD_T}>
+            <ellipse cx="61" cy="70" rx="8" ry="11" fill={a.skin} stroke={O} strokeWidth={W} />
+            <ellipse cx="139" cy="70" rx="8" ry="11" fill={a.skin} stroke={O} strokeWidth={W} />
+            <path d="M60 65 Q57 70 61 76 M140 65 Q143 70 139 76" stroke={ctx.skinShade} strokeWidth="2" fill="none" strokeLinecap="round" />
+            <path d={FACE} fill={`url(#${uid}skin)`} stroke={O} strokeWidth={W} />
+            <path d="M126 44 Q138 62 132 84 Q126 98 112 104 Q130 86 126 44Z" fill="#000" opacity="0.06" />
+            {renderFace(a, face, ctx)}
+            {hairFront(a)}
+            {glasses && renderGlasses(glasses)}
+            {hat && renderHat(hat, ctx)}
+          </g>
           {hand && !["suitcase", "duck", "umbrella"].includes(hand.k) && handItem(hand)}
+          </g>
         </g>
       </g>
     </svg>
@@ -153,8 +168,8 @@ function Hand({ cx, cy, flip, skin }: { cx: number; cy: number; flip?: boolean; 
   const tx = flip ? -1 : 1;
   return (
     <g>
-      <ellipse cx={cx + 5.5 * tx} cy={cy - 3} rx="3.6" ry="5" fill={skin} stroke={O} strokeWidth={2} transform={`rotate(${-30 * tx} ${cx + 5.5 * tx} ${cy - 3})`} />
-      <circle cx={cx} cy={cy} r="8.5" fill={skin} stroke={O} strokeWidth={W} />
+      <ellipse cx={cx + 4.6 * tx} cy={cy - 2.5} rx="3" ry="4.4" fill={skin} stroke={O} strokeWidth={1.6} transform={`rotate(${-30 * tx} ${cx + 4.6 * tx} ${cy - 2.5})`} />
+      <ellipse cx={cx} cy={cy} rx="6.6" ry="7.6" fill={skin} stroke={O} strokeWidth={W} />
       <path d={`M${cx - 3 * tx} ${cy + 3} Q${cx} ${cy + 5} ${cx + 3 * tx} ${cy + 3}`} stroke={shade(skin, -0.2)} strokeWidth="1.4" fill="none" strokeLinecap="round" />
     </g>
   );
@@ -166,7 +181,7 @@ function hairBack(a: Appearance): ReactNode {
   const s = { fill: c, stroke: O, strokeWidth: W, strokeLinejoin: "round" as const };
   switch (a.hair) {
     case "long":
-      return <path d="M58 64 Q54 22 100 22 Q146 22 142 64 L148 136 Q134 146 124 132 L76 132 Q66 146 52 136Z" {...s} />;
+      return <path d="M58 64 Q54 22 100 22 Q146 22 142 64 L150 156 Q134 168 122 150 L78 150 Q66 168 50 156Z" {...s} />;
     case "bob":
       return <path d="M58 62 Q56 24 100 23 Q144 24 142 62 L144 96 Q132 104 124 94 L76 94 Q68 104 56 96Z" {...s} />;
     case "ponytail":
@@ -219,47 +234,54 @@ function hairFront(a: Appearance): ReactNode {
 
 // ---------------- face ----------------
 function renderFace(a: Appearance, face: Spec | undefined, ctx: Ctx): ReactNode {
-  const brow = shade(a.hairColor === "#F2F2F2" ? "#9E9E9E" : a.hairColor, -0.25);
+  const browC = shade(a.hairColor === "#F2F2F2" ? "#9E9E9E" : a.hairColor, -0.3);
+  const iris = a.eyeColor ?? "#5D4037";
+  const lip = shade("#D9727C", a.skin < "#B0" ? -0.25 : 0);
+  const eye = (cx: number) => (
+    <g key={cx}>
+      <path d={`M${cx - 9} 68 Q${cx} 59 ${cx + 9} 68 Q${cx} 74 ${cx - 9} 68Z`} fill="#FFFFFF" stroke={O} strokeWidth="1.4" />
+      <circle cx={cx} cy="67.5" r="4.6" fill={iris} />
+      <circle cx={cx} cy="67.5" r="2.2" fill="#1B1426" />
+      <circle cx={cx + 1.6} cy="65.8" r="1.4" fill="#fff" />
+      <path d={`M${cx - 9.5} 67.5 Q${cx} 57.5 ${cx + 9.5} 67.5`} stroke="#2A2238" strokeWidth="2.6" fill="none" strokeLinecap="round" />
+      {a.eyes === "lashes" && <path d={`M${cx + (cx < 100 ? -9 : 9)} 66 l${cx < 100 ? -3 : 3} -3 M${cx + (cx < 100 ? -6 : 6)} 62.5 l${cx < 100 ? -2 : 2} -3`} stroke="#2A2238" strokeWidth="1.6" strokeLinecap="round" />}
+      <path d={`M${cx - 7} 72 Q${cx} 75 ${cx + 7} 72`} stroke={ctx.skinShade} strokeWidth="1.2" fill="none" opacity="0.8" />
+    </g>
+  );
   return (
     <>
-      {face?.k === "sunburn" && <ellipse cx="100" cy="66" rx="36" ry="34" fill="#FF5A4A" opacity="0.28" />}
-      <ellipse cx="78" cy="82" rx="7" ry="4.2" fill="#FF8A8A" opacity="0.45" />
-      <ellipse cx="122" cy="82" rx="7" ry="4.2" fill="#FF8A8A" opacity="0.45" />
-      {face?.k === "tanline" && <><ellipse cx="86" cy="69" rx="11" ry="9" fill="#fff" opacity="0.55" /><ellipse cx="114" cy="69" rx="11" ry="9" fill="#fff" opacity="0.55" /></>}
-      {face?.k === "zinc" && <><path d="M95 72 L105 72 L103 82 L97 82Z" fill="#fff" /><path d="M70 80 Q78 76 84 82" stroke="#fff" strokeWidth={5} strokeLinecap="round" fill="none" /><path d="M116 82 Q122 76 130 80" stroke="#fff" strokeWidth={5} strokeLinecap="round" fill="none" /></>}
-      {/* brows */}
-      <path d="M79 58 Q86 54 92 57" stroke={brow} strokeWidth="2.6" fill="none" strokeLinecap="round" />
-      <path d="M108 57 Q114 54 121 58" stroke={brow} strokeWidth="2.6" fill="none" strokeLinecap="round" />
+      {face?.k === "sunburn" && <path d={FACE} fill="#FF5A4A" opacity="0.25" />}
+      <ellipse cx="76" cy="84" rx="8" ry="4.5" fill="#FF7F7F" opacity="0.28" />
+      <ellipse cx="124" cy="84" rx="8" ry="4.5" fill="#FF7F7F" opacity="0.28" />
+      {face?.k === "tanline" && <><ellipse cx="85" cy="67" rx="13" ry="10" fill="#fff" opacity="0.45" /><ellipse cx="115" cy="67" rx="13" ry="10" fill="#fff" opacity="0.45" /></>}
+      {face?.k === "zinc" && <><path d="M96 74 L104 74 L103 86 L97 86Z" fill="#fff" /><path d="M68 82 Q76 78 82 84" stroke="#fff" strokeWidth={5} strokeLinecap="round" fill="none" /><path d="M118 84 Q124 78 132 82" stroke="#fff" strokeWidth={5} strokeLinecap="round" fill="none" /></>}
+      {/* eyebrows: tapered */}
+      <path d="M74 55 Q84 49 94 53 Q84 52 75 57Z" fill={browC} stroke={browC} strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M126 55 Q116 49 106 53 Q116 52 125 57Z" fill={browC} stroke={browC} strokeWidth="1.6" strokeLinejoin="round" />
       {/* eyes */}
       {a.eyes === "happy" ? (
         <>
-          <path d="M80 70 Q86 63 92 70" stroke={O} strokeWidth="3" fill="none" strokeLinecap="round" />
-          <path d="M108 70 Q114 63 120 70" stroke={O} strokeWidth="3" fill="none" strokeLinecap="round" />
+          <path d="M76 68 Q85 60 94 68" stroke="#2A2238" strokeWidth="2.8" fill="none" strokeLinecap="round" />
+          <path d="M106 68 Q115 60 124 68" stroke="#2A2238" strokeWidth="2.8" fill="none" strokeLinecap="round" />
         </>
       ) : (
-        <>
-          <ellipse cx="86" cy="69" rx="5" ry="6" fill={O} />
-          <ellipse cx="114" cy="69" rx="5" ry="6" fill={O} />
-          <circle cx="87.8" cy="66.6" r="1.9" fill="#fff" />
-          <circle cx="115.8" cy="66.6" r="1.9" fill="#fff" />
-          <circle cx="84.6" cy="71.4" r="0.9" fill="#fff" />
-          <circle cx="112.6" cy="71.4" r="0.9" fill="#fff" />
-          {a.eyes === "lashes" && <path d="M80 64 L77 61 M82 62 L80 58 M120 64 L123 61 M118 62 L120 58" stroke={O} strokeWidth="1.8" strokeLinecap="round" />}
-        </>
+        <>{eye(85)}{eye(115)}</>
       )}
       {/* nose */}
-      <path d="M97 77 Q100 80.5 103 77" stroke={ctx.skinShade} strokeWidth="2.2" fill="none" strokeLinecap="round" />
-      {a.beard && <path d="M64 72 Q66 106 100 108 Q134 106 136 72 Q130 92 114 92 Q100 97 86 92 Q70 92 64 72Z" fill={a.hairColor} stroke={O} strokeWidth={W} strokeLinejoin="round" />}
+      <path d="M101 70 Q99 79 96 84 Q99 87.5 104 86" stroke={ctx.skinShade} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <ellipse cx="103" cy="83" rx="3" ry="1.8" fill={ctx.skinShade} opacity="0.35" />
+      {a.beard && <path d="M64 76 Q66 104 100 110 Q134 104 136 76 Q130 96 114 96 Q100 101 86 96 Q70 96 64 76Z" fill={a.hairColor} stroke={O} strokeWidth={W} strokeLinejoin="round" />}
       {/* mouth */}
       {face?.k === "moustache" ? (
         <>
-          <path d="M100 84 Q90 78 82 84 Q76 90 70 84 Q74 94 86 92 Q96 90 100 86 Q104 90 114 92 Q126 94 130 84 Q124 90 118 84 Q110 78 100 84Z" fill="#4A2C18" stroke={O} strokeWidth={1.5} />
-          <path d="M94 96 Q100 99 106 96" stroke={O} strokeWidth={2} fill="none" strokeLinecap="round" />
+          <path d="M100 89 Q90 83 82 89 Q76 95 70 89 Q74 99 86 97 Q96 95 100 91 Q104 95 114 97 Q126 99 130 89 Q124 95 118 89 Q110 83 100 89Z" fill="#4A2C18" stroke={O} strokeWidth={1.4} />
+          <path d="M92 99 Q100 102 108 99" stroke={lip} strokeWidth={2.4} fill="none" strokeLinecap="round" />
         </>
       ) : (
         <>
-          <path d="M90 86 Q100 99 110 86 Q100 90 90 86Z" fill="#8A2B3A" stroke={O} strokeWidth="1.8" strokeLinejoin="round" />
-          <ellipse cx="100" cy="93" rx="4" ry="2.2" fill="#FF8FA3" />
+          <path d="M87 92 Q100 104 113 92 Q100 96 87 92Z" fill={lip} stroke={shade(lip, -0.3)} strokeWidth="1.3" strokeLinejoin="round" />
+          <path d="M90 93.2 Q100 98 110 93.2 Q100 95.4 90 93.2Z" fill="#FFFFFF" />
+          <path d="M94 101 Q100 102.5 106 101" stroke="#fff" strokeWidth="1.2" opacity="0.4" fill="none" strokeLinecap="round" />
         </>
       )}
     </>
@@ -302,10 +324,10 @@ function renderOuter(sp: Spec, ctx: Ctx): ReactNode {
   const dark = shade(c, -0.25);
   const sleeves = (col: string) => (
     <>
-      <Limb d="M74 110 Q61 124 57 140 Q55 150 55 156" w={20} color={col} />
-      <Limb d="M126 110 Q139 124 143 140 Q145 150 145 156" w={20} color={col} />
-      <Limb d="M55 153 L55 157" w={20} color={shade(col, -0.18)} outline={false} />
-      <Limb d="M145 153 L145 157" w={20} color={shade(col, -0.18)} outline={false} />
+      <Limb d="M74 110 Q61 124 57 140 Q55 150 55 156" w={17} color={col} />
+      <Limb d="M126 110 Q139 124 143 140 Q145 150 145 156" w={17} color={col} />
+      <Limb d="M55 153 L55 157" w={17} color={shade(col, -0.18)} outline={false} />
+      <Limb d="M145 153 L145 157" w={17} color={shade(col, -0.18)} outline={false} />
     </>
   );
   switch (sp.k) {

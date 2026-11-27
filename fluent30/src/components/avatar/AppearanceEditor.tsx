@@ -1,5 +1,5 @@
 "use client";
-import { EYES, HAIR_COLORS, HAIR_STYLES, SKIN_TONES } from "@/lib/data/shop";
+import { EYE_COLORS, EYES, HAIR_COLORS, HAIR_STYLES, SKIN_TONES } from "@/lib/data/shop";
 import { useT } from "@/hooks/useT";
 import { Toggle, cx } from "@/components/ui";
 import type { Appearance } from "@/lib/types";
@@ -39,6 +39,14 @@ export function AppearanceEditor({ value, onChange }: { value: Appearance; onCha
         <div className="flex flex-wrap gap-1.5">
           {EYES.map((e) => (
             <button key={e.id} onClick={() => set({ eyes: e.id })} className={cx("rounded-full border px-3 py-1.5 text-sm", value.eyes === e.id ? "border-ink-500 bg-ink-600 text-white" : "border-line bg-surface")}>{t(e.fr, e.en)}</button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p className="mb-2 text-sm font-medium">{t("Couleur des yeux", "Eye colour")}</p>
+        <div className="flex flex-wrap gap-2">
+          {EYE_COLORS.map((c) => (
+            <button key={c} onClick={() => set({ eyeColor: c })} aria-label={c} className={cx("h-8 w-8 rounded-full border-2 transition", (value.eyeColor ?? EYE_COLORS[0]) === c ? "scale-110 border-ink-600 ring-2 ring-ink-300" : "border-white shadow")} style={{ background: c }} />
           ))}
         </div>
       </div>

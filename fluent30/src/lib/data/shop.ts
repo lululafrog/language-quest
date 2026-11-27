@@ -201,6 +201,7 @@ export const HAIR_STYLES: { id: import("../types").Appearance["hair"]; fr: strin
   { id: "afro", fr: "Afro", en: "Afro" },
   { id: "bald", fr: "Chauve", en: "Bald" },
 ];
+export const EYE_COLORS = ["#5D4037", "#8D6E3F", "#4E7D46", "#3F7FBF", "#7A8A99", "#2B1B12"];
 export const EYES: { id: import("../types").Appearance["eyes"]; fr: string; en: string }[] = [
   { id: "round", fr: "Ronds", en: "Round" },
   { id: "happy", fr: "Rieurs", en: "Smiling" },

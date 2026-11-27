@@ -284,5 +284,6 @@ export interface Appearance {
   hair: "short" | "long" | "bun" | "curly" | "ponytail" | "afro" | "buzz" | "bob" | "bald";
   hairColor: string;
   eyes: "round" | "happy" | "lashes";
+  eyeColor?: string;
   beard: boolean;
 }
