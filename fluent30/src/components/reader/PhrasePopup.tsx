@@ -81,7 +81,7 @@ export function PhrasePopup({ text, context, kind, onClose }: { text: string; co
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-muted">{t("Traduction automatique", "Machine translation")}</p>
             {free ? <p className="mt-0.5 text-lg font-semibold">{free}</p> : freeErr ? <ErrorNote>{freeErr}</ErrorNote> : <p className="flex items-center gap-2 text-sm text-muted"><Spinner className="h-4 w-4" /> {t("Traduction…", "Translating…")}</p>}
-            <p className="mt-1 text-xs text-muted">{t("Traduction gratuite (MyMemory), hors contexte et limitée par jour. Avec une clé IA (ANTHROPIC_API_KEY), la traduction est fidèle au contexte et expliquée.", "Free machine translation, limited per day. Add an AI key for contextual translations.")}</p>
+            <p className="mt-1 text-xs text-muted">{t("Traduction automatique simple (MyMemory), sans tenir compte du contexte et limitée par jour.", "Simple machine translation (MyMemory), without context, limited per day.")}</p>
           </div>
         )}
         {!!err && !notConfigured && <ErrorNote>{errorMessage(err)}</ErrorNote>}

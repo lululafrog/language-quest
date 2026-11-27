@@ -111,7 +111,7 @@ export default function PostcardPage() {
           <Button variant="secondary" onClick={correct} loading={busy} disabled={!text.trim()}>Corriger</Button>
           <Button onClick={() => save(text)} disabled={draft === null}>Enregistrer</Button>
         </div>
-        {err && (err.nc ? <ServiceNotice service="La correction" envVar="ANTHROPIC_API_KEY" /> : <ErrorNote>{err.msg}</ErrorNote>)}
+        {err && (err.nc ? <ServiceNotice service="La correction" alternative="Ta carte reste enregistrée avec ton message tel quel." /> : <ErrorNote>{err.msg}</ErrorNote>)}
         {fix && (
           <div className="space-y-2 rounded-2xl bg-surface-2 p-3 text-sm">
             {fix.isAlreadyCorrect ? <p className="font-semibold text-mint-600">Ton message est correct.</p> : <p><span className="font-semibold">Corrigé :</span> {fix.corrected}</p>}

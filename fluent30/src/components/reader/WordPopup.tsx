@@ -200,7 +200,7 @@ export function WordPopup({ word, sentence, onClose, properNoun, bookTitle }: { 
         </div>
 
         {aiLoading && <p className="flex items-center gap-2 text-sm text-muted"><Spinner className="h-4 w-4" /> {t("Analyse du contexte…", "Analysing context…")}</p>}
-        {status && !status.ai && <p className="text-xs text-muted">💡 {t("Avec une clé IA (ANTHROPIC_API_KEY), la traduction s'adapte au sens exact de la phrase.", "With an AI key, the translation adapts to the sentence.")}</p>}
+        {status && !status.ai && <p className="text-xs text-muted">{t("Traduction générale du mot : la traduction adaptée à la phrase est momentanément indisponible.", "General translation: contextual translation is unavailable for now.")}</p>}
         {aiError && !(aiError instanceof ApiError && aiError.notConfigured) && <ErrorNote>{errorMessage(aiError)}</ErrorNote>}
 
         {ai?.isPartOfExpression && (

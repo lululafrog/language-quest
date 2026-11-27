@@ -26,7 +26,7 @@ export function LevelSheet({ book, current, onPick, onClose }: { book: Book; cur
         ) : (
           <>
             <p className="text-sm text-muted">{t("Une version adaptée garde l'intrigue, les personnages et les dialogues, avec une langue plus simple. Vous pouvez changer de niveau à tout moment sans perdre votre progression.", "Adapted versions keep the plot; switch any time.")}</p>
-            {status && !status.ai && <ServiceNotice service={t("L'adaptation de niveau", "Level adaptation")} envVar="ANTHROPIC_API_KEY" />}
+            {status && !status.ai && <ServiceNotice service={t("L'adaptation de niveau", "Level adaptation")} alternative={"Tu peux lire la version originale avec l'aide à la traduction des mots."} />}
             <div className="grid gap-2">
               <button onClick={() => onPick(null)} className={cx("rounded-xl border-2 px-3 py-2.5 text-left", !current ? "border-ink-500 bg-ink-50 dark:bg-ink-900/50" : "border-line")}>
                 <span className="font-semibold">{t("Version originale", "Original")}</span>

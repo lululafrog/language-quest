@@ -117,7 +117,7 @@ export function Produce({ ex, onDone }: { ex: Extract<Mechanic, { type: "produce
           {aiBusy ? "Analyse…" : "Avis de l'IA sur ma phrase"}
         </button>
       )}
-      {aiErr && (aiErr.nc ? <ServiceNotice service="La correction par l'IA" envVar="ANTHROPIC_API_KEY" /> : <ErrorNote>{aiErr.msg}</ErrorNote>)}
+      {aiErr && (aiErr.nc ? <ServiceNotice service="La correction par l'IA" alternative="Compare ta réponse avec les exemples proposés ci-dessus." /> : <ErrorNote>{aiErr.msg}</ErrorNote>)}
       {ai && (
         <div className="space-y-1.5 rounded-2xl border border-line p-3 text-[14.5px]">
           {ai.isAlreadyCorrect ? <p className="font-semibold text-mint-600">Ta phrase est correcte.</p> : <p><span className="text-muted">Corrigé : </span>{ai.corrected}</p>}

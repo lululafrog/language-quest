@@ -121,15 +121,17 @@ export function EmptyState({ icon, title, children }: { icon?: string; title: st
   );
 }
 
-/** Explains clearly that a feature needs an external service (never pretend it works). */
-export function ServiceNotice({ service, envVar, children }: { service: string; envVar: string; children?: ReactNode }) {
+/**
+ * Tells the learner, in plain words, that an online feature is unavailable right now — never pretends it works,
+ * never shows technical details (those are on the admin dashboard). `alternative` / children: what they can do instead.
+ */
+export function ServiceNotice({ service, feature, alternative, children }: { service?: string; feature?: string; alternative?: ReactNode; children?: ReactNode; /** @deprecated ignored: keys are an admin concern */ envVar?: string }) {
+  const name = service ?? feature ?? "Cette fonction";
+  const extra = alternative ?? children;
   return (
-    <div className="rounded-xl border border-sun-400/60 bg-sun-100/60 p-3 text-sm text-sun-900 dark:bg-sun-500/10 dark:text-sun-100">
-      <p className="font-medium">{service} nécessite une clé API</p>
-      <p className="mt-1 opacity-90">
-        Ajoutez <code className="rounded bg-black/5 px-1 dark:bg-white/10">{envVar}</code> dans les variables d&apos;environnement du serveur (voir README).{" "}
-        {children}
-      </p>
+    <div role="status" className="rounded-xl border border-sun-400/60 bg-sun-100/60 p-3 text-sm text-sun-900 dark:bg-sun-500/10 dark:text-sun-100">
+      <p className="font-medium">{name} n&apos;est pas disponible pour le moment.</p>
+      <p className="mt-1 opacity-90">{extra ?? "Le reste de l'application fonctionne normalement. Réessaie un peu plus tard."}</p>
     </div>
   );
 }

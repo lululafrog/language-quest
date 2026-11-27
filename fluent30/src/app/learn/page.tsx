@@ -160,7 +160,7 @@ function LearnInner() {
                   ) : status?.ai ? (
                     <Button size="sm" variant="secondary" className="mt-1.5" onClick={() => start("ai-tier", c.id)} disabled={loading}>{t("Générer 10 mots de ce palier", "Generate 10 words")}</Button>
                   ) : (
-                    <p className="mt-1 text-xs text-muted">{t("Nécessite la clé IA (ANTHROPIC_API_KEY).", "Requires the AI key.")}</p>
+                    <p className="mt-1 text-xs text-muted">{t("Fonction en ligne indisponible pour le moment.", "Online feature unavailable for now.")}</p>
                   )}
                 </li>
               ))}

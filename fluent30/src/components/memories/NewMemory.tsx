@@ -143,7 +143,7 @@ export function NewMemory({ onCancel }: { onCancel: () => void }) {
         </Panel>
       )}
 
-      {error && (error.notConfigured ? <ServiceNotice service="L'analyse de photo" envVar="ANTHROPIC_API_KEY">Tu peux quand même ajouter tes mots toi-même.</ServiceNotice> : <ErrorNote>{error.msg}</ErrorNote>)}
+      {error && (error.notConfigured ? <ServiceNotice service="L'analyse de photo">Tu peux quand même ajouter tes mots toi-même.</ServiceNotice> : <ErrorNote>{error.msg}</ErrorNote>)}
 
       {photo && (vocab || manual) && (
         <>

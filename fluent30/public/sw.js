@@ -1,14 +1,39 @@
-// Fluent30 service worker: offline app shell + runtime caching of pages and static assets.
-// User data lives in IndexedDB and is always available offline.
-const VERSION = "fluent30-v2";
-const SHELL = ["/", "/review", "/learn", "/cards", "/library", "/practice", "/games", "/verbs", "/grammar", "/more", "/stats", "/settings", "/session", "/listen", "/offline.html", "/icon.svg", "/icon-192.png"];
+// Fluent30 service worker: offline app shell + runtime caching of pages, static assets and books.
+// User data (cards, reviews, progress, downloaded books) lives in IndexedDB and is always available offline.
+// API responses (/api/*) are never cached here: AI answers are cached per device in IndexedDB instead.
+const VERSION = "fluent30-v3";
+const PAGES = VERSION + "-pages";
+const STATIC = VERSION + "-static"; // immutable build assets, icons, bundled books
+const SHELL = [
+  "/", "/cours", "/cours/fiches", "/review", "/learn", "/cards", "/library", "/practice", "/games", "/verbs", "/grammar",
+  "/basics", "/world", "/profile", "/stats", "/settings", "/listen", "/offline.html", "/icon.svg", "/icon-192.png",
+];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(VERSION).then((c) => Promise.allSettled(SHELL.map((u) => c.add(u)))).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(PAGES).then((c) => Promise.allSettled(SHELL.map((u) => c.add(u)))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (e) => {
-  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== VERSION && k !== SHARE_CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+  const keep = new Set([PAGES, STATIC, SHARE_CACHE]);
+  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => !keep.has(k)).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+});
+
+// The settings page can ask for a list of pages to be stored for offline use.
+self.addEventListener("message", (e) => {
+  const data = e.data || {};
+  if (data.type !== "warm" || !Array.isArray(data.urls)) return;
+  e.waitUntil(
+    caches.open(PAGES).then(async (c) => {
+      let ok = 0;
+      for (const u of data.urls) {
+        try {
+          const res = await fetch(u, { credentials: "same-origin" });
+          if (res.ok) { await c.put(u, res); ok++; }
+        } catch { /* offline or failed: skip */ }
+      }
+      if (e.source) e.source.postMessage({ type: "warmed", ok, total: data.urls.length });
+    }),
+  );
 });
 
 // Share target (manifest.share_target, POST multipart to /share): keep the shared file/text in a
@@ -46,19 +71,32 @@ self.addEventListener("fetch", (e) => {
   if (url.origin !== location.origin) return;
   if (url.pathname.startsWith("/api/")) return; // never cache API responses here
 
-  // Static assets: cache first.
-  if (url.pathname.startsWith("/_next/static/") || /\.(png|svg|webp|ico|woff2?|mjs|gz)$/.test(url.pathname)) {
-    e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((res) => { const copy = res.clone(); caches.open(VERSION).then((c) => c.put(req, copy)); return res; })));
+  // Immutable assets, icons and bundled books (/books/*.txt.gz, *.lemmas.json): cache first.
+  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/books/") || /\.(png|svg|webp|ico|woff2?|mjs|gz)$/.test(url.pathname)) {
+    e.respondWith(
+      caches.match(req).then(
+        (hit) =>
+          hit ||
+          fetch(req).then((res) => {
+            if (res.ok) { const copy = res.clone(); caches.open(STATIC).then((c) => c.put(req, copy)); }
+            return res;
+          }),
+      ),
+    );
     return;
   }
 
-  // Pages & RSC payloads: network first, fall back to cache, then offline page.
+  // Pages & RSC payloads: network first (fresh content), fall back to cache, then the offline page.
   e.respondWith(
     fetch(req)
       .then((res) => {
-        if (res.ok) { const copy = res.clone(); caches.open(VERSION).then((c) => c.put(req, copy)); }
+        if (res.ok) { const copy = res.clone(); caches.open(PAGES).then((c) => c.put(req, copy)); }
         return res;
       })
-      .catch(async () => (await caches.match(req)) || (await caches.match(url.pathname)) || (req.mode === "navigate" ? caches.match("/offline.html") : Response.error()))
+      .catch(async () =>
+        (await caches.match(req)) ||
+        (await caches.match(url.pathname, { ignoreSearch: true })) ||
+        (req.mode === "navigate" ? caches.match("/offline.html") : Response.error()),
+      ),
   );
 });

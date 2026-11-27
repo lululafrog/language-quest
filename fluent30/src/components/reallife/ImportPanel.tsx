@@ -143,7 +143,7 @@ export function ImportPanel() {
       <FilterChips value={kind} onChange={switchKind} options={CAPTURE_KINDS.map((k) => ({ value: k.id, label: k.label }))} />
       <p className="text-sm text-muted">{CAPTURE_KINDS.find((k) => k.id === kind)?.hint}</p>
 
-      {status && !status.ai && <ServiceNotice service="L'analyse par l'IA" envVar="ANTHROPIC_API_KEY" />}
+      {status && !status.ai && <ServiceNotice service="L'analyse par l'IA" alternative="Tu peux quand même enregistrer ton contenu et ajouter les mots qui t'intéressent dans Mes cartes." />}
       {notice && <ErrorNote>{notice}</ErrorNote>}
 
       {isImage && (
@@ -187,7 +187,7 @@ export function ImportPanel() {
             }} />
           </label>
           {transcribing && <span className="text-sm text-muted">Transcription…</span>}
-          {status && !status.transcription && <p className="w-full text-xs text-muted">La transcription audio nécessite <code>OPENAI_API_KEY</code> sur le serveur. Sans elle, tape le message ci-dessous.</p>}
+          {status && !status.transcription && <p className="w-full text-xs text-muted">La transcription des messages vocaux est momentanément indisponible : tape le message ci-dessous, ou dicte-le avec le micro de ton clavier.</p>}
         </div>
       )}
 

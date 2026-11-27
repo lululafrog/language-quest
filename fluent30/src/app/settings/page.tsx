@@ -96,7 +96,7 @@ export default function SettingsPage() {
           <Segmented<Settings["theme"]> value={s.theme} onChange={(v) => set({ theme: v })} options={[{ value: "system", label: t("Auto", "Auto") }, { value: "light", label: t("Clair", "Light") }, { value: "dark", label: t("Sombre", "Dark") }]} />
         </div>
         <Toggle checked={s.immersion} onChange={(v) => set({ immersion: v })} label={t("Mode immersion (interface en anglais)", "Immersion mode (English interface)")} hint={t("Toute l'interface passe en anglais.", "The whole interface switches to English.")} />
-        <Toggle checked={s.autoImages} onChange={(v) => set({ autoImages: v })} label={t("Illustrations automatiques", "Automatic illustrations")} hint={status?.images ? t(`Fournisseur : ${status.imageProvider === "openai" ? "OpenAI Images" : "pictogrammes SVG dessinés par Claude"} · mises en cache`, "Cached") : t("Nécessite OPENAI_API_KEY ou ANTHROPIC_API_KEY", "Requires an API key")} />
+        <Toggle checked={s.autoImages} onChange={(v) => set({ autoImages: v })} label={t("Illustrations automatiques", "Automatic illustrations")} hint={status?.images ? t(`Fournisseur : ${status.imageProvider === "openai" ? "OpenAI Images" : "pictogrammes SVG dessinés par Claude"} · mises en cache`, "Cached") : t("Indisponible pour le moment : les cartes restent utilisables, et tu peux ajouter ta propre photo.", "Unavailable for now")} />
         <Toggle checked={!!s.reduceMotion} onChange={(v) => set({ reduceMotion: v })} label={t("Réduire les animations", "Reduce motion")} hint={t("Célébrations et animations simplifiées (accessibilité).", "Simplified celebrations (accessibility).")} />
       </Panel>
 
@@ -144,19 +144,20 @@ export default function SettingsPage() {
       </Panel>
 
       <Panel>
-        <h2 className="mb-3 font-semibold">{t("Services externes", "External services")}</h2>
+        <h2 className="mb-1 font-semibold">{t("Fonctions en ligne", "Online features")}</h2>
+        <p className="mb-3 text-xs text-muted">{t("Ces fonctions ont besoin d'internet. Tout le reste fonctionne sur ton appareil, même hors connexion.", "These features need the internet. Everything else works on your device, even offline.")}</p>
         <ul className="space-y-2 text-sm">
           {[
-            { ok: status?.ai, name: t("IA (traductions, enrichissement, conversation, correction)", "AI"), env: "ANTHROPIC_API_KEY" },
-            { ok: status?.images, name: t("Illustrations", "Illustrations"), env: "OPENAI_API_KEY ou ANTHROPIC_API_KEY" },
-            { ok: status?.transcription, name: t("Transcription audio serveur (si le navigateur n'a pas de reconnaissance vocale)", "Server transcription"), env: "OPENAI_API_KEY" },
-            { ok: status?.supabase, name: t("Compte, sauvegarde et synchronisation", "Account & sync"), env: "NEXT_PUBLIC_SUPABASE_URL / ANON_KEY" },
-            { ok: true, name: t("Synthèse vocale et reconnaissance vocale du navigateur", "Browser speech"), env: t("gratuit, selon navigateur", "free, browser-dependent") },
-            { ok: true, name: t("Dictionnaire libre (phonétique, définitions)", "Free dictionary"), env: "dictionaryapi.dev" },
+            { ok: status?.ai, name: t("Analyse et correction intelligentes", "Smart analysis & correction"), desc: t("traduction en contexte, conversations, journal, photos, vraie vie", "contextual translation, chat, journal, photos") },
+            { ok: status?.images, name: t("Illustrations des mots", "Word illustrations"), desc: t("tu peux aussi ajouter ta propre photo", "you can also add your own photo") },
+            { ok: status?.transcription, name: t("Transcription des messages vocaux", "Voice message transcription"), desc: t("la dictée du navigateur reste disponible", "browser dictation still works") },
+            { ok: status?.supabase, name: t("Compte et synchronisation", "Account & sync"), desc: t("sinon : sauvegarde par export", "otherwise: back up with the export") },
+            { ok: true, name: t("Voix et reconnaissance vocale", "Voice & speech recognition"), desc: t("intégrées à ton navigateur", "built into your browser") },
+            { ok: true, name: t("Dictionnaire libre", "Free dictionary"), desc: t("phonétique et définitions", "phonetics and definitions") },
           ].map((x) => (
             <li key={x.name} className="flex items-start justify-between gap-3">
-              <span>{x.name}<span className="block text-xs text-muted">{x.env}</span></span>
-              <Badge tone={x.ok ? "mint" : "sun"}>{x.ok ? t("actif", "active") : t("non configuré", "not configured")}</Badge>
+              <span>{x.name}<span className="block text-xs text-muted">{x.desc}</span></span>
+              <Badge tone={x.ok ? "mint" : "gray"}>{x.ok ? t("disponible", "available") : t("indisponible", "unavailable")}</Badge>
             </li>
           ))}
         </ul>
@@ -170,6 +171,8 @@ export default function SettingsPage() {
           </div>
         )}
       </Panel>
+
+      <OfflinePanel />
 
       <PersonalContentPanel />
 
@@ -227,6 +230,85 @@ function PersonalContentPanel() {
           Supprimer mes contenus personnels
         </Button>
       </div>
+    </Panel>
+  );
+}
+
+// Pages warmed for offline use: loading each one once in a hidden frame lets the service worker store
+// the page and the code it needs. User data (cards, reviews, progress, opened books) is already on the device.
+const OFFLINE_ROUTES = ["/", "/cours", "/cours/fiches", "/review", "/learn", "/cards", "/games", "/verbs", "/verbs/irregular", "/grammar", "/basics", "/courses", "/library", "/practice", "/world", "/profile", "/stats", "/translate"];
+
+function OfflinePanel() {
+  const [state, setState] = useState<{ running: boolean; done: number; ok: number; total: number } | null>(null);
+  const supported = typeof navigator !== "undefined" && "serviceWorker" in navigator;
+
+  const prepare = async () => {
+    const { ALL_LESSONS } = await import("@/lib/curriculum");
+    const routes = [...OFFLINE_ROUTES, ...ALL_LESSONS.map((l) => `/cours/${l.id}`)];
+    setState({ running: true, done: 0, ok: 0, total: routes.length });
+    // Ask the service worker to store the HTML of every page (fast), then open the main pages in a hidden
+    // frame so their scripts are cached too (lesson pages share the same code, so one is enough).
+    navigator.serviceWorker?.controller?.postMessage({ type: "warm", urls: routes });
+    const frameRoutes = [...OFFLINE_ROUTES, routes.find((r) => r.startsWith("/cours/a1")) ?? "/cours"];
+    let ok = 0;
+    for (let i = 0; i < frameRoutes.length; i++) {
+      const loaded = await new Promise<boolean>((resolve) => {
+        const f = document.createElement("iframe");
+        f.style.cssText = "position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;left:-10px;top:-10px";
+        f.setAttribute("aria-hidden", "true");
+        f.tabIndex = -1;
+        const done = (v: boolean) => { setTimeout(() => { f.remove(); resolve(v); }, 1200); };
+        const timer = setTimeout(() => done(false), 15000);
+        f.onload = () => { clearTimeout(timer); done(true); };
+        f.src = frameRoutes[i];
+        document.body.appendChild(f);
+      });
+      if (loaded) ok++;
+      setState({ running: true, done: Math.round(((i + 1) / frameRoutes.length) * routes.length), ok: Math.round((ok / frameRoutes.length) * routes.length), total: routes.length });
+    }
+    setState({ running: false, done: routes.length, ok: Math.round((ok / frameRoutes.length) * routes.length), total: routes.length });
+    toast(ok === frameRoutes.length ? "Mode hors ligne prêt" : "Mode hors ligne préparé en partie : relance avec une bonne connexion");
+  };
+
+  return (
+    <Panel>
+      <h2 className="mb-1 font-semibold">Mode hors ligne</h2>
+      <p className="mb-3 text-sm text-muted">
+        Tes mots, tes révisions, ta progression et les livres déjà ouverts sont enregistrés sur ton appareil. Prépare le mode hors ligne avant un voyage pour garder aussi les cours, les fiches et les jeux sans connexion.
+      </p>
+      <div className="mb-3 grid gap-3 text-sm sm:grid-cols-2">
+        <div>
+          <p className="mb-1 font-medium text-mint-600 dark:text-mint-400">Fonctionne sans internet</p>
+          <ul className="space-y-0.5 text-muted">
+            <li>Révisions et flashcards</li>
+            <li>Cours, fiches et grammaire</li>
+            <li>Mini-jeux et verbes</li>
+            <li>Livres déjà ouverts</li>
+            <li>Voix de l&apos;appareil (selon le téléphone)</li>
+            <li>Ta progression (synchronisée au retour de la connexion)</li>
+          </ul>
+        </div>
+        <div>
+          <p className="mb-1 font-medium">A besoin d&apos;internet</p>
+          <ul className="space-y-0.5 text-muted">
+            <li>Analyses et corrections intelligentes</li>
+            <li>Conversations avec l&apos;IA</li>
+            <li>Traduction en ligne et dictionnaire</li>
+            <li>Nouvelles illustrations</li>
+            <li>Nouveaux livres du catalogue</li>
+          </ul>
+        </div>
+      </div>
+      {!supported ? (
+        <p className="text-sm text-muted">Ton navigateur ne permet pas le mode hors ligne complet. Tes données restent tout de même sur l&apos;appareil.</p>
+      ) : (
+        <div className="space-y-2">
+          <Button variant="outline" onClick={prepare} disabled={state?.running}>
+            {state?.running ? `Préparation… ${state.done}/${state.total}` : "Préparer le mode hors ligne"}
+          </Button>
+          {state && !state.running && <p className="text-sm text-muted">{state.ok} pages sur {state.total} disponibles hors ligne.</p>}
+        </div>
+      )}
     </Panel>
   );
 }

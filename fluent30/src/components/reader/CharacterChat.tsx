@@ -55,12 +55,12 @@ export function CharacterChat({ book, chapter, textSoFar, level, onClose }: { bo
   return (
     <Sheet open onClose={onClose} title={who ? `💬 ${who}` : t("Parler avec un personnage", "Talk to a character")} wide>
       {status && !status.ai ? (
-        <ServiceNotice service={t("La discussion avec les personnages", "Character chat")} envVar="ANTHROPIC_API_KEY" />
+        <ServiceNotice service={t("La discussion avec les personnages", "Character chat")} alternative={"La lecture, l'audio et la traduction des mots restent disponibles."} />
       ) : !who ? (
         <div className="space-y-3">
           <p className="text-sm text-muted">{t(`Les personnages ne connaissent que l'histoire jusqu'au chapitre ${chapter + 1} : aucun spoiler.`, `Characters only know the story up to chapter ${chapter + 1}: no spoilers.`)}</p>
           {!chars && !err && <p className="flex items-center gap-2 text-sm text-muted"><Spinner className="h-4 w-4" /> {t("Recherche des personnages…", "Finding characters…")}</p>}
-          {err instanceof ApiError && err.notConfigured ? <ServiceNotice service={t("La discussion avec les personnages", "Character chat")} envVar="ANTHROPIC_API_KEY" /> : err ? <ErrorNote>{errorMessage(err)}</ErrorNote> : null}
+          {err instanceof ApiError && err.notConfigured ? <ServiceNotice service={t("La discussion avec les personnages", "Character chat")} alternative={"La lecture, l'audio et la traduction des mots restent disponibles."} /> : err ? <ErrorNote>{errorMessage(err)}</ErrorNote> : null}
           <div className="grid gap-2 sm:grid-cols-2">
             {chars?.map((c) => (
               <button key={c.name} onClick={() => pick(c.name)} className="rounded-xl border border-line p-3 text-left transition hover:border-ink-300">

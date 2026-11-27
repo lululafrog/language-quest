@@ -200,7 +200,7 @@ export default function ChatScenarioPage() {
     return (
       <div className="mx-auto max-w-2xl">
         <PageHeader back="/chat" title={<span>{sc.emoji} {t(sc.titleFr, sc.titleEn)}</span>} subtitle={t(sc.goalFr, sc.goal)} />
-        {aiOff && <div className="mb-4"><ServiceNotice service={t("La conversation IA", "AI conversation")} envVar="ANTHROPIC_API_KEY" /></div>}
+        {aiOff && <div className="mb-4"><ServiceNotice service={t("La conversation IA", "AI conversation")} alternative={"En attendant, entraîne-toi avec les dialogues interactifs des cours et des missions."} /></div>}
         <Panel className="space-y-4">
           <div>
             <p className="text-sm text-muted">{t("Situation", "Setting")}</p>
@@ -317,7 +317,7 @@ export default function ChatScenarioPage() {
           <div className="flex items-center gap-2 text-sm text-muted"><Spinner className="h-4 w-4" /> {t("Votre interlocuteur écrit…", "Typing…")}</div>
         )}
         {reportLoading && <div className="flex items-center gap-2 text-sm text-muted"><Spinner className="h-4 w-4" /> {t("Préparation du bilan…", "Preparing your report…")}</div>}
-        {aiOff && <ServiceNotice service={t("La conversation IA", "AI conversation")} envVar="ANTHROPIC_API_KEY" />}
+        {aiOff && <ServiceNotice service={t("La conversation IA", "AI conversation")} alternative={"En attendant, entraîne-toi avec les dialogues interactifs des cours et des missions."} />}
         {error && !aiOff && (
           <ErrorNote>
             {error}{" "}

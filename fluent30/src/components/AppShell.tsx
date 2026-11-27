@@ -11,6 +11,7 @@ import { Icon, type IconName } from "./icons";
 import { Toaster, cx } from "./ui";
 import { RewardWatcher } from "./game/RewardWatcher";
 import { StampWatcher } from "./passport/StampWatcher";
+import { OfflineBanner } from "./OfflineBanner";
 import { CeremonyWatcher } from "./game/CeremonyWatcher";
 
 type NavItem = { href: string; fr: string; en: string; icon: IconName };
@@ -217,6 +218,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Toaster />
       {mounted && <RewardWatcher />}
       {mounted && <StampWatcher />}
+      {mounted && <OfflineBanner />}
       {mounted && <CeremonyWatcher />}
     </div>
   );

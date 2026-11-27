@@ -7,7 +7,7 @@ export function AiRequired() {
   const t = useT();
   return (
     <div className="space-y-3">
-      <ServiceNotice service={t("L'écriture de romans personnalisés", "Personal novel writing")} envVar="ANTHROPIC_API_KEY">
+      <ServiceNotice service={t("L'écriture de romans personnalisés", "Personal novel writing")}>
         {t("Chaque chapitre est écrit sur mesure par l'IA Claude : rien n'est simulé ici.", "Each chapter is written by Claude: nothing is simulated.")}
       </ServiceNotice>
       <div className="rounded-2xl border border-line bg-surface-2 p-3 text-sm text-muted">

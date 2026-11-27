@@ -70,7 +70,7 @@ export default function CapturePage() {
           )}
         </Panel>
       )}
-      {err && (err.notConfigured ? <ServiceNotice service="L'analyse par l'IA" envVar="ANTHROPIC_API_KEY" /> : <ErrorNote>{err.msg}</ErrorNote>)}
+      {err && (err.notConfigured ? <ServiceNotice service="L'analyse par l'IA" alternative="Ton contenu est enregistré : relance l'analyse plus tard, ou ajoute tes mots à la main dans Mes cartes." /> : <ErrorNote>{err.msg}</ErrorNote>)}
       {busy && (
         <Panel className="flex items-center gap-3">
           <Spinner />

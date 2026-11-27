@@ -39,7 +39,7 @@ export function WordImage({ term, fr, card, className, allowGenerate }: { term: 
         className={cx("flex flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-line text-xs text-muted hover:border-ink-300", className)}
       >
         {busy ? <Spinner /> : <span className="text-2xl">🖼️</span>}
-        <span>{failed ? "Indisponible (clé API ?)" : busy ? "Création…" : "Créer une illustration"}</span>
+        <span>{failed ? "Illustration indisponible" : busy ? "Création…" : "Créer une illustration"}</span>
       </button>
     );
   }

@@ -11,7 +11,7 @@ export default function PracticePage() {
   const status = useStatus();
   const o = useLiveQuery(() => computeOverview(), []);
   const due = o?.dueNow ?? 0;
-  const aiNote = status && !status.ai ? t("Analyse IA : clé API non configurée sur le serveur", "AI analysis: API key not configured") : undefined;
+  const aiNote = status && !status.ai ? t("Analyse automatique momentanément indisponible", "Automatic analysis unavailable for now") : undefined;
 
   return (
     <div className="mx-auto max-w-2xl">

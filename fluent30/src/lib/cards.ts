@@ -85,8 +85,15 @@ export function cardFromLocal(term: string, fr?: string): Card | null {
   };
 }
 
-export async function enrichTerm(input: string, context?: string): Promise<EnrichResponse> {
-  return postApi<EnrichResponse>("/api/ai/enrich", { input, context }, { cacheKey: `enrich:${normalize(input)}:${context ? normalize(context).slice(0, 80) : ""}` });
+/** AI enrichment; when the AI is unavailable, a card completed from the built-in lexicon, the free dictionary and free translation (engine "local"). */
+export async function enrichTerm(input: string, context?: string): Promise<EnrichResponse & { engine?: "ai" | "local" }> {
+  try {
+    return await postApi<EnrichResponse>("/api/ai/enrich", { input, context }, { cacheKey: `enrich:${normalize(input)}:${context ? normalize(context).slice(0, 80) : ""}` });
+  } catch (err) {
+    if (!(err instanceof ApiError) || err.status === 400) throw err;
+    const { enrichWithoutAI } = await import("./fallbacks");
+    return enrichWithoutAI(input);
+  }
 }
 
 export interface AddResult {
@@ -122,11 +129,16 @@ export async function quickAdd(term: string, opts: { fr?: string; context?: stri
   try {
     const e = await enrichTerm(term, opts.context);
     const card = cardFromEnrichment(e, opts.source ?? "user");
+    if (e.engine === "local") {
+      if (opts.fr) card.fr = opts.fr;
+      if (opts.example && !card.example) card.example = opts.example;
+      card.enriched = false;
+    }
     const r = await saveCard(card);
-    void maybeGenerateImage(r.card, e.imagePrompt);
-    return { ...r, usedAI: true };
+    if (e.engine !== "local") void maybeGenerateImage(r.card, e.imagePrompt);
+    return { ...r, usedAI: e.engine !== "local" };
   } catch (err) {
-    if (!(err instanceof ApiError)) throw err;
+    if (!(err instanceof ApiError) && !(err instanceof Error && /sans connexion à l'IA/.test(err.message))) throw err;
     const local = cardFromLocal(term, opts.fr);
     const card = local ?? {
       id: uid("c"), term, lemma: lemmaOf(term), kind: guessKind(term, opts.pos), fr: opts.fr ?? "", pos: opts.pos, themes: guessThemes(term, opts.pos), source: opts.source ?? "user",

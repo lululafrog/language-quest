@@ -84,7 +84,7 @@ export function EntryAnalysis({ entry }: { entry: JournalEntry }) {
         <Button className="w-full" onClick={run} loading={busy}>
           <Icon name="sparkle" size={18} /> Corriger et améliorer
         </Button>
-        {error && (error.nc ? <ServiceNotice service="La correction du journal" envVar="ANTHROPIC_API_KEY" /> : <ErrorNote>{error.msg}</ErrorNote>)}
+        {error && (error.nc ? <ServiceNotice service="La correction du journal" alternative="Ta page est bien enregistrée : tu pourras lancer la correction plus tard." /> : <ErrorNote>{error.msg}</ErrorNote>)}
       </Panel>
     );
   }
@@ -190,7 +190,7 @@ export function EntryAnalysis({ entry }: { entry: JournalEntry }) {
       <button type="button" onClick={run} disabled={busy} className="mx-auto block text-sm text-muted hover:underline">
         {busy ? "Analyse…" : "Relancer l'analyse"}
       </button>
-      {error && (error.nc ? <ServiceNotice service="La correction du journal" envVar="ANTHROPIC_API_KEY" /> : <ErrorNote>{error.msg}</ErrorNote>)}
+      {error && (error.nc ? <ServiceNotice service="La correction du journal" alternative="Ta page est bien enregistrée : tu pourras lancer la correction plus tard." /> : <ErrorNote>{error.msg}</ErrorNote>)}
     </div>
   );
 }

@@ -188,7 +188,7 @@ export function WritingSection({ targetLevel, aiAvailable, onDone }: { targetLev
       <Panel>
         <p className="font-semibold">{t("Auto-évaluation de l'expression écrite", "Writing self-assessment")}</p>
         <p className="mb-3 mt-1 text-sm text-muted">
-          {aiAvailable ? "" : t("L'évaluation automatique de votre texte nécessite une clé IA (ANTHROPIC_API_KEY). ", "Automatic assessment needs an AI key. ")}
+          {aiAvailable ? "" : t("L'évaluation automatique de ton texte est momentanément indisponible. ", "Automatic assessment is unavailable for now. ")}
           {t("Cochez honnêtement ce que vous savez faire (grille d'auto-évaluation du Cadre européen). Ce résultat est une auto-évaluation, moins fiable qu'un test.", "Tick honestly what you can do (CEFR self-assessment grid). This is a self-assessment.")}
         </p>
         <CanDoGrid grid={CAN_DO.writing} ticked={ticked} setTicked={setTicked} />

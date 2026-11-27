@@ -33,7 +33,7 @@ export function AccountPanel() {
       <Panel>
         <h2 className="font-semibold">{t("Compte et synchronisation", "Account & sync")}</h2>
         <p className="mt-1 text-sm text-muted">
-          {t("Mode local : tout est enregistré sur cet appareil et fonctionne hors connexion. Pour créer un compte, sauvegarder dans le cloud et synchroniser plusieurs appareils, configurez Supabase (NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY, voir README). En attendant, utilisez l'export JSON ci-dessous pour sauvegarder.", "Local mode: everything is saved on this device. Configure Supabase to enable accounts and sync.")}
+          {t("Mode local : tout est enregistré sur cet appareil et fonctionne hors connexion. La création de compte et la synchronisation entre appareils ne sont pas encore activées sur cette version. En attendant, utilise l'export ci-dessous pour faire une sauvegarde.", "Local mode: everything is saved on this device. Accounts and sync are not enabled yet; use the export below to back up.")}
         </p>
       </Panel>
     );

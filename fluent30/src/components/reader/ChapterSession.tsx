@@ -196,14 +196,14 @@ export function ChapterSession({ book, chapter, chapterTitle, paragraphs, looked
               <Button className="flex-1" onClick={start}>{t("Faire la séance", "Start the session")}</Button>
               <Button variant="ghost" onClick={() => onClose(false)}>{t("Passer", "Skip")}</Button>
             </div>
-            {status && !status.ai && <p className="text-xs text-muted">{t("Sans clé IA, la séance propose les exercices de vocabulaire et de prononciation ; le quiz de compréhension nécessite ANTHROPIC_API_KEY.", "Without AI key: vocabulary and pronunciation only.")}</p>}
+            {status && !status.ai && <p className="text-xs text-muted">{t("Pour l'instant, la séance propose les exercices de vocabulaire et de prononciation ; le quiz de compréhension est momentanément indisponible.", "For now: vocabulary and pronunciation exercises; the comprehension quiz is unavailable.")}</p>}
           </>
         )}
 
         {step === "quiz" && (
           <>
             {!quiz && !quizErr && <p className="flex items-center gap-2 text-sm text-muted"><Spinner className="h-4 w-4" /> {t("Préparation des questions…", "Preparing questions…")}</p>}
-            {quizErr instanceof ApiError && quizErr.notConfigured ? <ServiceNotice service={t("Le quiz de compréhension", "The comprehension quiz")} envVar="ANTHROPIC_API_KEY" /> : quizErr ? <ErrorNote>{errorMessage(quizErr)}</ErrorNote> : null}
+            {quizErr instanceof ApiError && quizErr.notConfigured ? <ServiceNotice service={t("Le quiz de compréhension", "The comprehension quiz")} alternative={"Tu peux continuer ta lecture : le quiz sera proposé quand le service sera de retour."} /> : quizErr ? <ErrorNote>{errorMessage(quizErr)}</ErrorNote> : null}
             {quizErr ? <Button onClick={() => next("quiz")}>{t("Continuer", "Continue")}</Button> : null}
             {quiz && quiz.mcq[qi] && (
               <div key={qi} className="animate-pop">

@@ -612,7 +612,7 @@ export function Reader({ bookId }: { bookId: string }) {
         <h1 className="mb-8 font-semibold leading-tight" style={{ fontSize: "1.35em" }}>{chap?.title}</h1>
         {readingMode === "bilingual" && status && !status.ai && (
           <p className="mb-6 rounded-xl border border-dashed p-3 font-sans text-xs opacity-80">
-            {t("Mode bilingue sans clé IA : touchez « FR ↓ » sous un paragraphe pour une traduction automatique gratuite (quota limité par jour). Avec ANTHROPIC_API_KEY, tout le chapitre est traduit fidèlement.", "Bilingual mode without AI key: tap “FR ↓” for a free machine translation.")}
+            {t("Touche « FR ↓ » sous un paragraphe pour une traduction automatique simple (nombre limité par jour). La traduction complète et fidèle du chapitre est momentanément indisponible.", "Tap “FR ↓” under a paragraph for a simple machine translation.")}
           </p>
         )}
         {paras.map((p, i) => {

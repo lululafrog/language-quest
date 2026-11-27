@@ -50,7 +50,7 @@ export function MicButton({
     }
     if (!canRecord) return onError?.("Ni la reconnaissance vocale ni l'enregistrement audio ne sont disponibles dans ce navigateur.");
     if (!status?.transcription)
-      return onError?.("La reconnaissance vocale n'est pas disponible dans ce navigateur, et la transcription serveur n'est pas configurée (OPENAI_API_KEY). Essayez Chrome, Edge ou Safari.");
+      return onError?.("La reconnaissance vocale n'est pas disponible dans ce navigateur. Essaie Chrome, Edge ou Safari, ou tape ta réponse.");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const rec = new MediaRecorder(stream);

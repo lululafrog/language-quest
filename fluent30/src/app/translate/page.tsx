@@ -66,7 +66,7 @@ export default function TranslatePage() {
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader title={t("Assistant de traduction", "Translation assistant")} subtitle={t("Comprenez un message reçu, répondez naturellement, faites corriger votre anglais.", "Understand a message, reply naturally, get your English corrected.")} />
-      {aiOff && <div className="mb-4"><ServiceNotice service={t("L'assistant de traduction", "The translation assistant")} envVar="ANTHROPIC_API_KEY" /></div>}
+      {aiOff && <div className="mb-4"><ServiceNotice service={t("L'assistant de traduction", "The translation assistant")} alternative={"Pour un mot ou une phrase courte, la traduction rapide reste disponible dans la liseuse et dans Mes cartes."} /></div>}
       <Segmented
         className="mb-4"
         value={tab}

@@ -2,6 +2,7 @@ import "server-only";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { config } from "./config";
+import { logError } from "./errors-log";
 
 // Protects paid API routes: requires a Supabase session when Supabase is configured,
 // otherwise an optional shared access code (FLUENT30_ACCESS_CODE). Includes a basic rate limit.
@@ -44,6 +45,11 @@ export function jsonError(status: number, code: string, message: string) {
   return NextResponse.json({ error: { code, message } }, { status });
 }
 
+/**
+ * A service needed by this feature is not configured on the server. The learner sees a friendly message
+ * (no variable names); the technical detail goes to the admin error log only.
+ */
 export function notConfigured(service: string, envVar: string) {
-  return jsonError(503, "not_configured", `Service non configuré sur le serveur : ${service} (variable ${envVar} manquante).`);
+  logError({ at: Date.now(), feature: "config", code: "not_configured", message: `${service}: ${envVar} manquant` });
+  return jsonError(503, "not_configured", `${service} n'est pas encore activé(e) sur ce serveur. Le reste de l'application fonctionne normalement.`);
 }

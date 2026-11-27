@@ -15,7 +15,7 @@ export default function ChatHome() {
   return (
     <div>
       <PageHeader title={t("Conversation avec l'IA", "AI conversation")} subtitle={t("Un partenaire anglophone disponible à tout moment, à l'écrit comme à l'oral.", "A native-speaking partner available anytime, written or spoken.")} />
-      {status && !status.ai && <div className="mb-4"><ServiceNotice service={t("La conversation IA", "AI conversation")} envVar="ANTHROPIC_API_KEY" /></div>}
+      {status && !status.ai && <div className="mb-4"><ServiceNotice service={t("La conversation IA", "AI conversation")} alternative={"En attendant, entraîne-toi avec les dialogues interactifs des cours (Cours → Vie réelle) et des missions de la carte du monde."} /></div>}
 
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">{t("Choisissez un scénario", "Choose a scenario")}</h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

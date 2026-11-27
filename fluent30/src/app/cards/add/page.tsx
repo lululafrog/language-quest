@@ -99,7 +99,7 @@ export default function AddCardPage() {
       />
 
       {status && !status.ai && mode !== "manual" && (
-        <div className="mb-4"><ServiceNotice service={t("L'enrichissement automatique", "Automatic enrichment")} envVar="ANTHROPIC_API_KEY">{t("En attendant, utilisez l'ajout manuel : les mots présents dans le lexique intégré sont complétés automatiquement.", "Meanwhile use manual mode.")}</ServiceNotice></div>
+        <div className="mb-4"><ServiceNotice service={t("L'enrichissement automatique", "Automatic enrichment")}>{t("En attendant, utilisez l'ajout manuel : les mots présents dans le lexique intégré sont complétés automatiquement.", "Meanwhile use manual mode.")}</ServiceNotice></div>
       )}
 
       {mode === "text" && (
