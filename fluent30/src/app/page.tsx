@@ -12,6 +12,7 @@ import { getGame, levelFromXp, levelTitle } from "@/lib/game";
 import { Tourist } from "@/components/avatar/Tourist";
 import { Coins } from "@/components/game/Coin";
 import { QuestList } from "@/components/game/QuestList";
+import { GoalsCard } from "@/components/game/GoalsCard";
 
 export default function Dashboard() {
   const s = useSettings();
@@ -107,6 +108,8 @@ export default function Dashboard() {
       </Panel>
 
       <QuestList />
+
+      <GoalsCard compact />
 
       <div className="grid grid-cols-2 gap-3">
         <Link href="/learn" className="rounded-2xl border border-line bg-surface p-4 transition hover:border-ink-300">

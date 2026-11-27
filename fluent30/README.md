@@ -118,3 +118,18 @@ restent sur l'appareil de l'utilisateur. Listes de fréquence : NGSL / NGSL-Spok
 **Non testé en conditions réelles dans l'environnement de développement** (accès réseau bloqué ou clés absentes) :
 appels Claude et OpenAI, Supabase, catalogue Gutenberg et dictionnaire libre. Le code gère ces cas avec des
 messages d'erreur clairs, mais un essai avec de vraies clés est recommandé avant mise en production.
+
+## Bibliothèque v2, bases et récompenses (ajouts)
+
+- **Bibliothèque du voyageur** : 141 classiques du domaine public (droits vérifiés USA + France/UE) intégrés à l'appli
+  (`public/books`, régénérables avec `scripts/build_library.py`), 8 catégories, couvertures originales SVG, résumés sans
+  spoiler, % de vocabulaire déjà connu, recommandations, liste d'envies, notes.
+- **Liseuse** : modes immersif / assisté / bilingue, couleur d'utilité des mots (vert/bleu/orange/gris), traduction de
+  paragraphe, livre audio (voix de l'appareil), shadowing, écoute seule, séance de fin de chapitre.
+- **Récompenses** : cérémonie de fin de livre, étagères de collection, cartes de lecture, 16 trophées, objectifs
+  hebdo/mensuels (sans culpabilisation), tenues littéraires. Animations désactivables (Réglages → Réduire les animations).
+- **Les bases** (13 leçons illustrées) et **Cours** (20 fiches de règles, contenu original).
+
+Nécessitent `ANTHROPIC_API_KEY` (sinon un message l'indique, rien n'est simulé) : romans personnalisés, versions A1–C1
+des livres, discussion avec les personnages, traduction bilingue complète d'un chapitre, quiz de compréhension générés.
+Sans clé, la traduction mot/paragraphe utilise MyMemory (gratuit, quota quotidien limité).

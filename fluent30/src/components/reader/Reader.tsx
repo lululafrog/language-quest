@@ -651,7 +651,7 @@ export function Reader({ bookId }: { bookId: string }) {
           {readingMode === "immersive" ? (
             <p className="flex-1 text-xs opacity-70">{t("Lecture immersive · appui long sur un mot pour le traduire", "Immersive · long-press a word")}</p>
           ) : (
-            <div className="flex flex-1 rounded-xl p-1" style={{ background: "rgba(127,127,127,0.12)" }} role="radiogroup" aria-label={t("Mode de sélection", "Selection mode")}>
+            <div className="flex min-w-0 flex-1 rounded-xl p-1" style={{ background: "rgba(127,127,127,0.12)" }} role="radiogroup" aria-label={t("Mode de sélection", "Selection mode")}>
               {([
                 ["word", t("Mot", "Word")],
                 ["phrase", t("Expr.", "Phrase")],
@@ -670,7 +670,7 @@ export function Reader({ bookId }: { bookId: string }) {
                     if (m === "phrase") toast(t("Touchez le premier puis le dernier mot", "Tap the first then the last word"), "info");
                     if (m === "paragraph") toast(t("Touchez un paragraphe pour le traduire", "Tap a paragraph to translate it"), "info");
                   }}
-                  className={cx("flex-1 rounded-lg px-1.5 py-1.5 text-[13px] font-medium transition", mode === m ? "bg-ink-600 text-white shadow" : "opacity-70")}
+                  className={cx("min-w-0 flex-1 truncate rounded-lg px-1 py-1.5 text-[13px] font-medium transition", mode === m ? "bg-ink-600 text-white shadow" : "opacity-70")}
                 >
                   {label}
                 </button>

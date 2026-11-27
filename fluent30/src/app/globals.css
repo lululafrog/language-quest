@@ -122,3 +122,7 @@ input, select, textarea { min-width: 0; }
 @keyframes coin-pop { 0% { transform: translateY(0) scale(0.6); opacity: 0 } 30% { opacity: 1; transform: translateY(-14px) scale(1.15) } 100% { transform: translateY(-40px) scale(1); opacity: 0 } }
 .confetti-piece { position: absolute; top: -12px; width: 8px; height: 14px; border-radius: 2px; animation-name: confetti-fall; animation-timing-function: linear; animation-iteration-count: infinite; }
 @keyframes confetti-fall { 0% { transform: translateY(0) rotate(0) } 100% { transform: translateY(110vh) rotate(540deg) } }
+
+/* Long unbreakable strings (URLs in books, etc.) must never widen the page on mobile. */
+p[data-pidx], .reader-word { overflow-wrap: anywhere; }
+html, body { overflow-x: clip; }
