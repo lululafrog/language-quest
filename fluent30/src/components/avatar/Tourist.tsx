@@ -55,27 +55,27 @@ export function Tourist({ equipped = {}, appearance, className, animate = true, 
           {hand?.k === "umbrella" && handItem(hand)}
           {hairBack(a)}
           {/* legs */}
-          <rect x="76" y="166" width="18" height="50" rx="8" fill={`url(#${uid}skin)`} stroke={O} strokeWidth={W} />
-          <rect x="106" y="166" width="18" height="50" rx="8" fill={`url(#${uid}skin)`} stroke={O} strokeWidth={W} />
+          <Limb d={LEG_L} w={17} color={a.skin} />
+          <Limb d={LEG_R} w={17} color={a.skin} />
           {!dress && renderBottom(bottom ?? { k: "shorts", c: "#7AA6C2" }, ctx)}
           {renderShoes(shoes ?? { k: "sneakers", c: "#FFFFFF", c2: "#CFCCFF" })}
           {dress?.k === "dressLong" && renderDress(dress, ctx)}
           {/* arms */}
-          <rect x="44" y="112" width="20" height="56" rx="10" fill={`url(#${uid}skin)`} stroke={O} strokeWidth={W} />
-          <rect x="136" y="112" width="20" height="56" rx="10" fill={`url(#${uid}skin)`} stroke={O} strokeWidth={W} />
+          <Limb d={ARM_L} w={16} color={a.skin} />
+          <Limb d={ARM_R} w={16} color={a.skin} />
+          <path d="M64 124 Q59 136 57 150" stroke="#fff" strokeWidth="2.5" opacity="0.28" fill="none" strokeLinecap="round" />
           {sleeveColor && !longSleeves && (
             <>
-              <rect x="42" y="110" width="24" height="26" rx="11" fill={sleeveColor} stroke={O} strokeWidth={W} />
-              <rect x="134" y="110" width="24" height="26" rx="11" fill={sleeveColor} stroke={O} strokeWidth={W} />
+              <Limb d={SLEEVE_L} w={21} color={sleeveColor} />
+              <Limb d={SLEEVE_R} w={21} color={sleeveColor} />
             </>
           )}
           {dress ? (dress.k !== "dressLong" ? renderDress(dress, ctx) : null) : renderTop(topSpec, ctx)}
           {outer && renderOuter(outer, ctx)}
-          {/* hands */}
-          <circle cx="54" cy="168" r="9.5" fill={`url(#${uid}skin)`} stroke={O} strokeWidth={W} />
-          <circle cx="146" cy="168" r="9.5" fill={`url(#${uid}skin)`} stroke={O} strokeWidth={W} />
+          <Hand cx={54} cy={166} skin={a.skin} />
+          <Hand cx={146} cy={166} flip skin={a.skin} />
           {bag && bag.k !== "backpack" && renderBag(bag)}
-          {bag?.k === "backpack" && <path d="M76 106 L80 150 M124 106 L120 150" stroke={shade(bag.c ?? "#FF7043", -0.35)} strokeWidth={6} strokeLinecap="round" />}
+          {bag?.k === "backpack" && <path d="M80 104 L82 150 M120 104 L118 150" stroke={shade(bag.c ?? "#FF7043", -0.35)} strokeWidth={6} strokeLinecap="round" />}
           {hand?.k === "duck" && handItem(hand)}
           {neck && renderNeck(neck)}
           {/* head */}
@@ -126,9 +126,39 @@ function patternDefs(id: string, p: Spec["p"], c: string, c2?: string): ReactNod
 }
 const fillOf = (id: string, p: Spec["p"], c: string) => (p && p !== "none" ? `url(#${id})` : c);
 
-const TORSO = "M64 120 Q64 106 80 104 L120 104 Q136 106 136 120 L137 166 Q137 174 129 174 L71 174 Q63 174 63 166Z";
-const torsoShade = <path d="M125 106 Q136 108 136 120 L137 166 Q137 174 129 174 L121 174 Q129 140 125 106Z" fill="#000" opacity="0.09" />;
-const torsoGloss = <path d="M72 112 Q68 132 70 160" stroke="#fff" strokeWidth="4" opacity="0.25" fill="none" strokeLinecap="round" />;
+// Body geometry (organic shapes: sloping shoulders, waist, bent arms).
+const TORSO = "M68 116 Q70 103 86 101 L114 101 Q130 103 132 116 L134 146 Q136 170 127 172 L73 172 Q64 170 66 146Z";
+const TORSO_L = "M68 116 Q70 103 86 101 L94 101 L94 172 L73 172 Q64 170 66 146Z";
+const TORSO_R = "M132 116 Q130 103 114 101 L106 101 L106 172 L127 172 Q136 170 134 146Z";
+const ARM_L = "M74 110 Q61 124 57 140 Q54 153 54 163";
+const ARM_R = "M126 110 Q139 124 143 140 Q146 153 146 163";
+const SLEEVE_L = "M74 110 Q64 120 60 132";
+const SLEEVE_R = "M126 110 Q136 120 140 132";
+const LEG_L = "M89 166 Q88 192 87 214";
+const LEG_R = "M111 166 Q112 192 113 214";
+const torsoShade = <path d="M123 103 Q130 105 132 116 L134 146 Q136 170 127 172 L119 172 Q127 140 123 103Z" fill="#000" opacity="0.09" />;
+const torsoGloss = <path d="M75 114 Q71 132 73 158" stroke="#fff" strokeWidth="4" opacity="0.25" fill="none" strokeLinecap="round" />;
+
+/** A limb drawn as a thick rounded stroke with an outline (organic, no boxy corners). */
+function Limb({ d, w, color, outline = true }: { d: string; w: number; color: string; outline?: boolean }) {
+  return (
+    <>
+      {outline && <path d={d} stroke={O} strokeWidth={w + W * 2} strokeLinecap="round" fill="none" />}
+      <path d={d} stroke={color} strokeWidth={w} strokeLinecap="round" fill="none" />
+    </>
+  );
+}
+
+function Hand({ cx, cy, flip, skin }: { cx: number; cy: number; flip?: boolean; skin: string }) {
+  const tx = flip ? -1 : 1;
+  return (
+    <g>
+      <ellipse cx={cx + 5.5 * tx} cy={cy - 3} rx="3.6" ry="5" fill={skin} stroke={O} strokeWidth={2} transform={`rotate(${-30 * tx} ${cx + 5.5 * tx} ${cy - 3})`} />
+      <circle cx={cx} cy={cy} r="8.5" fill={skin} stroke={O} strokeWidth={W} />
+      <path d={`M${cx - 3 * tx} ${cy + 3} Q${cx} ${cy + 5} ${cx + 3 * tx} ${cy + 3}`} stroke={shade(skin, -0.2)} strokeWidth="1.4" fill="none" strokeLinecap="round" />
+    </g>
+  );
+}
 
 // ---------------- hair ----------------
 function hairBack(a: Appearance): ReactNode {
@@ -247,11 +277,11 @@ function renderTop(sp: Spec, ctx: Ctx): ReactNode {
     <g>
       {patternDefs(pid, p, c, sp.c2)}
       {sp.k === "tank" ? (
-        <path d="M74 104 L86 104 Q92 116 100 116 Q108 116 114 104 L126 104 Q132 120 136 124 L137 166 Q137 174 129 174 L71 174 Q63 174 63 166 L64 124 Q68 120 74 104Z" fill={fill} stroke={O} strokeWidth={W} strokeLinejoin="round" />
+        <path d="M76 102 L87 101 Q92 114 100 114 Q108 114 113 101 L124 102 Q128 112 132 118 L134 146 Q136 170 127 172 L73 172 Q64 170 66 146 L68 118 Q72 112 76 102Z" fill={fill} stroke={O} strokeWidth={W} strokeLinejoin="round" />
       ) : (
         <path d={TORSO} fill={fill} stroke={O} strokeWidth={W} strokeLinejoin="round" />
       )}
-      {sp.k !== "tank" && <path d="M88 105 Q100 116 112 105" stroke={O} strokeWidth="2" fill={shade(c, -0.08)} />}
+      {sp.k !== "tank" && <path d="M88 102 Q100 113 112 102" stroke={O} strokeWidth="2" fill={shade(c, -0.08)} />}
       {sp.k === "polo" && <><path d="M86 104 L100 116 L114 104 L110 100 L100 108 L90 100Z" fill={shade(c, -0.15)} stroke={O} strokeWidth="1.8" /><circle cx="100" cy="124" r="1.8" fill={O} /><circle cx="100" cy="132" r="1.8" fill={O} /></>}
       {sp.k === "hawaii" && <path d="M86 104 L100 122 L114 104" stroke={O} strokeWidth={W} fill={shade(c, -0.15)} strokeLinejoin="round" />}
       {sp.k === "football" && <><path d="M88 104 L100 114 L112 104" stroke="#fff" strokeWidth="4" fill="none" /><text x="100" y="152" textAnchor="middle" fontSize="24" fontWeight="900" fill="#fff" fontFamily="system-ui, sans-serif">{sp.t}</text></>}
@@ -272,10 +302,10 @@ function renderOuter(sp: Spec, ctx: Ctx): ReactNode {
   const dark = shade(c, -0.25);
   const sleeves = (col: string) => (
     <>
-      <rect x="42" y="110" width="24" height="52" rx="11" fill={col} stroke={O} strokeWidth={W} />
-      <rect x="134" y="110" width="24" height="52" rx="11" fill={col} stroke={O} strokeWidth={W} />
-      <rect x="42" y="152" width="24" height="7" rx="3" fill={shade(col, -0.18)} />
-      <rect x="134" y="152" width="24" height="7" rx="3" fill={shade(col, -0.18)} />
+      <Limb d="M74 110 Q61 124 57 140 Q55 150 55 156" w={20} color={col} />
+      <Limb d="M126 110 Q139 124 143 140 Q145 150 145 156" w={20} color={col} />
+      <Limb d="M55 153 L55 157" w={20} color={shade(col, -0.18)} outline={false} />
+      <Limb d="M145 153 L145 157" w={20} color={shade(col, -0.18)} outline={false} />
     </>
   );
   switch (sp.k) {
@@ -306,16 +336,16 @@ function renderOuter(sp: Spec, ctx: Ctx): ReactNode {
     case "safari":
       return (
         <g>
-          <path d="M64 120 Q64 106 80 104 L94 104 L94 174 L71 174 Q63 174 63 166Z" fill={c} stroke={O} strokeWidth={W} />
-          <path d="M136 120 Q136 106 120 104 L106 104 L106 174 L129 174 Q137 174 137 166Z" fill={c} stroke={O} strokeWidth={W} />
-          {[[68, 126], [68, 148], [110, 126], [110, 148]].map(([x, y], i) => <rect key={i} x={x} y={y} width="20" height="15" rx="3" fill={dark} stroke={O} strokeWidth="1.5" />)}
+          <path d={TORSO_L} fill={c} stroke={O} strokeWidth={W} strokeLinejoin="round" />
+          <path d={TORSO_R} fill={c} stroke={O} strokeWidth={W} strokeLinejoin="round" />
+          {[[70, 124], [70, 146], [110, 124], [110, 146]].map(([x, y], i) => <rect key={i} x={x} y={y} width="20" height="15" rx="3" fill={dark} stroke={O} strokeWidth="1.5" />)}
         </g>
       );
     case "trench":
       return (
         <g>
           {sleeves(c)}
-          <path d="M64 120 Q64 106 80 104 L120 104 Q136 106 136 120 L140 198 L60 198Z" fill={c} stroke={O} strokeWidth={W} strokeLinejoin="round" />
+          <path d="M68 116 Q70 103 86 101 L114 101 Q130 103 132 116 L140 198 L60 198Z" fill={c} stroke={O} strokeWidth={W} strokeLinejoin="round" />
           <path d="M100 106 L100 198" stroke={dark} strokeWidth="2" />
           <path d="M84 104 L100 128 L116 104" fill={shade(c, -0.12)} stroke={O} strokeWidth="2" />
           <rect x="62" y="150" width="76" height="7" fill={dark} />
@@ -326,8 +356,8 @@ function renderOuter(sp: Spec, ctx: Ctx): ReactNode {
     case "lifejacket":
       return (
         <g>
-          <path d="M66 112 Q80 104 94 110 L94 170 L70 170 Q64 168 64 160Z" fill="#FF7A00" stroke={O} strokeWidth={W} />
-          <path d="M134 112 Q120 104 106 110 L106 170 L130 170 Q136 168 136 160Z" fill="#FF7A00" stroke={O} strokeWidth={W} />
+          <path d={TORSO_L} fill="#FF7A00" stroke={O} strokeWidth={W} strokeLinejoin="round" />
+          <path d={TORSO_R} fill="#FF7A00" stroke={O} strokeWidth={W} strokeLinejoin="round" />
           <rect x="64" y="138" width="72" height="5" fill="#1A1740" />
           <rect x="70" y="124" width="22" height="4" fill="#E8E8E8" />
           <rect x="108" y="124" width="22" height="4" fill="#E8E8E8" />
@@ -349,8 +379,8 @@ function renderOuter(sp: Spec, ctx: Ctx): ReactNode {
       return (
         <g>
           {sleeves(c)}
-          <path d="M64 120 Q64 106 80 104 L92 104 L92 174 L71 174 Q63 174 63 166Z" fill={c} stroke={O} strokeWidth={W} strokeLinejoin="round" />
-          <path d="M136 120 Q136 106 120 104 L108 104 L108 174 L129 174 Q137 174 137 166Z" fill={c} stroke={O} strokeWidth={W} strokeLinejoin="round" />
+          <path d="M68 116 Q70 103 86 101 L92 101 L92 172 L73 172 Q64 170 66 146Z" fill={c} stroke={O} strokeWidth={W} strokeLinejoin="round" />
+          <path d="M132 116 Q130 103 114 101 L108 101 L108 172 L127 172 Q136 170 134 146Z" fill={c} stroke={O} strokeWidth={W} strokeLinejoin="round" />
           <path d="M80 102 L92 104 L92 122 Z M120 102 L108 104 L108 122Z" fill={dark} stroke={O} strokeWidth="1.6" />
           {sp.c2 && <rect x="63" y="146" width="74" height="6" fill={sp.c2} />}
           {sp.t && (
@@ -376,9 +406,9 @@ function renderDress(sp: Spec, ctx: Ctx): ReactNode {
   return (
     <g>
       {patternDefs(pid, sp.p, c, sp.c2)}
-      <rect x="42" y="110" width="24" height="18" rx="9" fill={fill} stroke={O} strokeWidth={W} />
-      <rect x="134" y="110" width="24" height="18" rx="9" fill={fill} stroke={O} strokeWidth={W} />
-      <path d={`M68 116 Q68 104 82 104 L118 104 Q132 104 132 116 L134 148 L${long ? 152 : 146} ${long ? 214 : 196} Q100 ${long ? 224 : 204} ${long ? 48 : 54} ${long ? 214 : 196} L66 148Z`} fill={fill} stroke={O} strokeWidth={W} strokeLinejoin="round" />
+      <Limb d="M74 110 Q67 117 63 124" w={21} color={fill} />
+      <Limb d="M126 110 Q133 117 137 124" w={21} color={fill} />
+      <path d={`M68 116 Q70 103 86 101 L114 101 Q130 103 132 116 L134 148 L${long ? 152 : 146} ${long ? 214 : 196} Q100 ${long ? 224 : 204} ${long ? 48 : 54} ${long ? 214 : 196} L66 148Z`} fill={fill} stroke={O} strokeWidth={W} strokeLinejoin="round" />
       <path d="M88 105 Q100 114 112 105" stroke={O} strokeWidth="2" fill="none" />
       <path d="M66 146 Q100 152 134 146" stroke={shade(c, -0.3)} strokeWidth="3" fill="none" />
       <path d="M124 150 L136 198" stroke="#000" strokeWidth="8" opacity="0.07" />
@@ -392,46 +422,60 @@ function renderBottom(sp: Spec, ctx: Ctx): ReactNode {
   const fill = fillOf(pid, sp.p, c);
   const dark = shade(c, -0.2);
   const s = { stroke: O, strokeWidth: W, strokeLinejoin: "round" as const };
+  const hips = (col: string, bottomY = 176) => <path d={`M67 148 Q100 154 133 148 L131 ${bottomY} Q100 ${bottomY + 6} 69 ${bottomY}Z`} fill={col} {...s} />;
   switch (sp.k) {
     case "pants": {
-      const slim = sp.t === "slim";
+      const w = sp.t === "slim" ? 19 : 22;
       return (
         <g>
-          <path d={`M70 154 L130 154 L${slim ? 126 : 128} 214 L106 214 L101 176 L99 176 L94 214 L${slim ? 74 : 72} 214Z`} fill={c} {...s} />
-          <path d="M100 156 L100 172" stroke={dark} strokeWidth="1.5" />
-          {sp.t === "ripped" && <><path d="M78 186 Q84 183 90 187" stroke="#F3E5D8" strokeWidth="3" /><path d="M110 196 Q116 193 122 197" stroke="#F3E5D8" strokeWidth="3" /></>}
-          {sp.t === "zip" && <path d="M72 188 L94 188 M106 188 L128 188" stroke={dark} strokeWidth="2" strokeDasharray="2 2" />}
-          {(c === "#3F6FA8" || c === "#5C8BC4" || c === "#4A78B5") && <path d="M74 160 L74 170 M126 160 L126 170" stroke="#E3C08A" strokeWidth="1.5" strokeDasharray="2 2" />}
+          <Limb d="M89 160 Q88 190 87 210" w={w} color={c} />
+          <Limb d="M111 160 Q112 190 113 210" w={w} color={c} />
+          {hips(c)}
+          <path d="M100 152 L100 172" stroke={dark} strokeWidth="1.5" />
+          {sp.t === "ripped" && <><path d="M82 186 Q87 183 92 187" stroke="#F3E5D8" strokeWidth="3" /><path d="M108 196 Q113 193 118 197" stroke="#F3E5D8" strokeWidth="3" /></>}
+          {sp.t === "zip" && <path d="M77 188 L97 188 M103 188 L123 188" stroke={dark} strokeWidth="2" strokeDasharray="2 2" />}
+          {(c === "#3F6FA8" || c === "#5C8BC4" || c === "#4A78B5") && <path d="M76 156 L76 166 M124 156 L124 166" stroke="#E3C08A" strokeWidth="1.5" strokeDasharray="2 2" />}
+          <path d="M83 176 Q82 194 82 206" stroke="#fff" strokeWidth="2" opacity="0.2" fill="none" strokeLinecap="round" />
         </g>
       );
     }
     case "flare":
-      return <path d="M70 154 L130 154 L134 214 L106 214 L101 176 L99 176 L94 214 L66 214Z" fill={c} {...s} />;
+      return (
+        <g>
+          <path d="M76 160 L100 160 L96 214 L70 214Z" fill={c} {...s} />
+          <path d="M100 160 L124 160 L130 214 L104 214Z" fill={c} {...s} />
+          {hips(c)}
+        </g>
+      );
     case "skirt":
-      return <g><path d="M70 154 L130 154 L140 196 L60 196Z" fill={c} {...s} />{[80, 92, 104, 116, 128].map((x) => <path key={x} d={`M${x - 4} 158 L${x - 2} 194`} stroke={dark} strokeWidth="1.5" />)}</g>;
+      return <g><path d="M68 148 L132 148 L142 194 Q100 200 58 194Z" fill={c} {...s} />{[80, 92, 104, 116, 128].map((x) => <path key={x} d={`M${x - 4} 152 L${x - 2} 194`} stroke={dark} strokeWidth="1.5" />)}</g>;
     case "kilt":
       return (
         <g>
-          <path d="M68 154 L132 154 L138 202 L62 202Z" fill="#C62828" {...s} />
-          {[74, 88, 102, 116, 130].map((x) => <path key={x} d={`M${x} 154 L${x + 2} 202`} stroke="#1B5E20" strokeWidth={4} opacity="0.7" />)}
-          <path d="M66 170 L134 170 M64 186 L136 186" stroke="#1B5E20" strokeWidth={3} opacity="0.7" />
-          <rect x="94" y="170" width="12" height="16" rx="3" fill="#E0E0E0" stroke={O} strokeWidth={1.5} />
+          <path d="M67 148 L133 148 L138 200 Q100 205 62 200Z" fill="#C62828" {...s} />
+          {[74, 88, 102, 116, 130].map((x) => <path key={x} d={`M${x} 148 L${x + 2} 200`} stroke="#1B5E20" strokeWidth={4} opacity="0.7" />)}
+          <path d="M66 166 L134 166 M64 184 L136 184" stroke="#1B5E20" strokeWidth={3} opacity="0.7" />
+          <rect x="94" y="166" width="12" height="16" rx="3" fill="#E0E0E0" stroke={O} strokeWidth={1.5} />
         </g>
       );
     case "cargo":
       return (
         <g>
-          <path d="M70 154 L130 154 L131 196 L104 196 L100 180 L96 196 L69 196Z" fill={c} {...s} />
-          <rect x="72" y="172" width="15" height="14" rx="3" fill={dark} stroke={O} strokeWidth={1.5} />
-          <rect x="113" y="172" width="15" height="14" rx="3" fill={dark} stroke={O} strokeWidth={1.5} />
+          <Limb d="M88 162 Q88 178 87 190" w={25} color={c} />
+          <Limb d="M112 162 Q112 178 113 190" w={25} color={c} />
+          {hips(c)}
+          <rect x="74" y="174" width="13" height="13" rx="3" fill={dark} stroke={O} strokeWidth={1.5} />
+          <rect x="113" y="174" width="13" height="13" rx="3" fill={dark} stroke={O} strokeWidth={1.5} />
         </g>
       );
     default:
       return (
         <g>
           {patternDefs(pid, sp.p, c, sp.c2)}
-          <path d="M70 154 L130 154 L130 188 L104 188 L100 174 L96 188 L70 188Z" fill={fill} {...s} />
-          <path d="M70 160 L130 160" stroke={dark} strokeWidth="2" />
+          <Limb d="M88 162 Q88 175 88 184" w={25} color={fill} />
+          <Limb d="M112 162 Q112 175 112 184" w={25} color={fill} />
+          {hips(fill)}
+          <path d="M68 154 Q100 160 132 154" stroke={dark} strokeWidth="2" fill="none" />
         </g>
       );
   }
@@ -442,7 +486,7 @@ function foot(x: number, body: (x: number) => ReactNode) {
 }
 function renderShoes(sp: Spec): ReactNode {
   const c = sp.c ?? "#FFFFFF";
-  const both = (f: (x: number) => ReactNode) => <>{foot(0, f)}{foot(32, f)}</>;
+  const both = (f: (x: number) => ReactNode) => <>{foot(2, f)}{foot(28, f)}</>;
   switch (sp.k) {
     case "flipflops":
       return both((x) => <g transform={`translate(${x} 0)`}><ellipse cx="84" cy="221" rx="15" ry="5" fill={c} stroke={O} strokeWidth={2} /><path d="M78 217 L85 211 L92 217" stroke={shade(c, -0.3)} strokeWidth={3} fill="none" /></g>);
