@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { EYE_COLORS, EYES, HAIR_COLORS, HAIR_STYLES, SKIN_TONES } from "@/lib/data/shop";
+import { BODIES, EXPRESSIONS, EYE_COLORS, EYES, FACE_SHAPES, HAIR_COLORS, HAIR_STYLES, SKIN_TONES } from "@/lib/data/shop";
 import { useT } from "@/hooks/useT";
 import { cx } from "@/components/ui";
 import { DEFAULT_APPEARANCE, Tourist } from "./Tourist";
@@ -20,8 +20,10 @@ export function randomAppearance(gender?: Appearance["gender"]): Appearance {
     gender: g,
     skin: pick(SKIN_TONES),
     hair: pick(fem ? FEMALE_HAIR : MALE_HAIR),
-    hairColor: pick(HAIR_COLORS.slice(0, 7)),
-    face: pick(["oval", "round", "square", "heart"] as const),
+    hairColor: pick(HAIR_COLORS.slice(0, 8)),
+    face: pick(["oval", "round", "square", "heart", "long", "diamond"] as const),
+    body: pick(["slim", "average", "average", "strong"] as const),
+    expression: pick(["smile", "smile", "neutral", "laugh"] as const),
     eyes: fem ? pick(["lashes", "lashes", "happy", "round"] as const) : pick(["round", "round", "happy"] as const),
     eyeColor: pick(EYE_COLORS),
     brows: pick(["thin", "normal", "thick"] as const),
@@ -35,10 +37,10 @@ export function randomAppearance(gender?: Appearance["gender"]): Appearance {
 }
 
 
-function Thumb({ base, p, label, active, onClick }: { base: Appearance; p: Partial<Appearance>; label: string; active: boolean; onClick: () => void }) {
+function Thumb({ base, p, label, active, onClick, full }: { base: Appearance; p: Partial<Appearance>; label: string; active: boolean; onClick: () => void; full?: boolean }) {
   return (
-    <button onClick={onClick} className={cx("overflow-hidden rounded-2xl border-2 bg-surface-2 text-center transition active:scale-95", active ? "border-ink-500 ring-2 ring-ink-300/60" : "border-transparent")}>
-      <Tourist appearance={{ ...base, ...p }} portrait animate={false} className="w-full" />
+    <button type="button" aria-pressed={active} onClick={onClick} className={cx("overflow-hidden rounded-2xl border-2 bg-surface-2 text-center transition active:scale-95", active ? "border-ink-500 ring-2 ring-ink-300/60" : "border-transparent")}>
+      <Tourist appearance={{ ...base, ...p }} portrait={!full} animate={false} className="w-full" />
       <span className="block px-1 pb-1.5 text-[11px] font-medium leading-tight">{label}</span>
     </button>
   );
@@ -46,14 +48,14 @@ function Thumb({ base, p, label, active, onClick }: { base: Appearance; p: Parti
 function Swatches({ colors, current, onPick, size = "h-9 w-9" }: { colors: string[]; current?: string; onPick: (c: string) => void; size?: string }) {
   return (
     <div className="flex flex-wrap gap-2">
-      {colors.map((c) => <button key={c} onClick={() => onPick(c)} aria-label={c} className={cx(size, "rounded-full border-2 transition", current === c ? "scale-110 border-ink-600 ring-2 ring-ink-300" : "border-white shadow")} style={{ background: c }} />)}
+      {colors.map((c) => <button type="button" key={c} onClick={() => onPick(c)} aria-label={c} aria-pressed={current === c} className={cx(size, "rounded-full border-2 transition", current === c ? "scale-110 border-ink-600 ring-2 ring-ink-300" : "border-white shadow")} style={{ background: c }} />)}
     </div>
   );
 }
 function Chips<K extends string>({ options, current, onPick }: { options: { id: K; label: string }[]; current?: K; onPick: (k: K) => void }) {
   return (
     <div className="flex flex-wrap gap-1.5">
-      {options.map((o) => <button key={o.id} onClick={() => onPick(o.id)} className={cx("rounded-full border px-3 py-1.5 text-sm", current === o.id ? "border-ink-500 bg-ink-600 text-white" : "border-line bg-surface")}>{o.label}</button>)}
+      {options.map((o) => <button type="button" key={o.id} onClick={() => onPick(o.id)} aria-pressed={current === o.id} className={cx("rounded-full border px-3 py-1.5 text-sm", current === o.id ? "border-ink-500 bg-ink-600 text-white" : "border-line bg-surface")}>{o.label}</button>)}
     </div>
   );
 }
@@ -77,37 +79,43 @@ export function AppearanceEditor({ value, onChange }: { value: Appearance; onCha
   };
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: "corps", label: t("🧍 Corps", "🧍 Body") },
-    { id: "visage", label: t("🙂 Visage", "🙂 Face") },
-    { id: "cheveux", label: t("💇 Cheveux", "💇 Hair") },
-    { id: "pilosite", label: t("🧔 Barbe", "🧔 Beard") },
-    { id: "maquillage", label: t("💄 Maquillage", "💄 Make-up") },
+    { id: "corps", label: t("Corps", "Body") },
+    { id: "visage", label: t("Visage", "Face") },
+    { id: "cheveux", label: t("Cheveux", "Hair") },
+    { id: "pilosite", label: t("Barbe", "Beard") },
+    { id: "maquillage", label: t("Maquillage", "Make-up") },
   ];
 
   return (
     <div>
       <div className="mb-3 grid grid-cols-3 gap-2">
-        <button onClick={() => setGender("female")} className={cx("rounded-2xl border-2 py-2.5 font-semibold transition", v.gender === "female" ? "border-coral-400 bg-coral-100 text-coral-600 dark:bg-coral-600/20" : "border-line bg-surface")}>👩 {t("Femme", "Woman")}</button>
-        <button onClick={() => setGender("male")} className={cx("rounded-2xl border-2 py-2.5 font-semibold transition", v.gender !== "female" ? "border-ink-400 bg-ink-50 text-ink-700 dark:bg-ink-900/50 dark:text-ink-200" : "border-line bg-surface")}>👨 {t("Homme", "Man")}</button>
-        <button onClick={() => onChange(randomAppearance())} className="rounded-2xl border-2 border-dashed border-sun-400 bg-sun-100/60 py-2.5 font-semibold text-amber-800 transition active:rotate-6 dark:bg-sun-500/10 dark:text-sun-100">🎲 {t("Aléatoire", "Random")}</button>
+        <button type="button" aria-pressed={v.gender === "female"} onClick={() => setGender("female")} className={cx("rounded-2xl border-2 py-2.5 font-semibold transition", v.gender === "female" ? "border-coral-400 bg-coral-100 text-coral-600 dark:bg-coral-600/20" : "border-line bg-surface")}>{t("Femme", "Woman")}</button>
+        <button type="button" aria-pressed={v.gender !== "female"} onClick={() => setGender("male")} className={cx("rounded-2xl border-2 py-2.5 font-semibold transition", v.gender !== "female" ? "border-ink-400 bg-ink-50 text-ink-700 dark:bg-ink-900/50 dark:text-ink-200" : "border-line bg-surface")}>{t("Homme", "Man")}</button>
+        <button type="button" onClick={() => onChange(randomAppearance())} className="rounded-2xl border-2 border-dashed border-line bg-surface py-2.5 font-semibold transition active:scale-95">{t("Au hasard", "Random")}</button>
       </div>
       <div className="no-scrollbar -mx-1 mb-3 flex gap-1.5 overflow-x-auto px-1">
-        {tabs.map((x) => <button key={x.id} onClick={() => setTab(x.id)} className={cx("shrink-0 rounded-full px-3 py-1.5 text-sm font-medium", tab === x.id ? "bg-ink-600 text-white shadow-md shadow-ink-600/25" : "bg-surface-2 text-muted")}>{x.label}</button>)}
+        {tabs.map((x) => <button type="button" key={x.id} onClick={() => setTab(x.id)} className={cx("shrink-0 rounded-full px-3 py-1.5 text-sm font-medium", tab === x.id ? "bg-ink-600 text-white shadow-md shadow-ink-600/25" : "bg-surface-2 text-muted")}>{x.label}</button>)}
       </div>
 
       {tab === "corps" && (
         <div>
           <Label>{t("Couleur de peau", "Skin tone")}</Label>
-          <Swatches colors={SKIN_TONES} current={v.skin} onPick={(c) => set({ skin: c })} size="h-11 w-11" />
+          <Swatches colors={SKIN_TONES} current={v.skin} onPick={(c) => set({ skin: c })} size="h-10 w-10" />
+          <Label>{t("Morphologie", "Body shape")}</Label>
+          <div className="grid grid-cols-3 gap-2">
+            {BODIES.map((b) => <Thumb full base={v} key={b.id} p={{ body: b.id }} label={t(b.fr, b.en)} active={(v.body ?? "average") === b.id} onClick={() => set({ body: b.id })} />)}
+          </div>
           <Label>{t("Forme du visage", "Face shape")}</Label>
-          <div className="grid grid-cols-4 gap-2">
-            {([["oval", t("Ovale", "Oval")], ["round", t("Rond", "Round")], ["square", t("Carré", "Square")], ["heart", t("Cœur", "Heart")]] as const).map(([id, label]) => <Thumb base={v} key={id} p={{ face: id }} label={label} active={v.face === id} onClick={() => set({ face: id })} />)}
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+            {FACE_SHAPES.map((f) => <Thumb base={v} key={f.id} p={{ face: f.id }} label={t(f.fr, f.en)} active={v.face === f.id} onClick={() => set({ face: f.id })} />)}
           </div>
         </div>
       )}
 
       {tab === "visage" && (
         <div>
+          <Label>{t("Expression", "Expression")}</Label>
+          <div className="grid grid-cols-5 gap-2">{EXPRESSIONS.map((e) => <Thumb base={v} key={e.id} p={{ expression: e.id }} label={t(e.fr, e.en)} active={(v.expression ?? "smile") === e.id} onClick={() => set({ expression: e.id })} />)}</div>
           <Label>{t("Yeux", "Eyes")}</Label>
           <div className="grid grid-cols-3 gap-2">{EYES.map((e) => <Thumb base={v} key={e.id} p={{ eyes: e.id }} label={t(e.fr, e.en)} active={v.eyes === e.id} onClick={() => set({ eyes: e.id })} />)}</div>
           <Label>{t("Couleur des yeux", "Eye colour")}</Label>

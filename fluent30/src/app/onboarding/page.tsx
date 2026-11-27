@@ -15,9 +15,14 @@ import type { Appearance, Settings } from "@/lib/types";
 import { DEFAULT_APPEARANCE, Tourist } from "@/components/avatar/Tourist";
 import { AppearanceEditor } from "@/components/avatar/AppearanceEditor";
 import { getGame, saveAppearance } from "@/lib/game";
+import { WORLD } from "@/lib/data/world";
+import { DESTINATIONS } from "@/lib/data/destinations";
+import { CEFR_LEVELS } from "@/lib/curriculum/types";
+import { Stamp } from "@/components/passport/Stamp";
+import { DestinationScene } from "@/components/world/art";
 
 const LEVELS: CefrLevel[] = ["A1", "A2", "B1", "B2", "C1"];
-const STEP_NAMES = ["Bienvenue", "Niveau", "Objectifs", "Rythme", "Intérêts", "Personnage", "Parcours"];
+const STEP_NAMES = ["Bienvenue", "Niveau", "Objectifs", "Rythme", "Intérêts", "Personnage", "Destination", "Passeport", "Parcours"];
 
 const GOALS: { id: string; label: string; icon: IconName }[] = [
   { id: "travel", label: "Voyager sans stress", icon: "globe" },
@@ -136,6 +141,7 @@ export default function Onboarding() {
   const [daily, setDaily] = useState(10);
   const [look, setLook] = useState<Appearance>(DEFAULT_APPEARANCE);
   const [saving, setSaving] = useState(false);
+  const [home, setHome] = useState("london");
   const loaded = useRef(false);
 
   // Coming back to the onboarding keeps what was already chosen (existing data preserved).
@@ -150,6 +156,7 @@ export default function Onboarding() {
       if (s.sessionMinutes) setMinutes(s.sessionMinutes);
       if (s.dailyNewWords) setDaily(s.dailyNewWords);
       if (g.appearance) setLook(g.appearance);
+      if (s.homeDestination) setHome(s.homeDestination);
     });
   }, []);
 
@@ -157,11 +164,19 @@ export default function Onboarding() {
   const lv = level ?? "A1";
   const firstLesson = useMemo(() => PATH.find((l) => l.level === lv), [lv]);
 
-  const finish = async (to: "home" | "lesson" | "cefr") => {
+  // First destination: London is always open; others once the chosen level reaches theirs.
+  const openDests = WORLD.filter((d) => d.id === "london" || CEFR_LEVELS.indexOf(lv) >= CEFR_LEVELS.indexOf(d.level));
+  const homeDest = openDests.find((d) => d.id === home) ?? WORLD[0];
+  const homeStamp = DESTINATIONS.find((d) => d.id === homeDest.id);
+  const firstMission = homeDest.missions[0];
+
+  const finish = async (to: "home" | "lesson" | "cefr" | "mission") => {
     setSaving(true);
     await saveAppearance(look);
-    await saveSettings({ displayName: name.trim() || undefined, pathLevel: lv, goals, interests, sessionMinutes: minutes, dailyNewWords: daily, onboarded: true });
-    router.push(to === "lesson" && firstLesson ? `/cours/${firstLesson.id}` : to === "cefr" ? "/tests/cefr" : "/");
+    await saveSettings({ displayName: name.trim() || undefined, pathLevel: lv, goals, interests, sessionMinutes: minutes, dailyNewWords: daily, homeDestination: homeDest.id, onboarded: true });
+    router.push(
+      to === "mission" ? `/world/mission/${firstMission.id}` : to === "lesson" && firstLesson ? `/cours/${firstLesson.id}` : to === "cefr" ? "/tests/cefr" : "/",
+    );
   };
 
   const chip = (active: boolean) => cx("rounded-xl border px-3 py-2.5 text-sm transition", active ? "border-ink-500 bg-ink-600 text-white" : "border-line bg-surface hover:border-ink-300");
@@ -322,7 +337,43 @@ export default function Onboarding() {
       </div>
     </div>,
 
-    // 7. Summary
+    // 7. First destination
+    <div key="destination">
+      <h2 className="text-xl font-semibold">Ta première destination</h2>
+      <p className="mb-4 text-sm text-muted">Chaque ville est une série de missions d&apos;anglais concrètes. Les autres s&apos;ouvriront quand tu auras les compétences.</p>
+      <div className="grid gap-2">
+        {openDests.map((d) => (
+          <button key={d.id} type="button" onClick={() => setHome(d.id)} className={cx("grid grid-cols-[112px_1fr] items-center overflow-hidden rounded-2xl border text-left transition", homeDest.id === d.id ? "border-ink-500 ring-2 ring-ink-200 dark:ring-ink-800" : "border-line hover:border-ink-300")}>
+            <DestinationScene dest={d} />
+            <span className="block p-3">
+              <span className="block font-semibold">{d.nameFr} <span className="text-xs font-normal text-muted">· {d.level} · {d.accentLabel}</span></span>
+              <span className="block text-sm text-muted">{d.tagline}</span>
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>,
+
+    // 8. Passport handover
+    <div key="passport" className="text-center">
+      <h2 className="text-xl font-semibold">Voici ton passeport</h2>
+      <p className="mx-auto mt-1 max-w-sm text-sm text-muted">Il se remplit de tampons à chaque vraie progression : missions, cours, livres, régularité. Un jour manqué n&apos;efface jamais rien.</p>
+      <div className="mx-auto mt-5 w-fit rounded-3xl border border-line bg-surface-2 px-8 py-6">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted">Passport · Passeport</p>
+        <p className="mt-1 font-display text-lg font-semibold">{name.trim() || "Voyageur"}</p>
+        <div className="mx-auto mt-3 w-28 overflow-hidden rounded-2xl border border-line bg-surface">
+          <Tourist appearance={look} />
+        </div>
+        {homeStamp && (
+          <div className="mt-4">
+            <Stamp dest={homeStamp} locked size={84} className="mx-auto" />
+            <p className="mt-1 text-xs text-muted">Premier tampon à gagner : {homeDest.nameFr}</p>
+          </div>
+        )}
+      </div>
+    </div>,
+
+    // 9. Summary
     <div key="summary">
       <h2 className="text-xl font-semibold">{name.trim() ? `${name.trim()}, voici ton parcours` : "Ton parcours"}</h2>
       <ol className="mt-4 space-y-3">
@@ -369,17 +420,20 @@ export default function Onboarding() {
           </span>
           <div>
             <p className="font-medium">Ton passeport</p>
-            <p className="text-sm text-muted">Premier tampon (Londres) dès ton premier cours terminé.</p>
+            <p className="text-sm text-muted">Destination de départ : {homeDest.nameFr}. Première mission : {firstMission.title}.</p>
           </div>
         </li>
       </ol>
       <div className="mt-6 grid gap-2">
+        <Button onClick={() => finish("mission")} loading={saving}>
+          Partir pour {homeDest.nameFr} : {firstMission.title}
+        </Button>
         {firstLesson && (
-          <Button onClick={() => finish("lesson")} loading={saving}>
-            Commencer mon premier cours
+          <Button variant="outline" onClick={() => finish("lesson")} loading={saving}>
+            Commencer par le cours : {firstLesson.title}
           </Button>
         )}
-        <Button variant={firstLesson ? "outline" : "primary"} onClick={() => finish("home")} loading={saving}>
+        <Button variant="ghost" onClick={() => finish("home")} loading={saving}>
           Voir mon programme du jour
         </Button>
       </div>

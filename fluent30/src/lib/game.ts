@@ -2,7 +2,7 @@
 // Gamification: XP levels, coins, daily quests, streak rewards and the tourist's wardrobe.
 import { getDb, todayKey } from "./db";
 import { computeStreak } from "./track";
-import { LEGACY_IDS, SHOP_BY_ID, SHOP_ITEMS } from "./data/shop";
+import { LEGACY_IDS, SHOP_BY_ID, SHOP_ITEMS, type EarnRule, type ShopItem } from "./data/shop";
 import type { Appearance, AvatarSlot, DayActivity, GameState } from "./types";
 
 export const DEFAULT_GAME: GameState = {
@@ -159,6 +159,7 @@ export async function buyItem(itemId: string): Promise<{ ok: boolean; reason?: s
   if (!item) return { ok: false, reason: "Objet introuvable", game: g };
   if (g.owned.includes(itemId)) return { ok: true, game: g };
   if (item.unlock) return { ok: false, reason: `Débloqué en terminant ${item.unlock.fr}`, game: g };
+  if (item.earn) return { ok: false, reason: `À gagner : ${item.earn.fr}`, game: g };
   if (g.coins < item.price) return { ok: false, reason: "Pas assez de pièces", game: g };
   const next = { ...g, coins: g.coins - item.price, owned: [...g.owned, itemId], equipped: withItem(g.equipped, item.slot, itemId) };
   await saveGame(next);
@@ -239,4 +240,89 @@ export async function placeDecor(slot: string, decorId: string | null) {
   if (decorId) placed[slot] = decorId;
   else delete placed[slot];
   await saveGame({ ...g, shelf: { ...shelf, placed } });
+}
+
+// ---------- Earned wardrobe items (real progress, never bought) ----------
+
+/** Real progress measured from the learner's data (used by earned items). */
+export interface ProgressStats {
+  lessons: number; // course lessons passed
+  books: number; // books finished
+  mastered: number; // words durably memorised (FSRS stability ≥ 21 days)
+  streak: number; // total active days (never lost — rewards regularity without penalty)
+  missions: Record<string, number>; // destination id → missions completed
+}
+
+export async function progressStats(): Promise<ProgressStats> {
+  const db = getDb();
+  const [lessons, books, srs, days, missions] = await Promise.all([
+    db.lessons.where("status").equals("done").count(),
+    db.collection.count(),
+    db.srs.where("state").equals(2).toArray(),
+    db.activity.toArray(),
+    db.missions.where("status").equals("done").toArray(),
+  ]);
+  const mastered = new Set(srs.filter((x) => x.stability >= 21).map((x) => x.cardId)).size;
+  const activeDays = days.filter((d) => d.seconds > 30 || d.reviews > 0 || d.newWords > 0 || d.xp > 0).length;
+  const byDest: Record<string, number> = {};
+  for (const m of missions) {
+    const dest = m.id.split("-")[0];
+    byDest[dest] = (byDest[dest] ?? 0) + 1;
+  }
+  return { lessons, books, mastered, streak: activeDays, missions: byDest };
+}
+
+/** Current value of an earn rule. */
+export function earnValue(rule: EarnRule, st: ProgressStats): number {
+  switch (rule.kind) {
+    case "lessons": return st.lessons;
+    case "books": return st.books;
+    case "mastered": return st.mastered;
+    case "streak": return st.streak;
+    case "missions": return rule.dest ? st.missions[rule.dest] ?? 0 : Object.values(st.missions).reduce((a, b) => a + b, 0);
+  }
+}
+
+/** Grants every earned item whose rule is met (idempotent). Returns the newly granted items. */
+export async function checkEarnedItems(): Promise<ShopItem[]> {
+  const st = await progressStats();
+  const g = await getGame();
+  const fresh = SHOP_ITEMS.filter((i) => i.earn && !g.owned.includes(i.id) && earnValue(i.earn, st) >= i.earn.n);
+  if (fresh.length) await saveGame({ ...g, owned: [...g.owned, ...fresh.map((i) => i.id)] });
+  return fresh;
+}
+
+// ---------- Favourite outfits ----------
+export const MAX_OUTFITS = 5;
+
+export async function saveOutfit(name: string): Promise<{ ok: boolean; reason?: string }> {
+  const g = await getGame();
+  const outfits = g.outfits ?? [];
+  if (outfits.length >= MAX_OUTFITS) return { ok: false, reason: `${MAX_OUTFITS} tenues maximum : supprime-en une d'abord.` };
+  const id = `o${Date.now().toString(36)}`;
+  await saveGame({ ...g, outfits: [...outfits, { id, name: name.trim().slice(0, 30) || `Tenue ${outfits.length + 1}`, equipped: { ...g.equipped } }] });
+  return { ok: true };
+}
+
+/** Puts on a saved outfit (only items still owned). */
+export async function wearOutfit(id: string) {
+  const g = await getGame();
+  const o = g.outfits?.find((x) => x.id === id);
+  if (!o) return g;
+  const equipped: Partial<Record<AvatarSlot, string>> = {};
+  for (const [slot, itemId] of Object.entries(o.equipped)) if (itemId && g.owned.includes(itemId)) equipped[slot as AvatarSlot] = itemId;
+  const next = normalizeGame({ ...g, equipped });
+  await saveGame(next);
+  return next;
+}
+
+export async function deleteOutfit(id: string) {
+  const g = await getGame();
+  await saveGame({ ...g, outfits: (g.outfits ?? []).filter((o) => o.id !== id) });
+}
+
+/** Removes everything except the background. */
+export async function undressAll() {
+  const g = await getGame();
+  await saveGame({ ...g, equipped: g.equipped.background ? { background: g.equipped.background } : {} });
 }

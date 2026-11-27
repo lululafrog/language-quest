@@ -4,6 +4,7 @@ import { getDb, getSettings } from "./db";
 import { addCoins } from "./game";
 import { claimStamps } from "./passport";
 import { trackActivity } from "./track";
+import { LEVEL_INFO } from "./curriculum";
 import { CEFR_LEVELS, type CefrLevel, type Exercise } from "./curriculum/types";
 import { WORLD, getMission, type Mission, type Souvenir, type WorldDestination } from "./data/world";
 import type { Destination } from "./data/destinations";
@@ -137,4 +138,15 @@ export async function recordVisa(destId: string, score: number): Promise<boolean
 /** Next mission to play in a destination (first not done). */
 export function nextMission(dest: WorldDestination, progress: Map<string, MissionProgress>): Mission | undefined {
   return dest.missions.find((m) => progress.get(m.id)?.status !== "done");
+}
+
+/** Human hint: the three ways to open a locked destination. */
+export function unlockHint(d: DestState): string {
+  if (d.open) return "";
+  const parts = [
+    d.unlock.lessonsTotal ? `terminer ${d.unlock.lessonsTotal - d.unlock.lessonsDone} cours conseillé${d.unlock.lessonsTotal - d.unlock.lessonsDone > 1 ? "s" : ""}` : "",
+    `suivre le niveau ${d.dest.level} (${LEVEL_INFO[d.dest.level].title.toLowerCase()})`,
+    "réussir le contrôle de visa (5 questions)",
+  ].filter(Boolean);
+  return `Pour l'ouvrir : ${parts.join(", ou ")}.`;
 }

@@ -332,7 +332,7 @@ const NEW_YORK: WorldDestination = {
   tagline: "Rencontres, conversations rapides et expressions de tous les jours.",
   palette: { sky: "#D6DCE6", ground: "#E8DFD0", accent: "#C46A2B", ink: "#283346" },
   landmark: "statue",
-  pin: { x: 268, y: 205 },
+  pin: { x: 292, y: 222 },
   characters: [
     { name: "Dani", role: "Organisatrice des soirées sur le toit de l'auberge", personality: "Énergique, présente tout le monde à tout le monde.", register: "familier", hello: "Hey! Grab a drink and come say hi!" },
     { name: "Marcus", role: "Serveur dans un diner", personality: "Drôle, parle très vite, finit ses phrases par « buddy ».", register: "familier", hello: "Hey, how's it going? Coffee to start?" },
@@ -1060,7 +1060,7 @@ const TORONTO: WorldDestination = {
   tagline: "Entretien, réunions et opinions : l'anglais professionnel, avec chaleur.",
   palette: { sky: "#D3DDE0", ground: "#E6DECF", accent: "#A8432E", ink: "#26323B" },
   landmark: "maple",
-  pin: { x: 252, y: 178 },
+  pin: { x: 222, y: 158 },
   characters: [
     { name: "Sarah Chen", role: "Responsable recrutement", personality: "Bienveillante mais précise ; aime les exemples concrets.", register: "formel", hello: "Thanks for coming in today. Please, have a seat." },
     { name: "Tom", role: "Collègue de l'équipe produit", personality: "Direct, drôle, déteste les réunions trop longues.", register: "courant", hello: "Hey, ready for the stand-up?" },

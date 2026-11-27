@@ -33,7 +33,7 @@ type Equipped = Partial<Record<AvatarSlot, string>>;
 /** viewBox used to show one item on its own (wardrobe thumbnails). */
 const CROP: Record<AvatarSlot, string> = {
   hat: "40 -2 120 84", glasses: "62 40 76 46", face: "60 36 80 70", top: "28 74 144 116", outer: "18 72 164 140", dress: "18 72 164 160",
-  bottom: "44 140 112 98", shoes: "58 190 84 42", bag: "18 62 164 150", neck: "40 78 120 100", hand: "40 16 160 216", background: "0 0 200 240",
+  bottom: "44 140 112 98", shoes: "58 190 84 42", bag: "18 62 164 150", neck: "40 78 120 100", hand: "86 14 116 214", background: "0 0 200 240",
 };
 const MANNEQUIN = "#E8DFD4";
 
@@ -414,7 +414,8 @@ function renderFace(a: Appearance, face: Spec | undefined, ctx: Ctx, expr: Expre
     );
   const mouthW = lips === "full" ? 14 : lips === "thin" ? 11 : 13;
   const mouthD = lips === "full" ? 14 : lips === "thin" ? 9 : 12;
-  const cheek = makeup === "blush" ? "#E2687E" : "#E98B7F";
+  const dark = isDark(a.skin);
+  const cheek = makeup === "blush" ? (dark ? "#B0475C" : "#E2687E") : dark ? "#A65A4E" : "#E98B7F";
   const mouth = (() => {
     if (face?.k === "moustache") return null;
     switch (expr) {
@@ -708,9 +709,15 @@ function renderDress(sp: Spec, ctx: Ctx): ReactNode {
     return (
       <g>
         {patternDefs(pid, sp.p, c, sp.c2)}
-        <path d="M84 102 L86 112 M116 102 L114 112" stroke={c} strokeWidth="4" strokeLinecap="round" />
-        <path d={`M${78 + ctx.sx} 112 Q100 118 ${122 - ctx.sx} 112 Q126 140 ${122 - ctx.sx} 150 Q128 166 120 178 L108 178 Q100 168 92 178 L80 178 Q72 166 ${78 + ctx.sx} 150 Q74 140 ${78 + ctx.sx} 112Z`} fill={fill} stroke={O} strokeWidth={W} strokeLinejoin="round" />
-        {sp.c2 && !sp.p && <path d="M76 140 Q100 146 124 140" stroke={sp.c2} strokeWidth="4" fill="none" />}
+        {/* skin torso under the swimsuit */}
+        <path d={ctx.torso} fill={ctx.a.skin} stroke={O} strokeWidth={W} strokeLinejoin="round" />
+        <path d={`M${84 + ctx.sx / 2} 103 L${86 + ctx.sx / 2} 114 M${116 - ctx.sx / 2} 103 L${114 - ctx.sx / 2} 114`} stroke={c} strokeWidth="4" strokeLinecap="round" />
+        <path
+          d={`M${80 + ctx.sx} 114 Q100 124 ${120 - ctx.sx} 114 L${124 - ctx.sx} 130 Q${127 - ctx.sx} 144 ${122 - ctx.sx} 152 Q${130 - ctx.sx} 162 ${127 - ctx.sx} 170 Q112 168 104 178 L96 178 Q88 168 ${73 + ctx.sx} 170 Q${70 + ctx.sx} 162 ${78 + ctx.sx} 152 Q${73 + ctx.sx} 144 ${76 + ctx.sx} 130Z`}
+          fill={fill} stroke={O} strokeWidth={W} strokeLinejoin="round"
+        />
+        {sp.c2 && !sp.p && <path d={`M${77 + ctx.sx} 140 Q100 147 ${123 - ctx.sx} 140`} stroke={sp.c2} strokeWidth="4" fill="none" />}
+        <path d={`M${118 - ctx.sx} 120 Q${124 - ctx.sx} 140 ${118 - ctx.sx} 160`} stroke="#3A2A20" strokeWidth="5" opacity="0.08" fill="none" />
       </g>
     );
   }
@@ -933,6 +940,8 @@ function handItem(sp: Spec): ReactNode {
   switch (sp.k) {
     case "suitcaseHard":
       return <g><rect x="150" y="146" width="38" height="62" rx="9" fill={sp.c ?? "#7F9C7A"} stroke={O} strokeWidth={W} />{[160, 169, 178].map((x) => <path key={x} d={`M${x} 150 L${x} 204`} stroke={shade(sp.c ?? "#7F9C7A", -0.2)} strokeWidth="2" />)}<path d="M162 146 L162 126 L176 126 L176 146" stroke={O} strokeWidth={W} fill="none" /><circle cx="158" cy="212" r="4" fill={O} /><circle cx="180" cy="212" r="4" fill={O} />{sp.t === "stickers" && <><circle cx="164" cy="164" r="6" fill="#E9C46A" stroke={O} strokeWidth="1" /><rect x="170" y="180" width="13" height="9" rx="2" fill="#C9785A" stroke={O} strokeWidth="1" transform="rotate(-12 176 184)" /><rect x="154" y="186" width="11" height="8" rx="2" fill="#4C8DA8" stroke={O} strokeWidth="1" /></>}</g>;
+    case "journal":
+      return <g transform="rotate(-8 148 160)"><rect x="134" y="144" width="28" height="36" rx="3" fill="#8C5A3C" stroke={O} strokeWidth={W} /><path d="M138 144 L138 180" stroke={shade("#8C5A3C", -0.3)} strokeWidth="1.6" /><path d="M134 160 L162 160" stroke="#E9C46A" strokeWidth="2.4" /><circle cx="156" cy="168" r="3" fill="#E9C46A" stroke={O} strokeWidth="1" /></g>;
     case "racket":
       return <g transform="rotate(20 146 166)"><path d="M146 168 L146 132" stroke="#5A4636" strokeWidth="4" strokeLinecap="round" /><ellipse cx="146" cy="116" rx="13" ry="17" fill="none" stroke={sp.c ?? "#C9785A"} strokeWidth="3.5" /><g stroke="#D8CFC2" strokeWidth="0.8">{[-8, -4, 0, 4, 8].map((d) => <path key={d} d={`M${146 + d} 101 L${146 + d} 131`} />)}{[-10, -5, 0, 5, 10].map((d) => <path key={d} d={`M134 ${116 + d} L158 ${116 + d}`} />)}</g></g>;
     case "surfboard":
@@ -1012,6 +1021,13 @@ function renderHat(sp: Spec, ctx: Ctx): ReactNode {
           <path d="M126 22 Q138 28 134 40" stroke={shade(c, -0.25)} strokeWidth="1.6" fill="none" />
         </g>
       );
+    case "flowerpin":
+      return (
+        <g transform="translate(134 40)">
+          {[0, 72, 144, 216, 288].map((r) => <ellipse key={r} cx="0" cy="-7" rx="5" ry="8" fill="#FBF7F0" stroke={O} strokeWidth="1.3" transform={`rotate(${r})`} />)}
+          <circle r="4" fill="#E9C46A" />
+        </g>
+      );
     case "sweatband":
       return <g><path d="M60 50 Q100 30 140 50 L140 60 Q100 40 60 60Z" fill={c} {...s} />{sp.c2 && <path d="M62 55 Q100 36 138 55" stroke={sp.c2} strokeWidth="2.5" fill="none" />}</g>;
     case "cap":
@@ -1021,7 +1037,7 @@ function renderHat(sp: Spec, ctx: Ctx): ReactNode {
           <path d="M118 44 Q152 40 164 50 Q142 56 116 50Z" fill={sp.c2 ?? dark} {...s} />
           <path d="M100 14 L100 46" stroke={dark} strokeWidth="1.5" />
           <circle cx="100" cy="15" r="3" fill={dark} />
-          {sp.t && <text x="96" y="37" textAnchor="middle" fontSize={sp.t.length > 5 ? 8.5 : 11} fontWeight="900" fill={c === "#FFFFFF" ? "#C62828" : "#fff"} fontFamily="system-ui, sans-serif">{heart(sp.t, c === "#E53935" ? "#FFD166" : "#E53935")}</text>}
+          {sp.t && <text x="96" y="37" textAnchor="middle" fontSize={sp.t.length > 5 ? 8.5 : 11} fontWeight="900" fill={isDark(c) || !sp.c2 ? (isDark(c) ? "#FBF7F0" : "#2F2A28") : sp.c2} fontFamily="system-ui, sans-serif">{heart(sp.t, c === "#B23A3A" ? "#E9C46A" : "#B23A3A")}</text>}
           <path d="M72 24 Q86 16 100 17" stroke="#fff" strokeWidth="3" opacity="0.3" fill="none" strokeLinecap="round" />
         </g>
       );
@@ -1132,8 +1148,21 @@ function renderBackground(sp: Spec, uid: string): ReactNode {
     }
     case "space":
       return <><rect width="200" height="240" fill="#0F0E2A" />{Array.from({ length: 30 }, (_, i) => <circle key={i} cx={(i * 47) % 200} cy={(i * 83) % 240} r={i % 3 ? 1 : 1.8} fill="#fff" opacity="0.8" />)}<circle cx="160" cy="50" r="22" fill="#FF7A6B" /><ellipse cx="160" cy="50" rx="36" ry="7" fill="none" stroke="#FFD166" strokeWidth="3" transform="rotate(-18 160 50)" /><circle cx="30" cy="40" r="10" fill="#5FD3B5" opacity="0.8" /><rect y="200" width="200" height="40" fill="#2E2A6B" /></>;
-    default: // home
-      return <><rect width="200" height="240" fill="#F1EEFF" /><rect y="190" width="200" height="50" fill="#E3DDFB" /><rect x="18" y="30" width="54" height="48" rx="6" fill="#CFE9FF" stroke="#CFCCFF" strokeWidth="4" /><path d="M45 30 L45 78 M18 54 L72 54" stroke="#CFCCFF" strokeWidth="3" /><rect x="150" y="150" width="20" height="40" rx="4" fill="#FF8F80" /><circle cx="160" cy="142" r="16" fill="#5FD3B5" /><circle cx="170" cy="34" r="10" fill="#FFD166" opacity="0.6" /></>;
+    default: // home — warm travel-journal room
+      return (
+        <>
+          <rect width="200" height="240" fill="#F4EBDD" />
+          <rect y="190" width="200" height="50" fill="#E6D6BF" />
+          <path d="M0 190 L200 190" stroke="#D8C4A6" strokeWidth="2" />
+          <rect x="18" y="28" width="54" height="50" rx="6" fill="#DCE9EE" stroke="#A9BFA0" strokeWidth="4" />
+          <path d="M45 28 L45 78 M18 54 L72 54" stroke="#A9BFA0" strokeWidth="3" />
+          <path d="M24 72 Q36 62 48 70 Q58 64 66 72" stroke="#FBF7F0" strokeWidth="3" fill="none" opacity="0.8" />
+          <rect x="140" y="40" width="40" height="28" rx="2" fill="#FBF7F0" stroke="#D8C4A6" strokeWidth="2" transform="rotate(-4 160 54)" />
+          <path d="M146 58 Q154 46 162 54 Q168 48 174 56" stroke="#C9785A" strokeWidth="2" fill="none" />
+          <rect x="150" y="160" width="22" height="30" rx="4" fill="#C9785A" />
+          <path d="M161 160 Q150 136 140 132 M161 160 Q160 134 166 124 M161 160 Q174 140 182 138" stroke="#7F9C7A" strokeWidth="5" fill="none" strokeLinecap="round" />
+        </>
+      );
   }
 }
 

@@ -76,15 +76,17 @@ export function literaryHat(sp: Spec): ReactNode | null {
           <path d="M76 24 L124 24" stroke="#D9B44A" strokeWidth="1.2" />
         </g>
       );
-    case "fedora":
+    case "fedora": {
+      const fc = sp.c ?? "#7B5A4C";
       return (
         <g>
-          <path d="M40 44 Q100 30 160 44 Q150 56 100 52 Q50 56 40 44Z" fill="#6D4C41" {...S} />
-          <path d="M70 42 Q70 14 100 16 Q130 14 130 42Z" fill="#7B5A4C" {...S} />
-          <path d="M94 18 Q100 26 106 18" stroke={shade("#7B5A4C", -0.3)} strokeWidth="2" fill="none" />
-          <rect x="70" y="33" width="60" height="7" fill="#3E2723" />
+          <path d="M40 44 Q100 30 160 44 Q150 56 100 52 Q50 56 40 44Z" fill={shade(fc, -0.12)} {...S} />
+          <path d="M70 42 Q70 14 100 16 Q130 14 130 42Z" fill={fc} {...S} />
+          <path d="M94 18 Q100 26 106 18" stroke={shade(fc, -0.3)} strokeWidth="2" fill="none" />
+          <rect x="70" y="33" width="60" height="7" fill={sp.c2 ?? "#3E2723"} />
         </g>
       );
+    }
     case "pith":
       return (
         <g>
