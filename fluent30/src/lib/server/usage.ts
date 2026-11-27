@@ -14,6 +14,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { jsonError } from "./guard";
 import { logError } from "./errors-log";
+import { BudgetError } from "./errors";
 import { PLAN, currentPlan, type AiFeature } from "../plan";
 import { estimateCost, typicalCallCost, type TokenUsage } from "./costs-core";
 import { hashUser, budgetState, dayKey, monthKey, crossedThresholds } from "./usage-core";
@@ -186,11 +187,7 @@ export function budgetCaps() {
   };
 }
 
-export class BudgetError extends Error {
-  constructor(public scope: "global" | "user" = "global") {
-    super("budget_reached");
-  }
-}
+export { BudgetError };
 
 /** Throws BudgetError when a global spending cap is reached. */
 export async function assertBudget() {

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { config } from "./config";
 import { FEATURES, modelForTier, supportsServerFallback, type Tier } from "./costs-core";
 import { assertBudget, assertUserBudget, currentAiContext, recordCall, recordFailure } from "./usage";
-import { classifyAiError } from "./errors";
+import { BadResponseError, NotConfiguredError, RefusalError, classifyAiError } from "./errors";
 
 let client: Anthropic | null = null;
 export function ai(): Anthropic {
@@ -14,15 +14,7 @@ export function ai(): Anthropic {
   return client;
 }
 
-export class NotConfiguredError extends Error {
-  constructor() {
-    super("ai_not_configured");
-  }
-}
-
-export class RefusalError extends Error {}
-/** The model answered but the output was unusable (schema mismatch, truncated, empty). */
-export class BadResponseError extends Error {}
+export { NotConfiguredError, RefusalError, BadResponseError } from "./errors";
 
 type Effort = "low" | "medium" | "high";
 
@@ -69,8 +61,7 @@ async function callAnthropic<R extends { usage: Usage; stop_reason?: string | nu
     if (res.stop_reason === "refusal") throw new RefusalError("refusal");
     return res;
   } catch (e) {
-    const { code } = classifyAiError(e);
-    if (!(e instanceof RefusalError) || code) recordFailure({ code, message: technicalMessage(e), provider: "anthropic" });
+    if (!(e instanceof BadResponseError)) recordFailure({ code: classifyAiError(e).code, message: technicalMessage(e), provider: "anthropic" });
     throw e;
   }
 }

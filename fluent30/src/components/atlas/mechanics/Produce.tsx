@@ -13,6 +13,8 @@ interface AiCorrection {
   corrected: string;
   moreNatural: string;
   isAlreadyCorrect: boolean;
+  engine?: "ai" | "languagetool";
+  note?: string;
   changes: { original: string; corrected: string; explanationFr: string }[];
 }
 
@@ -120,7 +122,8 @@ export function Produce({ ex, onDone }: { ex: Extract<Mechanic, { type: "produce
       {aiErr && (aiErr.nc ? <ServiceNotice service="La correction par l'IA" alternative="Compare ta réponse avec les exemples proposés ci-dessus." /> : <ErrorNote>{aiErr.msg}</ErrorNote>)}
       {ai && (
         <div className="space-y-1.5 rounded-2xl border border-line p-3 text-[14.5px]">
-          {ai.isAlreadyCorrect ? <p className="font-semibold text-mint-600">Ta phrase est correcte.</p> : <p><span className="text-muted">Corrigé : </span>{ai.corrected}</p>}
+          {ai.engine === "languagetool" && <p className="text-[13px] text-muted">{ai.note}</p>}
+          {ai.isAlreadyCorrect ? <p className="font-semibold text-mint-600">{ai.engine === "languagetool" ? "Aucune faute détectée par le correcteur automatique." : "Ta phrase est correcte."}</p> : <p><span className="text-muted">Corrigé : </span>{ai.corrected}</p>}
           {ai.moreNatural && ai.moreNatural !== ai.corrected && <p><span className="text-muted">Plus naturel : </span>{ai.moreNatural}</p>}
           {ai.changes.slice(0, 4).map((c, i) => (
             <p key={i} className="text-[13.5px] text-fg/80">

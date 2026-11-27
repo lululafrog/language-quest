@@ -13,4 +13,4 @@ export const POST = aiRoute<{ messages?: Msg[]; level?: string; scenario?: strin
     system: `Task: write the post-conversation report for a French-speaking learner (level ${b.level ?? "unknown"}). Only list real errors made by the LEARNER. Natural alternatives should reflect how native speakers really talk and mention the register (familier, courant, professionnel, soutenu).`,
     user: `Scenario: ${b.scenario ?? "free conversation"}\n\nTranscript:\n${transcript}`,
   });
-});
+}, { feature: "report" });

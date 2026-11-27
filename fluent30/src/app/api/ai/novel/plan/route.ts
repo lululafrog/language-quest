@@ -7,4 +7,4 @@ export const maxDuration = 120;
 export const POST = aiRoute<{ prefs?: Partial<NovelPrefs> }>(async (b) => {
   if (!b.prefs) throw new BadInput("Préférences manquantes.");
   return planNovel(parsePrefs(b.prefs));
-});
+}, { feature: "novel" });

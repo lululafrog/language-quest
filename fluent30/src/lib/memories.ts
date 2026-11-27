@@ -117,7 +117,7 @@ export async function addWordsToMemory(m: Memory, words: { en: string; fr: strin
 export async function illustrateMemory(m: Memory, sceneFr?: string): Promise<string> {
   const key = `memory-illus-${m.id}`;
   const r = await postApi<{ data: string; mime: string; provider: "openai" | "claude-svg" }>("/api/image", {
-    key, term: m.words[0]?.en ?? m.title, meaning: m.title, kind: "phrase", prompt: [m.sentence, sceneFr].filter(Boolean).join(" — "),
+    key, term: m.words[0]?.en ?? m.title, meaning: m.title, kind: "phrase", prompt: [m.sentence, sceneFr].filter(Boolean).join(" — "), allowFree: false,
   });
   const now = Date.now();
   await getDb().images.put({ key, data: r.data, mime: r.mime, provider: r.provider, createdAt: now, updatedAt: now });

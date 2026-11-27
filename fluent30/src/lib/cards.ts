@@ -181,10 +181,10 @@ export async function ensureImage(card: Card, prompt?: string): Promise<string |
   if (inflight.has(key)) return inflight.get(key)!;
   const p = (async () => {
     try {
-      const r = await postApi<{ data: string; mime: string; provider: "openai" | "claude-svg" }>("/api/image", {
+      const r = await postApi<{ data: string; mime: string; provider: "openai" | "claude-svg" | "openverse"; attribution?: string; license?: string; sourceUrl?: string }>("/api/image", {
         key, term: card.term, meaning: card.fr, kind: card.kind, prompt: prompt ?? card.definition ?? "",
       });
-      await db.images.put({ key, data: r.data, mime: r.mime, provider: r.provider, createdAt: Date.now(), updatedAt: Date.now() });
+      await db.images.put({ key, data: r.data, mime: r.mime, provider: r.provider, attribution: r.attribution, license: r.license, sourceUrl: r.sourceUrl, createdAt: Date.now(), updatedAt: Date.now() });
       await db.cards.update(card.id, { imageKey: key });
       return r.data;
     } catch {

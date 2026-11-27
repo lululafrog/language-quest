@@ -51,4 +51,4 @@ If messages is empty, open the conversation yourself in character.`;
   ]);
   if (!reply) throw new BadInput("Réponse vide.");
   return { reply, correction: correction?.hasErrors ? correction.correction : null };
-});
+}, { feature: "chat" });

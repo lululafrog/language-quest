@@ -1,5 +1,6 @@
 import { adaptParagraphs } from "@/lib/server/ai-reader";
 import { aiRoute, BadInput, requireString } from "@/lib/server/route";
+import { sharedCache } from "@/lib/server/cache";
 
 export const maxDuration = 60;
 const LEVELS = ["A1", "A2", "B1", "B2", "C1"];
@@ -11,6 +12,8 @@ export const POST = aiRoute<{ paragraphs?: string[]; level?: string; title?: str
   const ps = (Array.isArray(b.paragraphs) ? b.paragraphs : []).filter((p) => typeof p === "string").map((p) => p.slice(0, 6000));
   if (!ps.length) throw new BadInput("Aucun paragraphe.");
   if (ps.join("").length > 24000) throw new BadInput("Passage trop long : envoyez-le en plusieurs parties.");
-  const r = await adaptParagraphs(ps, level, requireString(b.title, "title", 200));
+  const title = requireString(b.title, "title", 200);
+  // Public-domain / in-app texts only (checked above): adaptations are shared between learners.
+  const r = await sharedCache("reader", { op: "adapt", level, title, ps }, () => adaptParagraphs(ps, level, title));
   return { paragraphs: ps.map((p, i) => r.paragraphs[i] || p) };
-});
+}, { feature: "reader" });

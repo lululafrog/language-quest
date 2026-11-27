@@ -8,4 +8,4 @@ export const POST = aiRoute<{ text?: string; task?: string; level?: string }>(as
   if (text.split(/\s+/).filter(Boolean).length < 5) throw new BadInput("Texte trop court pour être évalué.");
   const level = LEVELS.includes(String(b.level)) ? String(b.level) : "B1";
   return assessWriting(text, requireString(b.task, "task", 600), level);
-});
+}, { feature: "assess" });

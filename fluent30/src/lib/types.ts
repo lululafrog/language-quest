@@ -196,7 +196,11 @@ export interface ImageAsset {
   key: string; // normalized lemma + sense
   mime: string; // image/svg+xml | image/png | image/webp
   data: string; // data URL
-  provider: "openai" | "claude-svg" | "upload";
+  provider: "openai" | "claude-svg" | "upload" | "openverse";
+  /** openly licensed images (Openverse): credit shown with the image */
+  attribution?: string;
+  license?: string;
+  sourceUrl?: string;
   createdAt: number;
   updatedAt: number;
 }

@@ -16,4 +16,4 @@ export const POST = aiRoute<{ image?: unknown }>(async (b) => {
       { type: "text", text: "What useful objects can you see? Give their everyday English names." },
     ],
   });
-});
+}, { feature: "identify" });

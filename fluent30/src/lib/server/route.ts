@@ -1,54 +1,103 @@
-import { takeQuota } from "./usage";
-import type { AiFeature } from "../plan";
 import "server-only";
-import Anthropic from "@anthropic-ai/sdk";
+/**
+ * Shared wrapper for every server route that calls a paid AI / external API.
+ *
+ *   withAi<B>(feature: AiFeature, req: Request, handler: (body: B, ctx: AiRouteContext) => Promise<unknown>, opts?: { body?: "json" | "none" }): Promise<Response>
+ *     1. guard: Supabase session (or access code) + per-minute rate limit per user/IP
+ *     2. request size limit (FEATURES[feature].maxBodyChars) and JSON parsing (opts.body "none" → body is undefined, read req yourself)
+ *     3. per-user daily/monthly quota for the feature, per-user concurrency limit
+ *     4. runs `handler` inside the AI context (feature + hashed user) so every model call is routed to the right
+ *        model tier, budget-checked and cost-tracked automatically (see ai.ts)
+ *     5. maps any error to a friendly JSON error { error: { code, message } } (no variable names) and logs it for the admin.
+ *     A handler may return a Response (sent as is) or any JSON-serialisable value.
+ *
+ *   aiRoute<B>(handler, { feature }) → (req) => withAi(feature, req, handler)   — shorthand for route files.
+ *   mapError(e) → Response                                                      — friendly error response.
+ *   sharedCache(feature, input, fn) lives in ./cache (generic, non-personal features only).
+ */
 import { NextResponse } from "next/server";
-import { guard, jsonError, notConfigured } from "./guard";
-import { NotConfiguredError, RefusalError } from "./ai";
+import { guard, jsonError } from "./guard";
+import { FEATURES, MAX_IMAGE_BASE64 } from "./costs-core";
+import { acquireSlot, hashUser, recordFailure, rememberUser, runWithAiContext, takeQuota } from "./usage";
+import { BadInput, classifyAiError } from "./errors";
+import type { AiFeature } from "../plan";
 
-/** Wraps an AI route: auth/rate-limit guard, JSON parsing and uniform error mapping. */
-export function aiRoute<B>(handler: (body: B, ctx: { userId: string | null }) => Promise<unknown>, opts: { feature?: AiFeature } = {}) {
-  return async (req: Request) => {
-    const g = await guard(req);
-    if (!g.ok) return g.response;
-    if (opts.feature) {
-      const who = g.userId ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
-      const limited = takeQuota(opts.feature, who);
-      if (limited) return limited;
-    }
-    let body: B;
+export { BadInput } from "./errors";
+
+export interface AiRouteContext {
+  userId: string | null;
+  /** pseudonymous id used for quotas and stats */
+  user: string;
+  feature: AiFeature;
+}
+
+export async function withAi<B>(
+  feature: AiFeature,
+  req: Request,
+  handler: (body: B, ctx: AiRouteContext) => Promise<unknown>,
+  opts: { body?: "json" | "none" } = {},
+): Promise<Response> {
+  const g = await guard(req);
+  if (!g.ok) return g.response;
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  const user = hashUser(g.userId ?? `ip:${ip}`);
+  rememberUser(user, g.userId);
+  const spec = FEATURES[feature];
+
+  const declared = Number(req.headers.get("content-length"));
+  if (Number.isFinite(declared) && declared > spec.maxBodyChars * 1.1) return jsonError(413, "too_large", "Ce contenu est trop volumineux. Essaie avec un texte plus court ou une image plus légère.");
+
+  let body = undefined as B;
+  if (opts.body !== "none") {
+    let raw: string;
     try {
-      body = (await req.json()) as B;
+      raw = await req.text();
     } catch {
       return jsonError(400, "bad_json", "Requête invalide.");
     }
+    if (raw.length > spec.maxBodyChars) return jsonError(413, "too_large", "Ce contenu est trop volumineux. Essaie avec un texte plus court ou une image plus légère.");
     try {
-      const data = await handler(body, { userId: g.userId });
-      return NextResponse.json(data);
-    } catch (e) {
-      return mapError(e);
+      body = (raw ? JSON.parse(raw) : {}) as B;
+    } catch {
+      return jsonError(400, "bad_json", "Requête invalide.");
     }
-  };
+  }
+
+  const limited = takeQuota(feature, user);
+  if (limited) return limited;
+  const release = acquireSlot(user);
+  if (!release) return jsonError(429, "busy", "Une analyse est déjà en cours. Attends qu'elle se termine avant d'en lancer une autre.");
+
+  try {
+    const data = await runWithAiContext({ feature, user }, () => handler(body, { userId: g.userId, user, feature }));
+    return data instanceof Response ? data : NextResponse.json(data);
+  } catch (e) {
+    return runWithAiContext({ feature, user }, async () => mapError(e));
+  } finally {
+    release();
+  }
 }
 
+/** Shorthand for route files: export const POST = aiRoute<Body>(handler, { feature: "lookup" }). */
+export function aiRoute<B>(handler: (body: B, ctx: AiRouteContext) => Promise<unknown>, opts: { feature?: AiFeature } = {}) {
+  return (req: Request) => withAi<B>(opts.feature ?? "chat", req, handler);
+}
+
+/** Friendly JSON error for any exception (technical detail only goes to the admin error log). */
 export function mapError(e: unknown) {
-  if (e instanceof NotConfiguredError) return notConfigured("L'IA (Anthropic Claude)", "ANTHROPIC_API_KEY");
-  if (e instanceof RefusalError) return jsonError(422, "refusal", "L'IA a refusé de traiter cette demande.");
-  if (e instanceof BadInput) return jsonError(400, "bad_input", e.message);
-  if (e instanceof Anthropic.AuthenticationError) return jsonError(502, "ai_auth", "Clé API Anthropic invalide.");
-  if (e instanceof Anthropic.RateLimitError) return jsonError(429, "ai_rate_limit", "Limite de l'API IA atteinte. Réessayez dans un instant.");
-  if (e instanceof Anthropic.BadRequestError) return jsonError(400, "ai_bad_request", `Requête refusée par l'API IA : ${e.message}`);
-  if (e instanceof Anthropic.APIConnectionError) return jsonError(502, "ai_unreachable", "Impossible de joindre l'API IA.");
-  if (e instanceof Anthropic.APIError) return jsonError(502, "ai_error", `Erreur de l'API IA (${e.status}).`);
-  console.error(e);
-  return jsonError(500, "internal", "Erreur interne du serveur.");
+  const m = classifyAiError(e);
+  if (m.code === "internal") {
+    console.error(e);
+    recordFailure({ code: "internal", message: e instanceof Error ? `${e.name}: ${e.message.slice(0, 160)}` : "unknown" });
+  } else if (m.code === "not_configured") {
+    recordFailure({ code: "not_configured", message: "ANTHROPIC_API_KEY manquant" });
+  }
+  return jsonError(m.status, m.code, m.message);
 }
-
-export class BadInput extends Error {}
 
 export function requireString(v: unknown, name: string, max = 4000): string {
   if (typeof v !== "string" || !v.trim()) throw new BadInput(`Champ « ${name} » manquant.`);
-  if (v.length > max) throw new BadInput(`Champ « ${name} » trop long (max ${max} caractères).`);
+  if (v.length > max) throw new BadInput(`Texte trop long (maximum ${max} caractères).`);
   return v.trim();
 }
 
@@ -58,12 +107,13 @@ export function optionalString(v: unknown, max = 4000): string | undefined {
 }
 
 const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+/** Validates an image sent as base64. Images must be compressed by the client (≤ 1600 px JPEG); max ≈ 1.1 MB binary. */
 export function parseImage(v: unknown): { data: string; mediaType: string } | undefined {
   if (!v || typeof v !== "object") return undefined;
   const o = v as { data?: unknown; mediaType?: unknown };
   if (typeof o.data !== "string" || typeof o.mediaType !== "string") return undefined;
   if (!IMAGE_TYPES.includes(o.mediaType)) throw new BadInput("Format d'image non pris en charge (PNG, JPEG, WebP, GIF).");
   const data = o.data.replace(/^data:[^,]+,/, "");
-  if (data.length > 7_000_000) throw new BadInput("Image trop lourde (max ~5 Mo).");
+  if (data.length > MAX_IMAGE_BASE64) throw new BadInput("Image trop lourde. Recadre-la ou prends une photo moins détaillée, puis réessaie.");
   return { data, mediaType: o.mediaType };
 }

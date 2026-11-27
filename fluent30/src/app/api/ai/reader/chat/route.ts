@@ -17,4 +17,4 @@ export const POST = aiRoute<{ title?: string; character?: string; text?: string;
     messages,
   });
   return { reply };
-});
+}, { feature: "reader" });

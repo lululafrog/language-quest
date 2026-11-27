@@ -168,3 +168,36 @@ ne sont sauvegardés dans le compte que sur option. Rien n'est conservé côté 
 **Coûts** : quotas IA quotidiens par fonctionnalité (`src/lib/plan.ts`, surchargeables par variables d'environnement),
 journal de consommation approximative `[ai-usage]` dans les logs serveur, cache des analyses sur l'appareil.
 Le plan premium est préparé mais **aucun paiement n'est activé**.
+
+## Configuration des services
+
+Toutes les clés sont lues **uniquement par le serveur** (`src/lib/server/*`, protégé par `server-only`) : elles ne
+sont jamais envoyées au navigateur ni écrites dans les journaux (seuls les 4 derniers caractères apparaissent dans
+l'espace administrateur). Les utilisateurs n'ont jamais de clé à saisir. Liste complète et commentée : `.env.example`.
+
+| Service | Variables | Indispensable ? | Ce que ça active |
+| --- | --- | --- | --- |
+| Anthropic Claude | `ANTHROPIC_API_KEY` (+ `FLUENT30_MODEL_FAST/STANDARD/PREMIUM`) | recommandé | toutes les fonctions intelligentes |
+| OpenAI | `OPENAI_API_KEY` | non | illustrations générées, transcription serveur |
+| Supabase | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | recommandé en production | comptes, synchro, quotas et coûts fiables, cache partagé |
+| Admin | `FLUENT30_ADMIN_TOKEN` ou `FLUENT30_ADMIN_EMAILS` | pour `/admin` | tableau de bord |
+| Coûts | `FLUENT30_MONTHLY_BUDGET_USD`, `FLUENT30_USER_MONTHLY_BUDGET_USD`, `FLUENT30_ALERT_WEBHOOK_URL`… | conseillé | plafonds, alertes |
+| Gratuits | — (`LANGUAGETOOL_URL` facultatif) | — | traduction simple, grammaire, dictionnaire, images libres, livres, voix |
+
+**Architecture** : chaque route payante passe par `withAi(feature, req, handler)` (`src/lib/server/route.ts`) :
+session ou code d'accès, limite par minute, taille de requête, quotas jour/mois, appels simultanés, puis exécution
+dans un contexte qui choisit le modèle (`costs-core.ts` → `FEATURES`), vérifie les plafonds de dépenses, mesure les
+vrais jetons de chaque réponse et enregistre le coût (`usage.ts`). Les erreurs sont traduites en messages simples
+(`errors.ts`) ; le détail technique va dans le journal d'erreurs de l'administrateur.
+
+**Routage des modèles** : Haiku 5.5 pour les tâches simples et fréquentes, Sonnet 5.5 pour les analyses personnelles,
+Opus 5.5 seulement pour les romans et l'évaluation écrite. Les réponses génériques (fiche d'un mot, mot dans une
+phrase, explication d'un texte, traduction ou adaptation d'un livre du domaine public) sont mises en **cache partagé**
+(`cache.ts`, table `shared_ai_cache`) ; les contenus personnels (journal, captures, photos, conversations, cartes
+postales, évaluations) ne le sont jamais.
+
+**Stockage des statistiques** : avec `SUPABASE_SERVICE_ROLE_KEY`, dans les tables `ai_usage_daily`, `ai_error_log`,
+`ai_budget_alerts` (accès serveur uniquement, identifiants pseudonymisés) ; sans elle, en mémoire (remis à zéro à
+chaque déploiement — les quotas sont alors approximatifs sur Vercel).
+
+**Simulation des coûts** : `simulateCosts()` / `simulatePopulation()` dans `src/lib/costs-sim.ts`.

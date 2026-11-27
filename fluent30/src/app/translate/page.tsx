@@ -23,6 +23,8 @@ interface TranslateResult {
   difficultExpressions: { en: string; fr: string; explanation: string }[];
   unknownWords: { en: string; fr: string; pos: string }[];
   suggestedReplies: { en: string; fr: string; tone: string; why: string }[];
+  engine?: "ai" | "mymemory";
+  note?: string;
 }
 
 interface CorrectResult {
@@ -32,6 +34,8 @@ interface CorrectResult {
   changes: { original: string; corrected: string; explanationFr: string; category: string }[];
   grammarPoints: string[];
   register: Register;
+  engine?: "ai" | "languagetool";
+  note?: string;
 }
 
 function RegisterBadge({ r }: { r: Register }) {
@@ -142,6 +146,20 @@ function Received() {
       setRes(r);
       await trackActivity({ xp: 3 });
     } catch (e) {
+      // image analysis unavailable → read the text on the device (free, private), then translate the text
+      if (e instanceof ApiError && e.code === "image_unavailable" && image) {
+        try {
+          const { readTextOnDevice } = await import("@/lib/ocr");
+          const bytes = Uint8Array.from(atob(image.data), (c) => c.charCodeAt(0));
+          const ocr = await readTextOnDevice(new Blob([bytes], { type: image.mediaType }));
+          const r = await postApi<TranslateResult>("/api/ai/translate", { text: [ocr.text, text].filter(Boolean).join("\n\n") });
+          setRes({ ...r, sourceText: ocr.text });
+          return;
+        } catch (e2) {
+          setError(errorMessage(e2));
+          return;
+        }
+      }
       setError(e instanceof ApiError ? e.message : errorMessage(e));
     } finally {
       setLoading(false);
@@ -189,8 +207,14 @@ function Received() {
               <SpeakButton text={res.sourceText || text} size={16} label={t("Écouter l'original", "Listen")} />
             </div>
             <p className="whitespace-pre-line text-[16px] leading-relaxed">{res.translationFr}</p>
-            <div className="mt-3"><RegisterBadge r={res.register} /></div>
-            <p className="mt-1.5 text-sm text-muted">{res.registerExplanation}</p>
+            {res.engine === "mymemory" ? (
+              <p className="mt-3 text-sm text-muted">{res.note}</p>
+            ) : (
+              <>
+                <div className="mt-3"><RegisterBadge r={res.register} /></div>
+                <p className="mt-1.5 text-sm text-muted">{res.registerExplanation}</p>
+              </>
+            )}
           </Panel>
 
           {res.difficultExpressions.length > 0 && (
@@ -296,7 +320,8 @@ function Correct() {
       {res && (
         <div className="space-y-4 animate-fade">
           <Panel>
-            {res.isAlreadyCorrect && <p className="mb-2 font-medium text-mint-600">✅ {t("Votre texte est déjà correct !", "Your text is already correct!")}</p>}
+            {res.engine === "languagetool" && <p className="mb-2 text-sm text-muted">{res.note}</p>}
+            {res.isAlreadyCorrect && <p className="mb-2 font-medium text-mint-600">{res.engine === "languagetool" ? t("Aucune faute détectée par le correcteur automatique.", "No error detected by the automatic checker.") : t("Votre texte est déjà correct !", "Your text is already correct!")}</p>}
             <div className="mb-1 flex items-center justify-between"><h3 className="font-semibold">{t("Version corrigée", "Corrected version")}</h3><CopyButton text={res.corrected} /></div>
             <p className="whitespace-pre-line text-[16px] leading-relaxed">{res.corrected}</p>
             {res.moreNatural && normalize(res.moreNatural) !== normalize(res.corrected) && (

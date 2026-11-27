@@ -30,4 +30,4 @@ export const POST = aiRoute<Body>(async (b) => {
     weakWords,
     index,
   });
-});
+}, { feature: "novel" });

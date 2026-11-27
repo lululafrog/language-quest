@@ -66,6 +66,7 @@ export function WordPopup({ word, sentence, onClose, properNoun, bookTitle }: { 
   const [adding, setAdding] = useState<string | null>(null);
   const [added, setAdded] = useState<string[]>([]);
   const [img, setImg] = useState<string | null>(null);
+  const [imgCredit, setImgCredit] = useState<string | null>(null);
   const [free, setFree] = useState<{ translation: string; alternatives: string[] } | null>(null);
   const [imgLoading, setImgLoading] = useState(false);
   // Local-first: the shared lexicon answers instantly; the AI (paid) is only asked for the meaning
@@ -153,9 +154,13 @@ export function WordPopup({ word, sentence, onClose, properNoun, bookTitle }: { 
     try {
       const key = imageKeyFor({ lemma, fr: fr || lemma });
       const cached = await getDb().images.get(key);
-      if (cached) return setImg(cached.data);
-      const r = await postApi<{ data: string; mime: string; provider: "openai" | "claude-svg" }>("/api/image", { key, term: lemma, meaning: fr, kind: pos?.includes("verb") ? "verb" : "word", prompt: ai?.definition ?? "" });
-      await getDb().images.put({ key, data: r.data, mime: r.mime, provider: r.provider, createdAt: Date.now(), updatedAt: Date.now() });
+      if (cached) {
+        setImgCredit(cached.attribution ?? null);
+        return setImg(cached.data);
+      }
+      const r = await postApi<{ data: string; mime: string; provider: "openai" | "claude-svg" | "openverse"; attribution?: string; license?: string; sourceUrl?: string }>("/api/image", { key, term: lemma, meaning: fr, kind: pos?.includes("verb") ? "verb" : "word", prompt: ai?.definition ?? "" });
+      await getDb().images.put({ key, data: r.data, mime: r.mime, provider: r.provider, attribution: r.attribution, license: r.license, sourceUrl: r.sourceUrl, createdAt: Date.now(), updatedAt: Date.now() });
+      setImgCredit(r.attribution ?? null);
       setImg(r.data);
     } catch (e) {
       toast(errorMessage(e), "err");
@@ -205,8 +210,13 @@ export function WordPopup({ word, sentence, onClose, properNoun, bookTitle }: { 
               </button>
             )}
           </div>
-          {/* eslint-disable-next-line @next/next/no-img-element -- local data URL */}
-          {picture && <img src={picture} alt="" className="h-24 w-24 shrink-0 rounded-xl border border-line object-cover" />}
+          {picture && (
+            <figure className="w-24 shrink-0">
+              {/* eslint-disable-next-line @next/next/no-img-element -- local data URL */}
+              <img src={picture} alt="" className="h-24 w-24 rounded-xl border border-line object-cover" />
+              {img && imgCredit && <figcaption className="mt-0.5 line-clamp-2 text-[9px] leading-tight text-muted">{imgCredit}</figcaption>}
+            </figure>
+          )}
         </div>
 
         {aiLoading && <p className="flex items-center gap-2 text-sm text-muted"><Spinner className="h-4 w-4" /> {t("Analyse du contexte…", "Analysing context…")}</p>}

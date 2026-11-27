@@ -22,4 +22,4 @@ export const POST = aiRoute<{ mode?: "tier" | "interests"; tier?: number; intere
     system: "Task: suggest vocabulary to learn. Each item: headword, French translation, part of speech, a natural example sentence and its French translation, and 1-2 theme ids.",
     user: `${task}\nDo NOT include any of these already-known items: ${exclude || "(none)"}`,
   });
-});
+}, { feature: "words" });

@@ -88,7 +88,7 @@ export const FEATURES: Record<AiFeature, FeatureSpec> = {
   correct: { tier: "standard", maxBodyChars: 8 * K, maxTokens: 3000, sharedCache: false, typical: { input: 800, output: 500 } },
   chat: { tier: "standard", maxBodyChars: 120 * K, maxTokens: 1500, sharedCache: false, typical: { input: 1500, output: 150 } },
   report: { tier: "standard", maxBodyChars: 120 * K, maxTokens: 6000, sharedCache: false, typical: { input: 3000, output: 1500 } },
-  reader: { tier: "standard", maxBodyChars: 90 * K, maxTokens: 16000, sharedCache: true, typical: { input: 2500, output: 2000 } },
+  reader: { tier: "standard", maxBodyChars: 140 * K, maxTokens: 16000, sharedCache: true, typical: { input: 2500, output: 2000 } },
   reallife: { tier: "standard", maxBodyChars: 2_100 * K, maxTokens: 12000, sharedCache: false, typical: { input: 2500, output: 3000 } },
   journal: { tier: "standard", maxBodyChars: 12 * K, maxTokens: 4000, sharedCache: false, typical: { input: 1200, output: 1200 } },
   memories: { tier: "standard", maxBodyChars: 2_100 * K, maxTokens: 3000, sharedCache: false, typical: { input: 1800, output: 900 } },

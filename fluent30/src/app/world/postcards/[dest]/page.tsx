@@ -17,6 +17,8 @@ interface Correction {
   corrected: string;
   moreNatural: string;
   isAlreadyCorrect: boolean;
+  engine?: "ai" | "languagetool";
+  note?: string;
   changes: { original: string; corrected: string; explanationFr: string }[];
 }
 
@@ -114,7 +116,8 @@ export default function PostcardPage() {
         {err && (err.nc ? <ServiceNotice service="La correction" alternative="Ta carte reste enregistrée avec ton message tel quel." /> : <ErrorNote>{err.msg}</ErrorNote>)}
         {fix && (
           <div className="space-y-2 rounded-2xl bg-surface-2 p-3 text-sm">
-            {fix.isAlreadyCorrect ? <p className="font-semibold text-mint-600">Ton message est correct.</p> : <p><span className="font-semibold">Corrigé :</span> {fix.corrected}</p>}
+            {fix.engine === "languagetool" && <p className="text-[13px] text-muted">{fix.note}</p>}
+          {fix.isAlreadyCorrect ? <p className="font-semibold text-mint-600">{fix.engine === "languagetool" ? "Aucune faute détectée par le correcteur automatique." : "Ton message est correct."}</p> : <p><span className="font-semibold">Corrigé :</span> {fix.corrected}</p>}
             {fix.moreNatural && fix.moreNatural !== fix.corrected && <p><span className="font-semibold">Plus naturel :</span> {fix.moreNatural}</p>}
             {fix.changes.length > 0 && (
               <ul className="list-disc space-y-0.5 pl-5 text-muted">
