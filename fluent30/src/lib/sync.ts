@@ -11,7 +11,7 @@ const MAX_ROW_BYTES = 2_000_000;
 type Row = { user_id: string; tbl: string; row_id: string; data: unknown; deleted: boolean; updated_at: number };
 
 function pkOf(table: string, row: Record<string, unknown>): string {
-  const key = table === "settings" ? "id" : table === "known" ? "lemma" : table === "bookContent" ? "bookId" : table === "activity" || table === "sessions" ? "date" : table === "grammar" ? "lessonId" : table === "images" ? "key" : "id";
+  const key = table === "settings" ? "id" : table === "known" ? "lemma" : table === "bookContent" || table === "collection" ? "bookId" : table === "activity" || table === "sessions" ? "date" : table === "grammar" ? "lessonId" : table === "images" ? "key" : "id";
   return String(row[key]);
 }
 

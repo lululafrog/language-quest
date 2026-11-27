@@ -84,7 +84,7 @@ export interface Book {
   id: string;
   title: string;
   author?: string;
-  source: "import" | "gutenberg" | "graded";
+  source: "import" | "gutenberg" | "graded" | "custom";
   format: "epub" | "pdf" | "txt" | "builtin";
   level?: string; // CEFR estimate A1..C2
   genre?: string;
@@ -94,6 +94,19 @@ export interface Book {
   progress: number; // 0..1
   lastOpenedAt?: number;
   gutenbergId?: number;
+  /** id in the built-in library (lib/data/library.ts) */
+  libraryId?: number;
+  /** AI-generated personal novel id (table "novels") */
+  novelId?: string;
+  startedAt?: number;
+  finishedAt?: number;
+  rating?: number; // 1..5, given by the reader
+  readingSeconds?: number;
+  wordsRead?: number;
+  chaptersDone?: number[]; // chapters whose end-of-chapter session was completed
+  quizResults?: { chapter: number; score: number; total: number; at: number }[];
+  /** difficulty signals: words looked up per 100 words read, per chapter */
+  lookups?: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -227,8 +240,11 @@ export interface Settings {
   goals: string[];
   placementDone: boolean;
   onboarded: boolean;
-  reader: { font: "serif" | "sans" | "dyslexic"; size: number; theme: "light" | "sepia" | "dark"; lineHeight: number };
+  reader: { font: "serif" | "sans" | "dyslexic"; size: number; theme: "light" | "sepia" | "dark"; lineHeight: number; brightness?: number; margin?: number; voice?: "en-GB" | "en-US" };
   autoImages: boolean; // generate illustrations automatically when an image API is configured
+  reduceMotion?: boolean; // accessibility: disable celebrations/animations
+  readingMode?: "immersive" | "assisted" | "bilingual";
+  readingGoals?: { minutesPerWeek: number; wordsPerWeek: number; booksPerMonth: number };
   lastSyncAt?: number;
   updatedAt: number;
 }
@@ -270,6 +286,8 @@ export interface GameState {
   owned: string[]; // shop item ids
   equipped: Partial<Record<AvatarSlot, string>>;
   appearance?: Appearance;
+  /** personal bookshelf: decoration style, owned & placed decorations, unlocked shelves */
+  shelf?: { style: string; decor: string[]; placed: Record<string, string>; shelves: number };
   claimed: Record<string, string[]>; // date -> claimed quest ids (+ "chest")
   levelRewarded: number; // highest level whose reward was paid
   streakRewarded: number[]; // streak milestones already paid
@@ -295,4 +313,47 @@ export interface Appearance {
   makeup?: "none" | "blush" | "lipstick" | "eyeliner";
   /** @deprecated use facialHair */
   beard: boolean;
+}
+
+// ---------------- Library v2 ----------------
+
+export interface WishItem {
+  id: string; // "lib:<libraryId>" or a book id
+  addedAt: number;
+  updatedAt: number;
+}
+
+export interface AchievementRecord {
+  id: string; // achievement id (lib/achievements.ts)
+  unlockedAt: number;
+  updatedAt: number;
+}
+
+/** A finished book, displayed on the personal bookshelf (collectible card). */
+export interface CollectionEntry {
+  bookId: string;
+  libraryId?: number;
+  title: string;
+  author?: string;
+  cat?: string;
+  level?: string;
+  finishedAt: number;
+  times: number; // how many times finished
+  card: "bronze" | "silver" | "gold" | "holo";
+  stats: { wordsRead: number; readingSeconds: number; newWords: number; memorized: number; expressions: number; quizAvg: number | null; lookupsPer100: number | null };
+  updatedAt: number;
+}
+
+/** AI-generated personal novel: story bible + chapters (also stored as a Book for the reader). */
+export interface Novel {
+  id: string;
+  bookId: string;
+  title: string;
+  prefs: { genre: string; level: string; setting: string; era: string; hero: string; mood: string; chapterWords: number; chapters: number; interactive: boolean };
+  bible: string; // running memory: characters, events, choices
+  chapters: { title: string; text: string; summary: string; choices?: string[]; chosen?: string }[];
+  cover: { palette: string[]; motif: string; subtitle?: string };
+  status: "writing" | "done";
+  createdAt: number;
+  updatedAt: number;
 }

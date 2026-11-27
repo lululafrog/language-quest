@@ -6,12 +6,20 @@ export type LibraryCategory = "policier" | "aventure" | "romance" | "fantastique
 export interface LibraryBook {
   id: number;
   cat: LibraryCategory;
+  /** extra categories the book also belongs to (e.g. a short horror story is also "courtes") */
+  alsoIn?: LibraryCategory[];
   title: string;
   titleFr: string;
   author: string;
   level: "A2" | "B1" | "B2" | "C1" | "C2";
   words: number;
   noteFr: string;
+  /** spoiler-free French summary (2-3 sentences) */
+  summaryFr?: string;
+  /** countries where the story takes place (ISO-like French names), for the "Globe-trotteur" trophy */
+  countries?: string[];
+  /** original cover design: palette (3 colours) + motif id drawn by components/library/BookCover.tsx */
+  cover?: { palette: [string, string, string]; motif: string };
 }
 
 export const LIBRARY_CATEGORIES: { id: LibraryCategory; fr: string; en: string; emoji: string }[] = [
