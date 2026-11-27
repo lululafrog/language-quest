@@ -54,6 +54,11 @@ export default function VerbsPage() {
         title={t("Verbes essentiels", "Core verbs")}
         subtitle={t("Les verbes les plus fréquents de l'anglais parlé, avec leurs vrais usages.", "The most frequent verbs in spoken English, with how they're really used.")}
       />
+      <Link href="/verbs/irregular" className="mb-4 flex items-center gap-3 rounded-2xl border border-ink-200 bg-gradient-to-r from-ink-50 to-transparent p-4 transition hover:border-ink-400 dark:border-ink-800 dark:from-ink-900/50">
+        <span className="text-2xl">🔁</span>
+        <span className="flex-1"><span className="block font-semibold">{t("Verbes irréguliers", "Irregular verbs")}</span><span className="block text-sm text-muted">{t("Les plus importants d'abord, par familles, avec quiz", "Most important first, by family, with quizzes")}</span></span>
+        <span className="text-muted">›</span>
+      </Link>
       <Panel className="mb-5">
         <div className="flex items-center justify-between text-sm">
           <span className="font-medium">{t("Verbes maîtrisés", "Verbs mastered")}</span>

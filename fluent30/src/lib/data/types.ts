@@ -50,6 +50,7 @@ export const THEMES: Theme[] = [
   { id: "slang", fr: "Argot et expressions familières", en: "Slang & informal", emoji: "😎" },
   { id: "action-verbs", fr: "Verbes", en: "Verbs", emoji: "⚡" },
   { id: "adjectives", fr: "Adjectifs", en: "Adjectives", emoji: "🎨" },
+  { id: "irregular-verbs", fr: "Verbes irréguliers", en: "Irregular verbs", emoji: "🔁" },
   { id: "phrasal-verbs", fr: "Phrasal verbs", en: "Phrasal verbs", emoji: "🧩" },
   { id: "idioms", fr: "Expressions idiomatiques", en: "Idioms", emoji: "🦉" },
   { id: "time", fr: "Temps et dates", en: "Time & dates", emoji: "🕒" },

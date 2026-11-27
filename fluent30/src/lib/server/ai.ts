@@ -68,7 +68,7 @@ export async function chatText(opts: { system: string; messages: Anthropic.Beta.
 export const THEME_IDS = [
   "travel", "airport", "transport", "restaurant", "food", "sport", "adventure", "health", "work", "relationships",
   "dating", "emotions", "daily", "slang", "action-verbs", "adjectives", "phrasal-verbs", "idioms", "time", "home",
-  "shopping", "nature", "people", "body", "tech", "animals", "crime", "clothes", "grammar-words",
+  "shopping", "nature", "people", "body", "tech", "animals", "crime", "clothes", "irregular-verbs", "grammar-words",
 ] as const;
 
 export const EnrichSchema = z.object({
