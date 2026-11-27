@@ -1,4 +1,5 @@
 "use client";
+import { lookupDictionary } from "@/lib/dictionary";
 import { useEffect, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { getDb } from "@/lib/db";
@@ -70,7 +71,7 @@ export function WordPopup({ word, sentence, onClose }: { word: string; sentence:
   // Free dictionary (phonetics, audio, definitions, synonyms)
   useEffect(() => {
     let alive = true;
-    getApi<DictResult>(`/api/dictionary?word=${encodeURIComponent(baseLemma)}`, { cacheKey: `dict:${baseLemma}` })
+    lookupDictionary(baseLemma)
       .then((d) => alive && (setDict(d), setDictState("ok")))
       .catch(() => alive && setDictState("none"));
     return () => {

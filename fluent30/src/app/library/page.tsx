@@ -12,13 +12,14 @@ import { useOnline } from "@/hooks/useOnline";
 import { Badge, Button, EmptyState, ErrorNote, PageHeader, Panel, ProgressBar, Segmented, Spinner, cx, toast } from "@/components/ui";
 import type { Book } from "@/lib/types";
 import { CLASSICS, GUTENBERG_TOPICS } from "./classics";
+import { TravelLibrary } from "@/components/reader/TravelLibrary";
 
-type Tab = "mine" | "graded" | "gutenberg" | "import";
+type Tab = "mine" | "travel" | "graded" | "gutenberg" | "import";
 const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 
 export default function LibraryPage() {
   const t = useT();
-  const [tab, setTab] = useState<Tab>("mine");
+  const [tab, setTab] = useState<Tab>("travel");
   const books = useLiveQuery(() => getDb().books.toArray(), []);
   const recent = useMemo(() => (books ?? []).filter((b) => b.lastOpenedAt).sort((a, b) => (b.lastOpenedAt ?? 0) - (a.lastOpenedAt ?? 0))[0], [books]);
 
@@ -48,6 +49,7 @@ export default function LibraryPage() {
           value={tab}
           onChange={setTab}
           options={[
+            { value: "travel", label: t("🎒 100 classiques", "🎒 100 classics") },
             { value: "mine", label: t("Mes livres", "My books") },
             { value: "graded", label: t("Histoires graduées", "Graded stories") },
             { value: "gutenberg", label: t("Catalogue Gutenberg", "Gutenberg") },
@@ -56,6 +58,7 @@ export default function LibraryPage() {
         />
       </div>
 
+      {tab === "travel" && <TravelLibrary books={books ?? []} />}
       {tab === "mine" && <MyBooks books={books} onGo={setTab} />}
       {tab === "graded" && <Graded books={books ?? []} />}
       {tab === "gutenberg" && <Gutenberg books={books ?? []} />}

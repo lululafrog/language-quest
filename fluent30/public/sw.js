@@ -1,6 +1,6 @@
 // Fluent30 service worker: offline app shell + runtime caching of pages and static assets.
 // User data lives in IndexedDB and is always available offline.
-const VERSION = "fluent30-v1";
+const VERSION = "fluent30-v2";
 const SHELL = ["/", "/review", "/learn", "/cards", "/library", "/practice", "/games", "/verbs", "/grammar", "/more", "/stats", "/settings", "/session", "/listen", "/offline.html", "/icon.svg", "/icon-192.png"];
 
 self.addEventListener("install", (e) => {
@@ -19,7 +19,7 @@ self.addEventListener("fetch", (e) => {
   if (url.pathname.startsWith("/api/")) return; // never cache API responses here
 
   // Static assets: cache first.
-  if (url.pathname.startsWith("/_next/static/") || /\.(png|svg|webp|ico|woff2?|mjs)$/.test(url.pathname)) {
+  if (url.pathname.startsWith("/_next/static/") || /\.(png|svg|webp|ico|woff2?|mjs|gz)$/.test(url.pathname)) {
     e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((res) => { const copy = res.clone(); caches.open(VERSION).then((c) => c.put(req, copy)); return res; })));
     return;
   }

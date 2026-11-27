@@ -1,6 +1,7 @@
 "use client";
 // Book import (EPUB / PDF / TXT), Project Gutenberg downloads and graded stories → IndexedDB.
 import JSZip from "jszip";
+import { LIBRARY, LIBRARY_CATEGORIES } from "./data/library";
 import { getDb } from "./db";
 import { getApi } from "./api";
 import { textDifficulty } from "./lexicon";
@@ -396,12 +397,37 @@ export async function searchGutenberg(params: { q?: string; topic?: string; page
   return getApi(`/api/gutenberg/search?${sp}`, { cacheKey: `gutsearch:${sp}` });
 }
 
-export async function downloadGutenberg(id: number, hint?: { title?: string; author?: string; genre?: string }): Promise<Book> {
+export async function downloadGutenberg(id: number, hint?: { title?: string; author?: string; genre?: string; level?: string }): Promise<Book> {
   const existing = await getDb().books.where("source").equals("gutenberg").filter((b) => b.gutenbergId === id).first();
   if (existing) return existing;
+  // 1. Built-in library (shipped with the app, works without any external service).
+  const local = LIBRARY.find((b) => b.id === id);
+  if (local) {
+    const text = await fetchBundledBook(id);
+    if (text) {
+      const cat = LIBRARY_CATEGORIES.find((c) => c.id === local.cat);
+      return saveBook({ id: `gutenberg:${id}`, title: local.title, author: local.author, source: "gutenberg", format: "txt", gutenbergId: id, genre: cat?.fr, level: local.level }, parsePlainText(text, local.title));
+    }
+  }
+  // 2. Project Gutenberg through the server (mirror first).
   const r = await getApi<{ id: number; title: string; author?: string; text: string; subjects: string[] }>(`/api/gutenberg/book?id=${id}`);
   const chapters = parsePlainText(r.text, r.title);
-  return saveBook({ id: `gutenberg:${id}`, title: r.title || hint?.title || `Gutenberg #${id}`, author: r.author || hint?.author, source: "gutenberg", format: "txt", gutenbergId: id, genre: hint?.genre }, chapters);
+  return saveBook({ id: `gutenberg:${id}`, title: r.title || hint?.title || `Gutenberg #${id}`, author: r.author || hint?.author, source: "gutenberg", format: "txt", gutenbergId: id, genre: hint?.genre, level: hint?.level }, chapters);
+}
+
+/** Loads public/books/<id>.txt.gz and decompresses it in the browser. */
+async function fetchBundledBook(id: number): Promise<string | null> {
+  try {
+    const res = await fetch(`/books/${id}.txt.gz`);
+    if (!res.ok) return null;
+    const buf = new Uint8Array(await res.arrayBuffer());
+    // Some hosts decompress .gz transparently: detect the gzip magic number.
+    if (buf[0] !== 0x1f || buf[1] !== 0x8b) return new TextDecoder("utf-8").decode(buf);
+    const stream = new Blob([buf]).stream().pipeThrough(new DecompressionStream("gzip"));
+    return await new Response(stream).text();
+  } catch {
+    return null;
+  }
 }
 
 // ---------------- Graded stories ----------------
