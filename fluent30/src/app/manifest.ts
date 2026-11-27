@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Vocabulaire utile, répétition espacée, lecture interactive et conversation pour francophones.",
     start_url: "/",
     display: "standalone",
-    background_color: "#f7f7fb",
-    theme_color: "#5a3fe0",
+    background_color: "#f6f1e7",
+    theme_color: "#2e5a7b",
     lang: "fr",
     icons: [
       { src: "/icon-192.png", sizes: "192x192", type: "image/png" },

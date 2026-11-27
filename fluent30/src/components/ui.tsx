@@ -59,7 +59,7 @@ export function Badge({ children, tone = "ink", className }: { children: ReactNo
     ink: "bg-ink-100 text-ink-800 dark:bg-ink-900/70 dark:text-ink-200",
     coral: "bg-coral-100 text-coral-600 dark:bg-coral-600/20 dark:text-coral-400",
     mint: "bg-mint-100 text-mint-600 dark:bg-mint-600/20 dark:text-mint-400",
-    sun: "bg-sun-100 text-amber-700 dark:bg-sun-500/20 dark:text-sun-400",
+    sun: "bg-sun-100 text-sun-800 dark:bg-sun-500/20 dark:text-sun-300",
     gray: "bg-surface-2 text-muted",
   };
   return <span className={cx("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium", tones[tone], className)}>{children}</span>;
@@ -75,7 +75,7 @@ export function ProgressBar({ value, max = 1, tone = "ink", className }: { value
   );
 }
 
-export function Ring({ value, max = 1, size = 72, stroke = 8, children, tone = "#6a55f2" }: { value: number; max?: number; size?: number; stroke?: number; children?: ReactNode; tone?: string }) {
+export function Ring({ value, max = 1, size = 72, stroke = 8, children, tone = "var(--color-ink-500)" }: { value: number; max?: number; size?: number; stroke?: number; children?: ReactNode; tone?: string }) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const pct = max > 0 ? Math.min(1, value / max) : 0;
@@ -103,7 +103,7 @@ export function PageHeader({ title, subtitle, back, action }: { title: ReactNode
         </Link>
       )}
       <div className="min-w-0 flex-1">
-        <h1 className="text-[26px] font-bold tracking-tight sm:text-[30px]">{title}</h1>
+        <h1 className="text-[27px] font-bold leading-tight sm:text-[31px]">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
       </div>
       {action}
@@ -111,10 +111,10 @@ export function PageHeader({ title, subtitle, back, action }: { title: ReactNode
   );
 }
 
-export function EmptyState({ icon = "✨", title, children }: { icon?: string; title: string; children?: ReactNode }) {
+export function EmptyState({ icon, title, children }: { icon?: string; title: string; children?: ReactNode }) {
   return (
     <div className="flex flex-col items-center rounded-2xl border border-dashed border-line px-6 py-10 text-center">
-      <div className="mb-3 text-4xl">{icon}</div>
+      {icon ? <div className="mb-3 text-4xl">{icon}</div> : <div className="mb-3 h-10 w-10 rounded-full border-2 border-dashed border-sun-400/70" aria-hidden />}
       <p className="font-medium">{title}</p>
       {children && <div className="mt-2 text-sm text-muted">{children}</div>}
     </div>
@@ -124,8 +124,8 @@ export function EmptyState({ icon = "✨", title, children }: { icon?: string; t
 /** Explains clearly that a feature needs an external service (never pretend it works). */
 export function ServiceNotice({ service, envVar, children }: { service: string; envVar: string; children?: ReactNode }) {
   return (
-    <div className="rounded-xl border border-sun-400/60 bg-sun-100/60 p-3 text-sm text-amber-900 dark:bg-sun-500/10 dark:text-sun-100">
-      <p className="font-medium">🔑 {service} nécessite une clé API</p>
+    <div className="rounded-xl border border-sun-400/60 bg-sun-100/60 p-3 text-sm text-sun-900 dark:bg-sun-500/10 dark:text-sun-100">
+      <p className="font-medium">{service} nécessite une clé API</p>
       <p className="mt-1 opacity-90">
         Ajoutez <code className="rounded bg-black/5 px-1 dark:bg-white/10">{envVar}</code> dans les variables d&apos;environnement du serveur (voir README).{" "}
         {children}
@@ -287,7 +287,7 @@ export function IconTile({ children, tone = "ink", size = "md" }: { children: Re
     ink: "bg-ink-50 text-ink-600 dark:bg-ink-900/60 dark:text-ink-300",
     coral: "bg-coral-100 text-coral-600 dark:bg-coral-600/20 dark:text-coral-400",
     mint: "bg-mint-100 text-mint-600 dark:bg-mint-600/20 dark:text-mint-400",
-    sun: "bg-sun-100 text-amber-700 dark:bg-sun-500/20 dark:text-sun-400",
+    sun: "bg-sun-100 text-sun-800 dark:bg-sun-500/20 dark:text-sun-300",
     gray: "bg-surface-2 text-muted",
   };
   const sizes = { sm: "h-8 w-8 rounded-lg", md: "h-10 w-10 rounded-xl", lg: "h-12 w-12 rounded-2xl" };

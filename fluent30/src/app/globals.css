@@ -4,35 +4,57 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-display: ui-rounded, "SF Pro Rounded", "Nunito", "Quicksand", system-ui, -apple-system, sans-serif;
+  /* Editorial travel-journal headings: system serif (no web font download). */
+  --font-display: "New York", ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
   --font-dyslexic: "Atkinson Hyperlegible", "Verdana", "Tahoma", sans-serif;
 
-  --color-ink-50: #f3f3ff;
-  --color-ink-100: #e7e6ff;
-  --color-ink-200: #cfccff;
-  --color-ink-300: #aaa4ff;
-  --color-ink-400: #8578fb;
-  --color-ink-500: #6a55f2;
-  --color-ink-600: #5a3fe0;
-  --color-ink-700: #4a32bb;
-  --color-ink-800: #3c2b96;
-  --color-ink-900: #2e2a6b;
-  --color-ink-950: #1a1740;
+  /* Palette "carnet de voyage" — token names kept, values retuned:
+     ink = deep sea blue-ink (primary) · coral = terracotta · mint = sage · sun = sand / ochre */
+  --color-ink-50: #eef3f6;
+  --color-ink-100: #dce6ed;
+  --color-ink-200: #b9cddb;
+  --color-ink-300: #8fb0c6;
+  --color-ink-400: #608ca9;
+  --color-ink-500: #3f6f92;
+  --color-ink-600: #2e5a7b;
+  --color-ink-700: #254a66;
+  --color-ink-800: #1e3c53;
+  --color-ink-900: #192f41;
+  --color-ink-950: #10202c;
 
-  --color-coral-100: #ffe7e3;
-  --color-coral-400: #ff8f80;
-  --color-coral-500: #ff7a6b;
-  --color-coral-600: #e85d4d;
+  --color-coral-50: #fcf1ec;
+  --color-coral-100: #f8e1d6;
+  --color-coral-200: #f0c2ad;
+  --color-coral-300: #e59e80;
+  --color-coral-400: #d97d59;
+  --color-coral-500: #c6623b;
+  --color-coral-600: #a94e2c;
+  --color-coral-700: #8a3f24;
+  --color-coral-800: #6c321e;
+  --color-coral-900: #522719;
 
-  --color-mint-100: #dcf7ef;
-  --color-mint-400: #5fd3b5;
-  --color-mint-500: #2fbf9a;
-  --color-mint-600: #1f9c7c;
+  --color-mint-50: #f1f5ee;
+  --color-mint-100: #e1eadb;
+  --color-mint-200: #c5d6ba;
+  --color-mint-300: #a4bd95;
+  --color-mint-400: #84a473;
+  --color-mint-500: #688a58;
+  --color-mint-600: #4f6d43;
+  --color-mint-700: #415a37;
+  --color-mint-800: #34472d;
+  --color-mint-900: #293824;
 
-  --color-sun-100: #fff3d1;
-  --color-sun-400: #ffd166;
-  --color-sun-500: #f5b83d;
+  --color-sun-50: #fbf6ea;
+  --color-sun-100: #f5ead0;
+  --color-sun-200: #ecd7a6;
+  --color-sun-300: #e2c27c;
+  --color-sun-400: #d8ab55;
+  --color-sun-500: #c18e36;
+  --color-sun-600: #9c712a;
+  --color-sun-700: #7a5822;
+  --color-sun-800: #5d431c;
+  --color-sun-900: #453317;
 
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
@@ -41,6 +63,7 @@
   --color-muted: var(--muted);
   --color-line: var(--line);
 
+  --ease-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
   --animate-pop: pop 0.25s ease-out;
   --animate-fade: fade 0.3s ease-out;
   --animate-slide-up: slide-up 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -53,35 +76,42 @@
 }
 
 :root {
-  --bg: #f7f7fb;
-  --surface: #ffffff;
-  --surface-2: #f0f0f7;
-  --fg: #17162b;
-  --muted: #6b6a85;
-  --line: #e4e3ef;
+  /* warm paper (light) */
+  --bg: #f6f1e7;
+  --surface: #fffdf8;
+  --surface-2: #efe8da;
+  --fg: #23201b;
+  --muted: #6b6457;
+  --line: #e3dac8;
+  --focus: #2e5a7b;
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .28 0 0 0 0 .18 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   color-scheme: light;
 }
 .dark {
-  --bg: #0f0e1c;
-  --surface: #181730;
-  --surface-2: #221f3f;
-  --fg: #ecebff;
-  --muted: #a09fc0;
-  --line: #2c2a4d;
+  /* warm night */
+  --bg: #14120e;
+  --surface: #1e1b16;
+  --surface-2: #29251e;
+  --fg: #f1ebdf;
+  --muted: #aba291;
+  --line: #37312a;
+  --focus: #8fb0c6;
   color-scheme: dark;
 }
 
 html, body { background: var(--bg); color: var(--fg); }
-/* Quiet background: one soft wash at the top, no multi-colour gradients. */
+/* Quiet background: a warm wash at the top + very light paper grain (tiny inline SVG, tiled). */
 body {
-  background-image: radial-gradient(1100px 520px at 50% -18%, color-mix(in srgb, var(--color-ink-100) 60%, transparent), transparent 70%);
-  background-attachment: fixed;
+  background-image: radial-gradient(1100px 520px at 50% -18%, color-mix(in srgb, var(--color-sun-100) 70%, transparent), transparent 70%), var(--paper-grain);
 }
 .dark body {
-  background-image: radial-gradient(1000px 520px at 50% -18%, rgba(106, 85, 242, 0.14), transparent 70%);
+  background-image: radial-gradient(1000px 520px at 50% -18%, rgba(63, 111, 146, 0.16), transparent 70%);
 }
-h1, h2, .font-display { font-family: var(--font-display); letter-spacing: -0.01em; }
-.card-shadow { box-shadow: 0 1px 2px rgba(23, 22, 43, 0.04), 0 10px 30px -14px rgba(74, 50, 187, 0.22); }
+h1, h2, .font-display { font-family: var(--font-display); letter-spacing: -0.005em; }
+.card-shadow { box-shadow: 0 1px 2px rgba(60, 45, 25, 0.05), 0 10px 28px -16px rgba(60, 45, 25, 0.28); }
+/* One visible, consistent focus ring for keyboard users. */
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 10px; }
+::selection { background: color-mix(in srgb, var(--color-sun-300) 55%, transparent); }
 .dark .card-shadow { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px -14px rgba(0, 0, 0, 0.6); }
 body { font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; }
 
@@ -101,7 +131,7 @@ body { font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; 
 .reader-word { cursor: pointer; border-radius: 4px; transition: background 0.15s; }
 .reader-word:hover { background: color-mix(in srgb, var(--color-ink-400) 18%, transparent); }
 .reader-word.saved { text-decoration: underline; text-decoration-color: var(--color-coral-400); text-decoration-thickness: 2px; text-underline-offset: 3px; }
-.reader-word.active { background: var(--color-sun-400); color: #17162b; }
+.reader-word.active { background: var(--color-sun-300); color: #23201b; }
 .reader-word.selected { background: color-mix(in srgb, var(--color-ink-400) 30%, transparent); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -111,8 +141,14 @@ body { font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; 
 .reduce-motion *, .reduce-motion *::before, .reduce-motion *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 
 /* Typographic scale */
-.t-display { font-family: var(--font-display); font-size: 1.75rem; line-height: 2.15rem; font-weight: 700; letter-spacing: -0.02em; }
-.t-title { font-family: var(--font-display); font-size: 1.25rem; line-height: 1.7rem; font-weight: 650; letter-spacing: -0.01em; }
+.t-display { font-family: var(--font-display); font-size: 1.875rem; line-height: 2.25rem; font-weight: 700; letter-spacing: -0.015em; }
+.t-title { font-family: var(--font-display); font-size: 1.3rem; line-height: 1.75rem; font-weight: 650; letter-spacing: -0.005em; }
+.t-section { font-size: 1.0625rem; line-height: 1.5rem; font-weight: 650; }
+.t-body { font-size: 0.9875rem; line-height: 1.55rem; }
+.t-caption { font-size: 0.8125rem; line-height: 1.15rem; color: var(--muted); }
+/* Travel-journal accents */
+.stitched { border: 1.5px dashed color-mix(in srgb, var(--color-sun-500) 45%, transparent); }
+.paper-card { background: var(--surface); background-image: var(--paper-grain); }
 .t-eyebrow { font-size: 0.75rem; line-height: 1rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
 
 /* Inputs inside flex rows must be allowed to shrink on narrow screens. */

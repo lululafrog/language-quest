@@ -40,20 +40,23 @@ export const SECTIONS: NavSection[] = [
     match: ["/practice", "/review", "/learn", "/cards", "/themes", "/around", "/games", "/listen", "/pronunciation", "/chat", "/translate", "/session"],
     children: [
       { href: "/review", fr: "Réviser", en: "Review", icon: "review" },
-      { href: "/learn", fr: "Nouveaux mots", en: "New words", icon: "sparkle" },
-      { href: "/cards", fr: "Mes flashcards", en: "My flashcards", icon: "flashcards" },
+      { href: "/practice/mindmap", fr: "Carte mentale", en: "Mind map", icon: "layers" },
+      { href: "/practice/real-life", fr: "My Real Life English", en: "My Real Life English", icon: "camera" },
+      { href: "/practice/journal", fr: "Journal", en: "Journal", icon: "pen" },
+      { href: "/practice/memories", fr: "Memory Cards", en: "Memory Cards", icon: "heart" },
       { href: "/games", fr: "Jeux", en: "Games", icon: "game" },
-      { href: "/listen", fr: "Écoute", en: "Listening", icon: "headphones" },
-      { href: "/chat", fr: "Conversation", en: "Conversation", icon: "chat" },
+      { href: "/chat", fr: "Conversations IA", en: "AI conversations", icon: "chat" },
     ],
   },
   {
-    href: "/profile", fr: "Profil", en: "Profile", icon: "profile",
-    match: ["/profile", "/more", "/shop", "/collection", "/achievements", "/stats", "/settings"],
+    href: "/profile", fr: "Mon univers", en: "My world", icon: "globe",
+    match: ["/profile", "/world", "/more", "/shop", "/collection", "/achievements", "/stats", "/settings"],
     children: [
+      { href: "/world", fr: "Carte du monde", en: "World map", icon: "map" },
       { href: "/shop", fr: "Dressing", en: "Wardrobe", icon: "shirt" },
-      { href: "/achievements", fr: "Récompenses", en: "Rewards", icon: "trophy" },
-      { href: "/stats", fr: "Statistiques", en: "Statistics", icon: "chart" },
+      { href: "/profile/passport", fr: "Passeport", en: "Passport", icon: "passport" },
+      { href: "/achievements", fr: "Trophées", en: "Trophies", icon: "trophy" },
+      { href: "/stats", fr: "Progression", en: "Progress", icon: "chart" },
       { href: "/settings", fr: "Paramètres", en: "Settings", icon: "settings" },
     ],
   },
@@ -99,6 +102,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.classList.toggle("reduce-motion", !!settings.reduceMotion);
   }, [settings.reduceMotion]);
+
+  // Text size (accessibility): every size is in rem, so scaling the root scales the whole UI.
+  useEffect(() => {
+    const k = settings.textScale ?? 1;
+    document.documentElement.style.fontSize = k === 1 ? "" : `${Math.round(k * 100)}%`;
+  }, [settings.textScale]);
 
   useEffect(() => {
     document.documentElement.lang = settings.immersion ? "en" : "fr";
@@ -183,11 +192,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
-        {!online && <p className="mt-3 rounded-lg bg-sun-100 px-3 py-2 text-xs text-amber-800 dark:bg-sun-500/15 dark:text-sun-100">{t("Hors ligne — vos données restent disponibles.", "Offline — your data is still available.")}</p>}
+        {!online && <p className="mt-3 rounded-lg bg-sun-100 px-3 py-2 text-xs text-sun-800 dark:bg-sun-500/15 dark:text-sun-100">{t("Hors ligne — vos données restent disponibles.", "Offline — your data is still available.")}</p>}
       </aside>
 
       <div className="min-w-0 flex-1">
-        {!online && <div className="bg-sun-100 px-4 py-1.5 text-center text-xs text-amber-800 md:hidden dark:bg-sun-500/15 dark:text-sun-100">{t("Hors ligne — flashcards et livres téléchargés disponibles", "Offline — flashcards and downloaded books available")}</div>}
+        {!online && <div className="bg-sun-100 px-4 py-1.5 text-center text-xs text-sun-800 md:hidden dark:bg-sun-500/15 dark:text-sun-100">{t("Hors ligne — flashcards et livres téléchargés disponibles", "Offline — flashcards and downloaded books available")}</div>}
         <main className="mx-auto w-full max-w-5xl px-4 pb-32 pt-5 sm:px-6 md:pb-12 md:pt-8">{mounted ? children : <div className="space-y-4"><div className="h-10 w-48 animate-pulse rounded-xl bg-surface-2" /><div className="h-40 animate-pulse rounded-2xl bg-surface-2" /></div>}</main>
       </div>
 
@@ -216,9 +225,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 export function Logo({ size = 30 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden>
-      <rect width="64" height="64" rx="16" fill="#5a3fe0" />
+      <rect width="64" height="64" rx="16" fill="#2e5a7b" />
       <path d="M18 44V20h18M18 32h13" stroke="#fff" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      <circle cx="45" cy="42" r="7" fill="#ff7a6b" />
+      <circle cx="45" cy="42" r="7" fill="#d97d59" />
     </svg>
   );
 }
