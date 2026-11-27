@@ -2,6 +2,7 @@
 // Gamification: XP levels, coins, daily quests, streak rewards and the tourist's wardrobe.
 import { getDb, todayKey } from "./db";
 import { computeStreak } from "./track";
+import { WORLD } from "./data/world";
 import { LEGACY_IDS, SHOP_BY_ID, SHOP_ITEMS, type EarnRule, type ShopItem } from "./data/shop";
 import type { Appearance, AvatarSlot, DayActivity, GameState } from "./types";
 
@@ -266,13 +267,15 @@ export async function progressStats(): Promise<ProgressStats> {
   const activeDays = days.filter((d) => d.seconds > 30 || d.reviews > 0 || d.newWords > 0 || d.xp > 0).length;
   const byDest: Record<string, number> = {};
   for (const m of missions) {
-    const dest = m.id.split("-")[0];
+    const dest = MISSION_DEST.get(m.id) ?? m.id.split("-")[0];
     byDest[dest] = (byDest[dest] ?? 0) + 1;
   }
   return { lessons, books, mastered, streak: activeDays, missions: byDest };
 }
 
 /** Current value of an earn rule. */
+const MISSION_DEST = new Map(WORLD.flatMap((d) => d.missions.map((m) => [m.id, d.id] as const)));
+
 export function earnValue(rule: EarnRule, st: ProgressStats): number {
   switch (rule.kind) {
     case "lessons": return st.lessons;

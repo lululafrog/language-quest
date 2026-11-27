@@ -2,6 +2,7 @@
 // World map state: which destinations are open (skills, not points), mission progress, souvenirs.
 import { getDb, getSettings } from "./db";
 import { addCoins } from "./game";
+import { emit } from "./events";
 import { claimStamps } from "./passport";
 import { trackActivity } from "./track";
 import { LEVEL_INFO } from "./curriculum";
@@ -112,6 +113,7 @@ export async function recordMission(id: string, score: number): Promise<MissionR
     destinationCompleted = all.every((r) => r?.status === "done");
     newStamps = await claimStamps();
   }
+  if (passed) emit("mission:done", { missionId: id, score });
   return { passed, firstCompletion, coins, destinationCompleted, newStamps };
 }
 

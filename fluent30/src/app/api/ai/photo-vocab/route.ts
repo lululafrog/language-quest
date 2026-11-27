@@ -6,4 +6,4 @@ export const POST = aiRoute<{ image?: unknown; level?: unknown; note?: unknown }
   const image = parseImage(b.image);
   if (!image) throw new BadInput("Photo manquante.");
   return photoVocab(image, safeLevel(b.level), optionalString(b.note, 300));
-});
+}, { feature: "memories" });

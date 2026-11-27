@@ -1,3 +1,5 @@
+import { takeQuota } from "./usage";
+import type { AiFeature } from "../plan";
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
@@ -5,10 +7,15 @@ import { guard, jsonError, notConfigured } from "./guard";
 import { NotConfiguredError, RefusalError } from "./ai";
 
 /** Wraps an AI route: auth/rate-limit guard, JSON parsing and uniform error mapping. */
-export function aiRoute<B>(handler: (body: B, ctx: { userId: string | null }) => Promise<unknown>) {
+export function aiRoute<B>(handler: (body: B, ctx: { userId: string | null }) => Promise<unknown>, opts: { feature?: AiFeature } = {}) {
   return async (req: Request) => {
     const g = await guard(req);
     if (!g.ok) return g.response;
+    if (opts.feature) {
+      const who = g.userId ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+      const limited = takeQuota(opts.feature, who);
+      if (limited) return limited;
+    }
     let body: B;
     try {
       body = (await req.json()) as B;

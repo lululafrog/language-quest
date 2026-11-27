@@ -149,3 +149,22 @@ Sans clé, la traduction mot/paragraphe utilise MyMemory (gratuit, quota quotidi
   le test CECRL complet peut placer le parcours au bon niveau.
 - Limites : la note de prononciation dépend de la reconnaissance vocale du navigateur (indicative) ; la conversation
   IA liée à chaque situation nécessite `ANTHROPIC_API_KEY`.
+
+## Aventure : vraie vie, souvenirs, monde (phases 2 et 3)
+
+| Fonction | Où | Service externe |
+| --- | --- | --- |
+| **My Real Life English** : texte, capture, photo de menu/panneau, message vocal, réplique de film, passage de livre, phrase française → traduction, expressions, registre, réponses, mini-leçon, situation | Pratique → Ta vraie vie, bouton sur l'accueil, partage depuis une autre app (PWA installée) | `ANTHROPIC_API_KEY` ; vocal : `OPENAI_API_KEY` |
+| **Memory Cards** : photo personnelle → vocabulaire et phrases, cartes illustrées par ta photo, album | Pratique → Memory Cards | `ANTHROPIC_API_KEY` (illustration facultative : `OPENAI_API_KEY`) |
+| **Journal My English Journey** : version corrigée + version naturelle expliquées, erreurs récurrentes → cours, bilan oral mensuel | Pratique → Journal | `ANTHROPIC_API_KEY` |
+| **Carte mentale** du vocabulaire (découvert / reconnu / employé / oublié, calculé sur les vraies révisions FSRS) | Pratique → Carte mentale | aucune |
+| **Carte du monde** : Londres, New York, Bali, Sydney, Tokyo, Toronto — 26 missions, déblocage par compétences (cours, niveau ou visa) | Mon univers → Carte du monde | aucune |
+| **Avatar** (morphologies, visages, expressions, animations) et **dressing** (22 catégories, 12 collections, objets exclusifs gagnés, 5 tenues favorites) | Mon univers → Dressing | aucune |
+
+**Confidentialité** : photos et enregistrements restent sur l'appareil (table locale `media`, jamais synchronisée).
+Consentement demandé avant tout envoi à l'IA, révocable (Paramètres → Contenus personnels). Les textes personnels
+ne sont sauvegardés dans le compte que sur option. Rien n'est conservé côté serveur ni utilisé pour entraîner un modèle.
+
+**Coûts** : quotas IA quotidiens par fonctionnalité (`src/lib/plan.ts`, surchargeables par variables d'environnement),
+journal de consommation approximative `[ai-usage]` dans les logs serveur, cache des analyses sur l'appareil.
+Le plan premium est préparé mais **aucun paiement n'est activé**.

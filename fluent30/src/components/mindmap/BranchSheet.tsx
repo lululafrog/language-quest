@@ -117,7 +117,7 @@ export function BranchSheet({ branch, all, onClose }: { branch: Branch | null; a
           <LinkButton href={`/learn?theme=${branch.cat.learnTheme}`} className="w-full">
             <Icon name="sparkle" size={18} /> Apprendre des mots de ce domaine
           </LinkButton>
-          <LinkButton href="/review" variant="secondary" className="w-full">
+          <LinkButton href={`/review?cards=${branch.words.slice(0, 150).map((w) => w.card.id).join(",")}`} variant="secondary" className="w-full">
             <Icon name="flashcards" size={18} /> Réviser mes mots
           </LinkButton>
           <LinkButton href="/games" variant="secondary" className="w-full">

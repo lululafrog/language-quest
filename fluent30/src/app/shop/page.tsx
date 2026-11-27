@@ -45,11 +45,12 @@ export default function ShopPage() {
   const name = (it: { fr: string; en: string }) => (s.immersion ? it.en : it.fr);
 
   // Grant items earned by real progress (missions, lessons, words, books, regularity).
+  const immersion = !!s.immersion;
   useEffect(() => {
     void checkEarnedItems().then((fresh) => {
-      for (const it of fresh) toast(t(`Nouvel objet gagné : ${it.fr}`, `New item earned: ${it.en}`));
+      for (const it of fresh) toast(immersion ? `New item earned: ${it.en}` : `Nouvel objet gagné : ${it.fr}`);
     });
-  }, [t]);
+  }, [immersion]);
 
   const items = useMemo(() => {
     if (!game) return [];

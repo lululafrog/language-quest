@@ -2,6 +2,7 @@
 // Grants passport stamps as soon as their condition is met (on launch, after lessons/books, and every few minutes).
 import { useEffect } from "react";
 import { claimStamps } from "@/lib/passport";
+import { checkEarnedItems } from "@/lib/game";
 import { on } from "@/lib/events";
 import { toast } from "@/components/ui";
 
@@ -14,6 +15,8 @@ export function StampWatcher() {
       try {
         const fresh = await claimStamps();
         for (const d of fresh) toast(`Nouveau tampon : ${d.nameFr} (+${d.coins} pièces)`);
+        const items = await checkEarnedItems();
+        for (const i of items) toast(`Nouvel objet dans ton dressing : ${i.fr}`);
       } catch {
         /* storage unavailable: retry later */
       } finally {
@@ -22,7 +25,7 @@ export function StampWatcher() {
     };
     const t0 = setTimeout(check, 2500);
     const iv = setInterval(check, 120_000);
-    const offs = [on("book:finished", check), on("chapter:finished", check), on("quiz:done", check), on("lesson:done", check)];
+    const offs = [on("book:finished", check), on("chapter:finished", check), on("quiz:done", check), on("lesson:done", check), on("mission:done", check)];
     const vis = () => document.visibilityState === "visible" && check();
     document.addEventListener("visibilitychange", vis);
     return () => {

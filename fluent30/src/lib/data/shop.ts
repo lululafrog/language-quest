@@ -24,7 +24,7 @@ export type Collection =
 export interface EarnRule {
   kind: "lessons" | "missions" | "books" | "mastered" | "streak";
   n: number;
-  /** destination id for "missions" (mission ids are prefixed "<dest>-") */
+  /** destination id for "missions" (world destination id, see data/world.ts) */
   dest?: string;
   fr: string;
   en: string;
@@ -238,8 +238,8 @@ export const SHOP_ITEMS: ShopItem[] = [
   // ---------- Earned by real progress (destination exclusives first)
   E("x-london-raincoat", "outer", "vestes", "Imperméable de Londres", "London raincoat", { k: "raincoat", c: "#2B3A55" }, mission("london", 2, "Londres", "London"), "citytrip"),
   E("x-london-tartan", "neck", "bijoux", "Écharpe tartan", "Tartan scarf", { k: "scarfPlaid", c: "#A33B3B", c2: "#2E4A3A" }, mission("london", 4, "Londres", "London"), "winter"),
-  E("x-ny-hoodie", "top", "pulls", "Sweat à capuche NYC", "NYC hoodie", { k: "hoodie", c: "#3F5470", c2: "#FBF7F0", t: "NYC" }, mission("newyork", 2, "New York", "New York"), "citytrip"),
-  E("x-ny-cap", "hat", "casquettes", "Casquette de Brooklyn", "Brooklyn cap", { k: "cap", c: "#2F2A28", t: "BKLYN" }, mission("newyork", 4, "New York", "New York"), "citytrip"),
+  E("x-ny-hoodie", "top", "pulls", "Sweat à capuche NYC", "NYC hoodie", { k: "hoodie", c: "#3F5470", c2: "#FBF7F0", t: "NYC" }, mission("new-york", 2, "New York", "New York"), "citytrip"),
+  E("x-ny-cap", "hat", "casquettes", "Casquette de Brooklyn", "Brooklyn cap", { k: "cap", c: "#2F2A28", t: "BKLYN" }, mission("new-york", 4, "New York", "New York"), "citytrip"),
   E("x-bali-sarong", "bottom", "jupes", "Sarong batik de Bali", "Balinese batik sarong", { k: "sarong", c: "#3F6B4F", p: "flowers", c2: "#E9C46A" }, mission("bali", 2, "Bali", "Bali"), "tropical"),
   E("x-bali-flowers", "hat", "bijoux", "Fleur de frangipanier", "Frangipani flower", { k: "flowerpin" }, mission("bali", 4, "Bali", "Bali"), "tropical"),
   E("x-sydney-bushhat", "hat", "chapeaux", "Chapeau de brousse", "Australian bush hat", { k: "bushhat", c: "#8C6A4A" }, mission("sydney", 2, "Sydney", "Sydney"), "adventure"),
