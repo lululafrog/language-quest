@@ -3,21 +3,26 @@ import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { config } from "./config";
+import { FEATURES, modelForTier, supportsServerFallback, type Tier } from "./costs-core";
+import { assertBudget, assertUserBudget, currentAiContext, recordCall, recordFailure } from "./usage";
+import { classifyAiError } from "./errors";
 
 let client: Anthropic | null = null;
 export function ai(): Anthropic {
   if (!config.anthropicKey) throw new NotConfiguredError();
-  if (!client) client = new Anthropic({ apiKey: config.anthropicKey });
+  if (!client) client = new Anthropic({ apiKey: config.anthropicKey, timeout: config.aiTimeoutMs, maxRetries: 2 });
   return client;
 }
 
 export class NotConfiguredError extends Error {
   constructor() {
-    super("ANTHROPIC_API_KEY is not set");
+    super("ai_not_configured");
   }
 }
 
 export class RefusalError extends Error {}
+/** The model answered but the output was unusable (schema mismatch, truncated, empty). */
+export class BadResponseError extends Error {}
 
 type Effort = "low" | "medium" | "high";
 
@@ -26,6 +31,56 @@ Principles: teach the English people really speak (natural, current usage), pref
 explain differences with French and typical mistakes made by French speakers ("faux amis", word order, tenses, prepositions),
 be accurate and concise. French explanations must be natural French. Never invent facts; if something is ambiguous, say so.`;
 
+/** Model tier for the current request: explicit, else from the feature of the running route (see costs-core FEATURES). */
+function routing(tier?: Tier): { model: string; tier: Tier; maxTokensCap: number } {
+  const ctx = currentAiContext();
+  const spec = ctx ? FEATURES[ctx.feature] : undefined;
+  const t = tier ?? spec?.tier ?? "standard";
+  return { model: modelForTier(t), tier: t, maxTokensCap: spec?.maxTokens || 16000 };
+}
+
+/** Effort per tier: fast → low; standard → at most medium; premium → as requested. */
+function effortFor(t: Tier, requested?: Effort): Effort {
+  if (t === "fast") return "low";
+  if (t === "standard") return requested === "high" ? "medium" : (requested ?? "low");
+  return requested ?? "low";
+}
+
+type Usage = { input_tokens: number; output_tokens: number; cache_read_input_tokens?: number | null; cache_creation_input_tokens?: number | null };
+
+/**
+ * Single wrapper for every Anthropic call: budget caps, timing, real token usage → cost tracking, typed failures.
+ * The call itself is passed as `fn(model)`; usage is read from the response.
+ */
+async function callAnthropic<R extends { usage: Usage; stop_reason?: string | null }>(model: string, fn: (model: string) => Promise<R>): Promise<R> {
+  ai(); // throws NotConfiguredError first
+  await assertBudget();
+  const ctx = currentAiContext();
+  if (ctx) await assertUserBudget(ctx.user);
+  const t0 = Date.now();
+  try {
+    const res = await fn(model);
+    const u = res.usage;
+    recordCall({
+      model,
+      latencyMs: Date.now() - t0,
+      usage: { input: u.input_tokens, output: u.output_tokens, cacheRead: u.cache_read_input_tokens ?? 0, cacheWrite: u.cache_creation_input_tokens ?? 0 },
+    });
+    if (res.stop_reason === "refusal") throw new RefusalError("refusal");
+    return res;
+  } catch (e) {
+    const { code } = classifyAiError(e);
+    if (!(e instanceof RefusalError) || code) recordFailure({ code, message: technicalMessage(e), provider: "anthropic" });
+    throw e;
+  }
+}
+
+function technicalMessage(e: unknown): string {
+  if (e instanceof Anthropic.APIError) return `${e.status ?? ""} ${e.name}`.trim();
+  if (e instanceof Error) return e.name + (e.message ? `: ${e.message.slice(0, 120)}` : "");
+  return "unknown";
+}
+
 /** One structured call: returns data validated against the zod schema. */
 export async function structured<T extends z.ZodType>(opts: {
   schema: T;
@@ -33,34 +88,53 @@ export async function structured<T extends z.ZodType>(opts: {
   user: Anthropic.Beta.BetaContentBlockParam[] | string;
   effort?: Effort;
   maxTokens?: number;
+  tier?: Tier;
 }): Promise<z.infer<T>> {
-  const res = await ai().beta.messages.parse({
-    model: config.model,
-    max_tokens: opts.maxTokens ?? 8000,
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
-    system: [{ type: "text", text: TEACHER + (opts.system ? `\n\n${opts.system}` : ""), cache_control: { type: "ephemeral" } }],
-    output_config: { effort: opts.effort ?? "low", format: betaZodOutputFormat(opts.schema) },
-    messages: [{ role: "user", content: opts.user }],
-  });
-  if (res.stop_reason === "refusal") throw new RefusalError("refusal");
-  if (!res.parsed_output) throw new Error(`Invalid AI output (stop_reason=${res.stop_reason})`);
+  const r = routing(opts.tier);
+  const max = Math.min(opts.maxTokens ?? 8000, r.maxTokensCap);
+  const res = await callAnthropic(r.model, (model) =>
+    ai().beta.messages.parse({
+      model,
+      max_tokens: max,
+      ...(supportsServerFallback(model) ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
+      system: [{ type: "text", text: TEACHER + (opts.system ? `\n\n${opts.system}` : ""), cache_control: { type: "ephemeral" } }],
+      output_config: { effort: effortFor(r.tier, opts.effort), format: betaZodOutputFormat(opts.schema) },
+      messages: [{ role: "user", content: opts.user }],
+    }),
+  );
+  if (!res.parsed_output) {
+    const err = new BadResponseError(`invalid_output stop_reason=${res.stop_reason}`);
+    recordFailure({ code: "bad_response", message: err.message, provider: "anthropic" });
+    throw err;
+  }
   return res.parsed_output as z.infer<T>;
 }
 
 /** Free-text multi-turn call (conversation partner). */
-export async function chatText(opts: { system: string; messages: Anthropic.Beta.BetaMessageParam[]; effort?: Effort; maxTokens?: number }) {
-  const res = await ai().beta.messages.create({
-    model: config.model,
-    max_tokens: opts.maxTokens ?? 2000,
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
-    system: [{ type: "text", text: opts.system, cache_control: { type: "ephemeral" } }],
-    output_config: { effort: opts.effort ?? "low" },
-    messages: opts.messages,
-  });
-  if (res.stop_reason === "refusal") throw new RefusalError("refusal");
-  return res.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("").trim();
+export async function chatText(opts: { system: string; messages: Anthropic.Beta.BetaMessageParam[]; effort?: Effort; maxTokens?: number; tier?: Tier }) {
+  const r = routing(opts.tier);
+  const max = Math.min(opts.maxTokens ?? 2000, r.maxTokensCap);
+  const res = await callAnthropic(r.model, (model) =>
+    ai().beta.messages.create({
+      model,
+      max_tokens: max,
+      ...(supportsServerFallback(model) ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
+      system: [{ type: "text", text: opts.system, cache_control: { type: "ephemeral" } }],
+      output_config: { effort: effortFor(r.tier, opts.effort) },
+      messages: opts.messages,
+    }),
+  );
+  const text = res.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("").trim();
+  if (!text) {
+    recordFailure({ code: "bad_response", message: `empty_text stop_reason=${res.stop_reason}`, provider: "anthropic" });
+    throw new BadResponseError("empty");
+  }
+  return text;
+}
+
+/** Lightweight health check: lists one model (no tokens billed). */
+export async function anthropicHealth(): Promise<void> {
+  await ai().models.list({ limit: 1 }, { timeout: 5000, maxRetries: 0 });
 }
 
 // ---------------- Schemas ----------------
