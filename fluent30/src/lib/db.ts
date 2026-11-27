@@ -2,6 +2,7 @@
 // Local-first persistence (IndexedDB via Dexie). Works offline; optional cloud sync in sync.ts.
 import Dexie, { type Table } from "dexie";
 import type {
+  Capture, JournalEntry, Memory, MediaBlob, MissionProgress,
   AchievementRecord, Book, LessonProgress, BookContent, CacheEntry, Card, CollectionEntry, Conversation, DailySession, DayActivity, GameResult, GameState, Novel, WishItem,
   GrammarProgress, ImageAsset, KnownWord, Mistake, ReviewLog, Settings, SrsState, TestResult,
 } from "./types";
@@ -37,6 +38,11 @@ export class FluentDB extends Dexie {
   collection!: Table<CollectionEntry, string>;
   novels!: Table<Novel, string>;
   lessons!: Table<LessonProgress, string>;
+  captures!: Table<Capture, string>;
+  journal!: Table<JournalEntry, string>;
+  memories!: Table<Memory, string>;
+  media!: Table<MediaBlob, string>;
+  missions!: Table<MissionProgress, string>;
 
   constructor() {
     super("fluent30");
@@ -62,9 +68,17 @@ export class FluentDB extends Dexie {
     this.version(2).stores({ game: "id, updatedAt" });
     this.version(3).stores({ wishlist: "id, addedAt, updatedAt", achievements: "id, unlockedAt, updatedAt", collection: "bookId, finishedAt, updatedAt", novels: "id, createdAt, updatedAt" });
     this.version(4).stores({ lessons: "id, status, due, lastAt, updatedAt" });
+    // v5 — personal content (Real Life English, journal, memory cards), local media, world missions.
+    this.version(5).stores({
+      captures: "id, kind, createdAt, updatedAt",
+      journal: "id, date, createdAt, updatedAt",
+      memories: "id, createdAt, updatedAt",
+      media: "key, createdAt",
+      missions: "id, status, completedAt, updatedAt",
+    });
 
     // Every write stamps updatedAt (used by sync), except for local-only tables.
-    const localOnly = new Set(["cache", "tombstones"]);
+    const localOnly = new Set(["cache", "tombstones", "media"]);
     for (const table of this.tables) {
       if (localOnly.has(table.name)) continue;
       table.hook("creating", (_pk, obj: { updatedAt?: number }) => {
@@ -92,6 +106,7 @@ export function setSyncApplying(v: boolean) {
 export const SYNCED_TABLES = [
   "settings", "cards", "srs", "reviewLogs", "known", "books", "bookContent", "activity", "mistakes",
   "grammar", "games", "conversations", "images", "tests", "sessions", "game", "wishlist", "achievements", "collection", "novels", "lessons",
+  "captures", "journal", "memories", "missions",
 ] as const;
 
 let _db: FluentDB | null = null;

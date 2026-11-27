@@ -4,7 +4,7 @@ export type Skill = "recognition" | "production" | "listening";
 export const SKILLS: Skill[] = ["recognition", "production", "listening"];
 
 export type EntryKind = "word" | "verb" | "expression" | "phrase" | "phrasal";
-export type CardSource = "seed" | "user" | "reader" | "conversation" | "translator" | "verbs" | "grammar" | "around";
+export type CardSource = "seed" | "user" | "reader" | "conversation" | "translator" | "verbs" | "grammar" | "around" | "reallife" | "memory" | "journal" | "mission";
 export type Register = "familier" | "courant" | "professionnel" | "soutenu";
 
 /** A learning item (word, verb, expression, sentence). */
@@ -34,6 +34,11 @@ export interface Card {
   enriched: boolean; // filled by AI or by verified seed data
   notes?: string;
   suspended?: boolean;
+  /** personal context: where the learner met this word (capture, photo, journal…) */
+  context?: string;
+  captureId?: string;
+  memoryId?: string;
+  journalId?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -232,6 +237,10 @@ export interface Settings {
   sessionMinutes: 5 | 10 | 15 | 20 | 30 | 60;
   /** level the learner follows in the course path (from placement or chosen) */
   pathLevel?: "A1" | "A2" | "B1" | "B2" | "C1";
+  /** explicit consent to send personal content (photos, screenshots, journal, voice) to the AI service. Asked once, revocable. */
+  personalAiConsent?: boolean;
+  /** world map: destination chosen at onboarding */
+  homeDestination?: string;
   immersion: boolean; // UI fully in English
   theme: "system" | "light" | "dark";
   accent: "en-GB" | "en-US";
@@ -376,5 +385,74 @@ export interface LessonProgress {
   reps: number;
   lapses: number;
   state: number;
+  updatedAt: number;
+}
+
+
+// ---------- Phase 2: personal content (private by default) ----------
+
+/** Binary media kept ON THE DEVICE ONLY (photos, voice notes). Never synced, deletable, included in export as metadata only. */
+export interface MediaBlob {
+  key: string;
+  blob: Blob;
+  mime: string;
+  size: number;
+  createdAt: number;
+}
+
+export type CaptureKind = "text" | "screenshot" | "photo" | "voice" | "french" | "film" | "book";
+
+/** "My Real Life English": something the learner met in real life, analysed by AI. */
+export interface Capture {
+  id: string;
+  kind: CaptureKind;
+  title: string;
+  input: string; // text, OCR or transcript (what was analysed)
+  mediaKey?: string; // MediaBlob key (screenshot/photo/voice), local only
+  analysis?: unknown; // structured AI analysis (see lib/reallife.ts)
+  keptCardIds: string[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+/** "My English Journey": daily journal entry. */
+export interface JournalEntry {
+  id: string;
+  date: string; // YYYY-MM-DD
+  prompt?: string;
+  text: string;
+  mood?: string;
+  place?: string; // only if the learner types it
+  mediaKeys?: string[]; // photos (local)
+  audioKey?: string; // voice recording (local)
+  monthly?: boolean; // the monthly "same topic" oral check
+  versions?: { corrected: string; natural: string; notes: { from: string; to: string; why: string; tag?: string }[] };
+  keptCardIds: string[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+/** "Memory Cards": a personal photo turned into vocabulary. */
+export interface Memory {
+  id: string;
+  title: string;
+  takenAt?: string;
+  place?: string;
+  photoKey?: string; // MediaBlob key (original photo, compressed), local only
+  illustrationKey?: string; // images table key if the learner generated an illustration
+  sentence?: string; // English sentence about the memory
+  sentenceFr?: string;
+  words: { en: string; fr: string; cardId?: string }[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+/** World map missions (destinations → places → missions). */
+export interface MissionProgress {
+  id: string; // mission id
+  status: "started" | "done";
+  bestScore: number;
+  attempts: number;
+  completedAt?: number;
   updatedAt: number;
 }
