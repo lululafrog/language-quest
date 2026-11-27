@@ -29,7 +29,9 @@ export function AudioRecorder({ onSaved, maxSeconds = 300, label = "Enregistrer 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const r = new MediaRecorder(stream);
       const chunks: Blob[] = [];
-      r.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+      r.ondataavailable = (e) => {
+        if (e.data.size) chunks.push(e.data);
+      };
       r.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
         if (timer.current) clearInterval(timer.current);
@@ -45,7 +47,7 @@ export function AudioRecorder({ onSaved, maxSeconds = 300, label = "Enregistrer 
       setState("rec");
       timer.current = setInterval(() => {
         setSecs((s) => {
-          if (s + 1 >= maxSeconds) r.state === "recording" && r.stop();
+          if (s + 1 >= maxSeconds && r.state === "recording") r.stop();
           return s + 1;
         });
       }, 1000);
@@ -74,6 +76,5 @@ export function AudioRecorder({ onSaved, maxSeconds = 300, label = "Enregistrer 
 export function AudioPlayer({ mediaKey, className }: { mediaKey: string; className?: string }) {
   const url = useMediaUrl(mediaKey);
   if (!url) return <div className={cx("h-10 animate-pulse rounded-full bg-surface-2", className)} />;
-  // eslint-disable-next-line jsx-a11y/media-has-caption
   return <audio controls src={url} className={cx("h-10 w-full", className)} preload="metadata" />;
 }
