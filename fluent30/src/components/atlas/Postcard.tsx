@@ -52,23 +52,26 @@ export const Postcard = forwardRef<SVGSVGElement, { data: PostcardData; classNam
     <svg ref={ref} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" className={className} role="img" aria-label={`Carte postale : ${data.nameFr}`}>
       <rect x="2" y="2" width="596" height="396" rx="18" fill="#FBF6EA" stroke="#D9CDB6" strokeWidth="2" />
       {/* picture side */}
-      <svg x="20" y="20" width="280" height="200">
+      <svg x="20" y="20" width="280" height="126">
         <Landscape motif={data.motif} continent={data.continent} palette={data.palette} />
       </svg>
-      <rect x="20" y="20" width="280" height="200" rx="2" fill="none" stroke="#D9CDB6" strokeWidth="1.5" />
+      <rect x="20" y="20" width="280" height="126" rx="2" fill="none" stroke="#D9CDB6" strokeWidth="1.5" />
       <text x="32" y="50" fontFamily={FONT} fontSize="15" fontStyle="italic" fill="#FBF6EA" stroke={INK} strokeWidth="3" paintOrder="stroke">Greetings from</text>
       <text x="32" y="80" fontFamily={FONT} fontSize="28" fontWeight="700" fill="#FBF6EA" stroke={INK} strokeWidth="4" paintOrder="stroke">{data.nameEn}</text>
-      <svg x="34" y="214" width="120" height="144">
+      <svg x="24" y="160" width="140" height="168">
         <Tourist equipped={data.equipped} appearance={data.appearance} animate={false} expression="smile" />
       </svg>
-      <text x="170" y="250" fontFamily={SANS} fontSize="11" fill={MUTED} letterSpacing="1">SKILLS</text>
+      <text x="170" y="186" fontFamily={SANS} fontSize="11" fill={MUTED} letterSpacing="1">SKILLS</text>
       {data.skills.slice(0, 4).map((s, i) => (
-        <text key={s} x="170" y={268 + i * 17} fontFamily={SANS} fontSize="12" fill={INK}>• {s.length > 22 ? s.slice(0, 21) + "…" : s}</text>
+        <text key={s} x="170" y={204 + i * 18} fontFamily={SANS} fontSize="12" fill={INK}>• {s.length > 22 ? s.slice(0, 21) + "…" : s}</text>
       ))}
       {data.souvenirs.length > 0 && (
-        <text x="170" y="350" fontFamily={SANS} fontSize="11" fill={MUTED}>
-          {data.souvenirs.slice(0, 2).join(" · ").slice(0, 34)}
-        </text>
+        <>
+          <text x="170" y="296" fontFamily={SANS} fontSize="11" fill={MUTED} letterSpacing="1">SOUVENIRS</text>
+          {data.souvenirs.slice(0, 2).map((s, i) => (
+            <text key={s} x="170" y={314 + i * 18} fontFamily={SANS} fontSize="12" fill={INK}>• {s.length > 22 ? s.slice(0, 21) + "…" : s}</text>
+          ))}
+        </>
       )}
       {/* writing side */}
       <path d="M318 30V370" stroke="#D9CDB6" strokeWidth="1.5" />

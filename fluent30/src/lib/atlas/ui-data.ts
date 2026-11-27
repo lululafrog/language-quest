@@ -51,14 +51,14 @@ export async function atlasOverview(): Promise<AtlasOverview> {
 }
 
 /** First regular mission not done yet (or the final story when all are done). */
-export async function nextMissionOf(destId: string): Promise<{ id: string; title: string; final: boolean } | undefined> {
+export async function nextMissionOf(destId: string): Promise<{ id: string; title: string; final: boolean; href: string } | undefined> {
   const d = atlasDestination(destId);
   if (!d) return undefined;
   const rows = await getDb().missions.toArray();
   const done = new Set(rows.filter((r) => r.status === "done").map((r) => r.id));
   const m = [...d.missions].sort((a, b) => a.order - b.order).find((x) => !done.has(x.id) && !(x.legacyId && done.has(x.legacyId)));
-  if (m) return { id: m.id, title: m.title, final: false };
-  if (!d.preview && d.final.nodes.length && !done.has(d.final.id)) return { id: d.final.id, title: d.final.title, final: true };
+  if (m) return { id: m.id, title: m.title, final: false, href: `/world/mission/${m.id}` };
+  if (!d.preview && d.final.nodes.length && !done.has(d.final.id)) return { id: d.final.id, title: d.final.title, final: true, href: `/world/final/${d.id}` };
   return undefined;
 }
 

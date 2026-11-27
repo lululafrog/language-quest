@@ -176,7 +176,7 @@ export default function DestinationPage() {
             <p className="font-display text-lg font-semibold">{dest.final.title}</p>
             <p className="text-sm text-muted">{dest.final.intro}</p>
             <p className="text-xs text-muted">Compétences : {dest.final.skills.join(" · ")}</p>
-            <LinkButton href={`/world/mission/${dest.final.id}`} className="w-full">
+            <LinkButton href={`/world/final/${dest.id}`} className="w-full">
               {finalRow?.status === "done" ? "Rejouer l'aventure" : progress && progress.done < progress.total ? `Disponible quand tu veux (${progress.done}/${progress.total} missions faites)` : "Commencer l'aventure"}
             </LinkButton>
           </Panel>

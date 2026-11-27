@@ -92,7 +92,7 @@ export default function WorldPage() {
             <p className="text-[12px] font-semibold uppercase tracking-wide text-muted">Activité recommandée · {recommended.why}</p>
             <p className="font-display text-lg font-semibold">{nextMission ? nextMission.title : recommended.d.entry.nameFr}</p>
             <p className="text-sm text-muted">{recommended.d.entry.nameFr}{recommended.d.progress ? ` · ${recommended.d.progress.done}/${recommended.d.progress.total} missions` : ""}</p>
-            <LinkButton href={nextMission ? `/world/mission/${nextMission.id}` : `/world/${recommended.d.entry.id}`} size="sm" className="mt-2">
+            <LinkButton href={nextMission ? nextMission.href : `/world/${recommended.d.entry.id}`} size="sm" className="mt-2">
               {nextMission ? "Commencer la mission" : "Voir la destination"}
             </LinkButton>
           </div>
