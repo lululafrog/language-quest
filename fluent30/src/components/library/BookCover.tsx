@@ -67,16 +67,19 @@ export function BookCover({ book, className, showText = true, showLevel = false 
   // useId alone can repeat across separately rendered trees: suffix with a content hash.
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "") + h.toString(36);
   const pal = book.cover?.palette ?? FALLBACK_PALETTES[h % FALLBACK_PALETTES.length];
-  const motif = book.cover?.motif ?? (book.cat && CAT_MOTIF[book.cat] && h % 3 === 0 ? CAT_MOTIF[book.cat] : COVER_MOTIFS[h % COVER_MOTIFS.length]);
+  const neutral = COVER_MOTIFS.filter((m) => book.cat === "horreur" || !["skull", "tentacles", "bats", "potion"].includes(m));
+  const motif = book.cover?.motif ?? (book.cat && CAT_MOTIF[book.cat] && h % 3 === 0 ? CAT_MOTIF[book.cat] : neutral[h % neutral.length]);
   const [dark, mid, accent] = pal;
   const title = book.title.replace(/^(The|A|An) /, (m) => m);
   const longest = Math.max(...title.split(/\s+/).map((w) => w.length));
   const maxChars = longest > 13 ? longest : title.length > 40 ? 15 : title.length > 22 ? 13 : 11;
   const lines = wrap(title.toUpperCase(), maxChars);
   const longestLine = Math.max(...lines.map((l) => l.length));
-  const fs = Math.max(17, Math.min(34, 236 / (longestLine * 0.62)));
+  const n = lines.length;
+  // Title block lives between the motif (y≈250) and the author line (y≈410).
+  const fs = Math.max(15, Math.min(34, 236 / (longestLine * 0.62), (374 - 256) / ((n - 1) * 1.12 + 1)));
   const lh = fs * 1.12;
-  const titleTop = Math.max(296, 318 - ((lines.length - 1) * lh) / 2);
+  const titleTop = Math.min(318 - ((n - 1) * lh) / 2, 374 - (n - 1) * lh);
   const author = (book.author ?? "").toUpperCase();
 
   return (
