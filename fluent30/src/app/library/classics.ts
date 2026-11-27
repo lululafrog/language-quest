@@ -9,6 +9,18 @@ export interface Classic {
 }
 
 export const CLASSICS: Classic[] = [
+  // Romans policiers et à suspense (domaine public)
+  { id: 863, title: "The Mysterious Affair at Styles", author: "Agatha Christie", level: "B2", genre: "Policier", noteFr: "Le tout premier Hercule Poirot : meurtre dans un manoir anglais." },
+  { id: 1155, title: "The Secret Adversary", author: "Agatha Christie", level: "B2", genre: "Policier", noteFr: "Tommy et Tuppence enquêtent : espionnage et suspense." },
+  { id: 58866, title: "The Murder on the Links", author: "Agatha Christie", level: "B2", genre: "Policier", noteFr: "Poirot enquête sur un meurtre près d'un terrain de golf en France." },
+  { id: 61262, title: "Poirot Investigates", author: "Agatha Christie", level: "B2", genre: "Policier", noteFr: "Courtes enquêtes de Poirot : idéal pour lire par petits morceaux." },
+  { id: 244, title: "A Study in Scarlet", author: "Arthur Conan Doyle", level: "B2", genre: "Policier", noteFr: "La première enquête de Sherlock Holmes." },
+  { id: 2097, title: "The Sign of the Four", author: "Arthur Conan Doyle", level: "B2", genre: "Policier", noteFr: "Trésor, pacte secret et meurtre : Holmes et Watson." },
+  { id: 204, title: "The Innocence of Father Brown", author: "G. K. Chesterton", level: "C1", genre: "Policier", noteFr: "Un prêtre détective, des énigmes astucieuses." },
+  { id: 1872, title: "The Red House Mystery", author: "A. A. Milne", level: "B2", genre: "Policier", noteFr: "Meurtre en chambre close, par l'auteur de Winnie l'Ourson." },
+  { id: 558, title: "The Thirty-Nine Steps", author: "John Buchan", level: "B2", genre: "Policier", noteFr: "Course-poursuite et espionnage, très rythmé." },
+  { id: 155, title: "The Moonstone", author: "Wilkie Collins", level: "C1", genre: "Policier", noteFr: "L'un des premiers romans policiers : vol d'un diamant." },
+  { id: 583, title: "The Woman in White", author: "Wilkie Collins", level: "C1", genre: "Policier", noteFr: "Suspense et secrets de famille." },
   { id: 21, title: "Aesop's Fables", author: "Aesop", level: "A2", genre: "Contes", noteFr: "Fables très courtes : idéal pour commencer." },
   { id: 2591, title: "Grimms' Fairy Tales", author: "Jacob & Wilhelm Grimm", level: "B1", genre: "Contes", noteFr: "Contes célèbres, phrases simples." },
   { id: 902, title: "The Happy Prince and Other Tales", author: "Oscar Wilde", level: "B1", genre: "Contes", noteFr: "Contes courts et poétiques." },

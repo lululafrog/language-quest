@@ -9,6 +9,7 @@ import { seedByLemma } from "./data/vocab";
 import { tierOf, type SeedWord } from "./data/types";
 import { IRREGULAR_FORMS } from "./data/irregular";
 import { lemmaCandidates, normalize } from "./text";
+import { guessThemes } from "./autotheme";
 import type { Card, EntryKind, Enrichment } from "./types";
 
 export type EnrichResponse = Omit<Enrichment, "forms" | "ipaUK"> & { ipaUK: string; forms: { name: string; value: string }[]; originalLanguage: "en" | "fr" };
@@ -48,7 +49,7 @@ export function cardFromSeed(w: SeedWord, source: Card["source"] = "seed"): Card
   const kind = guessKind(w.en, w.pos);
   return {
     id: uid("c"), term: w.en, lemma: lemmaOf(w.en), kind, fr: w.fr, pos: w.pos, ipa: w.ipa, example: w.ex, exampleFr: w.exFr,
-    themes: w.themes?.length ? w.themes : [kind === "verb" ? "action-verbs" : "daily"], frequencyRank: w.rank, tier: tierOf(w.rank),
+    themes: guessThemes(w.en, w.pos), frequencyRank: w.rank, tier: tierOf(w.rank),
     difficulty: w.rank <= 500 ? 1 : w.rank <= 1000 ? 2 : w.rank <= 2000 ? 3 : 4, source, enriched: true, createdAt: now, updatedAt: now,
   };
 }
@@ -58,7 +59,7 @@ export function cardFromEnrichment(e: EnrichResponse, source: Card["source"] = "
   const seed = seedByLemma(e.lemma);
   const forms: Record<string, string> = {};
   for (const f of e.forms ?? []) if (f.name && f.value) forms[f.name] = f.value;
-  const themes = (e.themes ?? []).filter(Boolean).slice(0, 4);
+  const themes = [...new Set([...guessThemes(e.term, e.kind === "phrasal" ? "phrasal verb" : e.kind === "verb" ? "verb" : e.pos).filter((x) => x !== "daily"), ...(e.themes ?? []).filter(Boolean)])].slice(0, 4);
   return {
     id: uid("c"), term: e.term, lemma: lemmaOf(e.lemma || e.term), kind: e.kind, fr: e.fr, definition: e.definition, ipa: e.ipaUK, ipaUS: e.ipaUS,
     pos: e.pos, example: e.example, exampleFr: e.exampleFr, synonyms: e.synonyms, antonyms: e.antonyms, forms,
@@ -79,7 +80,7 @@ export function cardFromLocal(term: string, fr?: string): Card | null {
   const kind = guessKind(term, local?.pos);
   return {
     id: uid("c"), term: local?.lemma ?? term.trim(), lemma: lemmaOf(local?.lemma ?? term), kind, fr: fr || local?.fr || "", pos: local?.pos,
-    ipa: local?.ipa, example: local?.example, exampleFr: local?.exampleFr, forms: local?.forms, themes: [kind === "verb" ? "action-verbs" : "daily"],
+    ipa: local?.ipa, example: local?.example, exampleFr: local?.exampleFr, forms: local?.forms, themes: guessThemes(local?.lemma ?? term, local?.pos),
     source: "user", enriched: !!local, createdAt: now, updatedAt: now,
   };
 }
@@ -112,7 +113,7 @@ export async function saveCard(card: Card, opts: { mergeDuplicates?: boolean; co
 }
 
 /** Quick add from any screen (reader, chat report, translator): enrich with AI if possible, else local data. */
-export async function quickAdd(term: string, opts: { fr?: string; context?: string; source?: Card["source"]; example?: string } = {}): Promise<AddResult & { usedAI: boolean }> {
+export async function quickAdd(term: string, opts: { fr?: string; context?: string; source?: Card["source"]; example?: string; pos?: string } = {}): Promise<AddResult & { usedAI: boolean }> {
   const dup = await findDuplicate(term);
   if (dup) {
     const r = await saveCard({ ...dup, term }, {});
@@ -128,7 +129,7 @@ export async function quickAdd(term: string, opts: { fr?: string; context?: stri
     if (!(err instanceof ApiError)) throw err;
     const local = cardFromLocal(term, opts.fr);
     const card = local ?? {
-      id: uid("c"), term, lemma: lemmaOf(term), kind: guessKind(term), fr: opts.fr ?? "", themes: ["daily"], source: opts.source ?? "user",
+      id: uid("c"), term, lemma: lemmaOf(term), kind: guessKind(term, opts.pos), fr: opts.fr ?? "", pos: opts.pos, themes: guessThemes(term, opts.pos), source: opts.source ?? "user",
       enriched: false, createdAt: Date.now(), updatedAt: Date.now(), example: opts.example,
     };
     if (opts.source) card.source = opts.source;

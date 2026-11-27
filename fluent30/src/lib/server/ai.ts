@@ -68,7 +68,7 @@ export async function chatText(opts: { system: string; messages: Anthropic.Beta.
 export const THEME_IDS = [
   "travel", "airport", "transport", "restaurant", "food", "sport", "adventure", "health", "work", "relationships",
   "dating", "emotions", "daily", "slang", "action-verbs", "adjectives", "phrasal-verbs", "idioms", "time", "home",
-  "shopping", "nature", "people", "body", "tech", "grammar-words",
+  "shopping", "nature", "people", "body", "tech", "animals", "crime", "clothes", "grammar-words",
 ] as const;
 
 export const EnrichSchema = z.object({
@@ -85,7 +85,7 @@ export const EnrichSchema = z.object({
   synonyms: z.array(z.string()).describe("0-5 genuinely relevant synonyms"),
   antonyms: z.array(z.string()).describe("0-3 relevant antonyms, empty if none"),
   forms: z.array(z.object({ name: z.string(), value: z.string() })).describe("Useful forms: for verbs past/past participle/-ing/3rd person; plural for nouns; comparative for adjectives"),
-  themes: z.array(z.string()).describe(`1-3 theme ids among: ${THEME_IDS.join(", ")}. If none fits, a new short French theme name prefixed with 'custom:'`),
+  themes: z.array(z.string()).describe(`1-3 theme ids (always include "action-verbs" for verbs, "phrasal-verbs" for phrasal verbs, "adjectives" for adjectives) among: ${THEME_IDS.join(", ")}. If none fits, a new short French theme name prefixed with 'custom:'`),
   difficulty: z.number().int().describe("1 (beginner) to 5 (advanced)"),
   frequency: z.enum(["very common", "common", "less common", "rare"]),
   register: z.enum(["familier", "courant", "professionnel", "soutenu"]),

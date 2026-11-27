@@ -48,7 +48,7 @@ export const THEMES: Theme[] = [
   { id: "emotions", fr: "Émotions", en: "Emotions", emoji: "💭" },
   { id: "daily", fr: "Conversation quotidienne", en: "Everyday conversation", emoji: "💬" },
   { id: "slang", fr: "Argot et expressions familières", en: "Slang & informal", emoji: "😎" },
-  { id: "action-verbs", fr: "Verbes d'action", en: "Action verbs", emoji: "⚡" },
+  { id: "action-verbs", fr: "Verbes", en: "Verbs", emoji: "⚡" },
   { id: "adjectives", fr: "Adjectifs", en: "Adjectives", emoji: "🎨" },
   { id: "phrasal-verbs", fr: "Phrasal verbs", en: "Phrasal verbs", emoji: "🧩" },
   { id: "idioms", fr: "Expressions idiomatiques", en: "Idioms", emoji: "🦉" },
@@ -59,6 +59,9 @@ export const THEMES: Theme[] = [
   { id: "people", fr: "Personnes et famille", en: "People & family", emoji: "👪" },
   { id: "body", fr: "Corps", en: "Body", emoji: "🫀" },
   { id: "tech", fr: "Technologie", en: "Technology", emoji: "📱" },
+  { id: "animals", fr: "Animaux", en: "Animals", emoji: "🐾" },
+  { id: "crime", fr: "Crime et enquête", en: "Crime & mystery", emoji: "🔎" },
+  { id: "clothes", fr: "Vêtements", en: "Clothes", emoji: "👕" },
   { id: "grammar-words", fr: "Mots grammaticaux", en: "Function words", emoji: "🔗" },
 ];
 

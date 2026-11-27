@@ -47,3 +47,12 @@ test("FSRS: Good increases interval, Again creates a lapse", () => {
   const again = f.next(good, good.due, Rating.Again).card;
   assert.equal(again.lapses, 1);
 });
+
+test("offline theme guessing", async () => {
+  const { guessThemes } = await import("../src/lib/autotheme");
+  assert.ok(guessThemes("murderer", "noun").includes("crime"));
+  assert.ok(guessThemes("hound", "noun").includes("animals"));
+  assert.equal(guessThemes("whisper", "verb")[0], "action-verbs");
+  assert.equal(guessThemes("give up", "phrasal verb")[0], "phrasal-verbs");
+  assert.ok(guessThemes("football", "noun").includes("sport"));
+});

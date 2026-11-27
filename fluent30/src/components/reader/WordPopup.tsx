@@ -9,7 +9,7 @@ import { normalize } from "@/lib/text";
 import { speak } from "@/lib/speech";
 import { useStatus } from "@/hooks/useStatus";
 import { useT } from "@/hooks/useT";
-import { Badge, Button, ErrorNote, ServiceNotice, Sheet, SpeakButton, Spinner, toast } from "@/components/ui";
+import { Badge, Button, ErrorNote, Sheet, SpeakButton, Spinner, toast } from "@/components/ui";
 
 export interface DictResult {
   word: string;
@@ -60,6 +60,7 @@ export function WordPopup({ word, sentence, onClose }: { word: string; sentence:
   const [adding, setAdding] = useState<string | null>(null);
   const [added, setAdded] = useState<string[]>([]);
   const [img, setImg] = useState<string | null>(null);
+  const [free, setFree] = useState<{ translation: string; alternatives: string[] } | null>(null);
   const [imgLoading, setImgLoading] = useState(false);
 
   const lemma = ai?.lemma?.toLowerCase() || baseLemma;
@@ -90,8 +91,21 @@ export function WordPopup({ word, sentence, onClose }: { word: string; sentence:
     };
   }, [word, sentence, status]);
 
+  // Free automatic translation when the AI isn't available and the word isn't in the built-in lexicon.
+  const needFree = !local && !!status && (!status.ai || !!aiError);
+  useEffect(() => {
+    if (!needFree) return;
+    let alive = true;
+    getApi<{ translation: string; alternatives: string[] }>(`/api/translate-free?q=${encodeURIComponent(baseLemma)}`, { cacheKey: `free:${baseLemma}` })
+      .then((r) => alive && setFree(r))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [needFree, baseLemma]);
+
   const aiLoading = !!status?.ai && !ai && !aiError;
-  const fr = ai?.contextualFr || local?.fr || "";
+  const fr = ai?.contextualFr || local?.fr || free?.translation || "";
   const ipa = ai?.ipa || dict?.ipa || local?.ipa;
   const pos = ai?.pos || local?.pos || dict?.meanings[0]?.pos;
   const isInflected = ai ? ai.isInflected : !!local?.isInflected;
@@ -99,7 +113,7 @@ export function WordPopup({ word, sentence, onClose }: { word: string; sentence:
   async function add(term: string, frText: string) {
     setAdding(term);
     try {
-      const r = await quickAdd(term, { context: sentence, source: "reader", fr: frText || undefined, example: sentence });
+      const r = await quickAdd(term, { context: sentence, source: "reader", fr: frText || undefined, example: sentence, pos: ai?.pos || local?.pos || dict?.meanings[0]?.pos });
       setAdded((a) => [...a, term]);
       toast(r.merged ? t("Déjà dans vos flashcards — mis à jour", "Already in your flashcards — updated") : t("Ajouté aux flashcards ✓", "Added to flashcards ✓"));
     } catch (e) {
@@ -149,6 +163,7 @@ export function WordPopup({ word, sentence, onClose }: { word: string; sentence:
           <div className="min-w-0 flex-1">
             <p className="text-xs font-medium uppercase tracking-wide text-muted">{ai ? t("Traduction dans ce contexte", "Translation in context") : t("Traduction", "Translation")}</p>
             <p className="mt-0.5 text-xl font-semibold">{fr || (aiLoading ? "…" : t("Pas dans le dictionnaire hors ligne", "Not in the offline dictionary"))}</p>
+            {!ai && !local && free && <p className="mt-0.5 text-xs text-muted">{free.alternatives.length ? `${t("Autres sens", "Other meanings")} : ${free.alternatives.join(", ")} · ` : ""}{t("traduction automatique, hors contexte", "machine translation, out of context")}</p>}
             {ai?.definition && <p className="mt-1 text-sm text-muted">{ai.definition}</p>}
             {!ai?.definition && dict?.meanings[0]?.definitions[0] && <p className="mt-1 text-sm text-muted">{dict.meanings[0].definitions[0].definition}</p>}
           </div>
@@ -157,9 +172,8 @@ export function WordPopup({ word, sentence, onClose }: { word: string; sentence:
         </div>
 
         {aiLoading && <p className="flex items-center gap-2 text-sm text-muted"><Spinner className="h-4 w-4" /> {t("Analyse du contexte…", "Analysing context…")}</p>}
-        {status && !status.ai && <ServiceNotice service={t("La traduction contextuelle", "Contextual translation")} envVar="ANTHROPIC_API_KEY">{t("La traduction ci-dessus vient du dictionnaire intégré.", "The translation above comes from the built-in dictionary.")}</ServiceNotice>}
+        {status && !status.ai && <p className="text-xs text-muted">💡 {t("Avec une clé IA (ANTHROPIC_API_KEY), la traduction s'adapte au sens exact de la phrase.", "With an AI key, the translation adapts to the sentence.")}</p>}
         {aiError && !(aiError instanceof ApiError && aiError.notConfigured) && <ErrorNote>{errorMessage(aiError)}</ErrorNote>}
-        {aiError instanceof ApiError && aiError.notConfigured && <ServiceNotice service={t("La traduction contextuelle", "Contextual translation")} envVar="ANTHROPIC_API_KEY" />}
 
         {ai?.isPartOfExpression && (
           <div className="rounded-xl border border-coral-400/40 bg-coral-100/40 p-3 dark:bg-coral-600/10">
