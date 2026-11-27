@@ -12,7 +12,8 @@
       "**/.git/**",
       "**/.*",
       "**/node_modules/**",
-      "qr-bintang-*.png"
+      "qr-bintang-*.png",
+      "fluent30/**"
     ],
     "headers": [
       {
