@@ -80,7 +80,7 @@ export default function PassportPage() {
               <p className="text-sm text-muted">{next.dest.rule.fr}</p>
               <ProgressBar value={next.value} max={next.target} className="mt-2" />
               <p className="mt-1 text-xs tabular-nums text-muted">
-                {next.value}/{next.target} {METRIC_LABEL[next.dest.rule.metric]} · +{next.dest.coins} pièces
+                {next.dest.atlas ? "Destination à valider" : `${next.value}/${next.target} ${METRIC_LABEL[next.dest.rule.metric]}`} · +{next.dest.coins} pièces
               </p>
             </div>
           </div>
@@ -95,7 +95,7 @@ export default function PassportPage() {
             <button key={st.dest.id} onClick={() => setOpen(st)} className="flex flex-col items-center rounded-2xl p-1.5 text-center transition hover:bg-black/5 dark:hover:bg-white/5">
               <Stamp dest={st.dest} locked={!st.unlockedAt} size={84} tilt={st.unlockedAt ? ((i * 37) % 17) - 8 : 0} />
               <span className={cx("mt-1 text-[12px] font-medium leading-tight", !st.unlockedAt && "text-muted")}>{st.dest.nameFr}</span>
-              {!st.unlockedAt && <span className="text-[10px] tabular-nums text-muted">{st.value}/{st.target}</span>}
+              {!st.unlockedAt && !st.dest.atlas && <span className="text-[10px] tabular-nums text-muted">{st.value}/{st.target}</span>}
             </button>
           ))}
         </div>
@@ -142,7 +142,7 @@ export default function PassportPage() {
               <div className="w-full max-w-xs">
                 <ProgressBar value={open.value} max={open.target} />
                 <p className="mt-1 text-xs tabular-nums text-muted">
-                  {open.value}/{open.target} {METRIC_LABEL[open.dest.rule.metric]} · récompense +{open.dest.coins} pièces
+                  {open.dest.atlas ? "Valide la destination sur la carte du monde" : `${open.value}/${open.target} ${METRIC_LABEL[open.dest.rule.metric]}`} · récompense +{open.dest.coins} pièces
                 </p>
               </div>
             )}
