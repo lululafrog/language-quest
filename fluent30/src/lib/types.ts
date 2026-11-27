@@ -243,6 +243,9 @@ export interface Settings {
   syncPersonalContent?: boolean;
   /** world map: destination chosen at onboarding */
   homeDestination?: string;
+  /** Atlas: favourite destinations and chosen thematic route */
+  atlasFavorites?: string[];
+  atlasRoute?: string;
   immersion: boolean; // UI fully in English
   theme: "system" | "light" | "dark";
   accent: "en-GB" | "en-US";
@@ -460,8 +463,25 @@ export interface Memory {
 export interface MissionProgress {
   id: string; // mission id
   status: "started" | "done";
+  /** CEFR band the mission was last played at (Atlas engine adapts content to the learner's level) */
+  band?: "A1" | "A2" | "B1" | "B2" | "C1";
+  /** best band validated (a destination can be replayed at a higher level) */
+  bestBand?: "A1" | "A2" | "B1" | "B2" | "C1";
   bestScore: number;
   attempts: number;
   completedAt?: number;
+  updatedAt: number;
+}
+
+/** Illustrated postcard created when a destination is validated (Atlas). Private, shared only if the learner chooses. */
+export interface Postcard {
+  id: string; // destination id
+  destId: string;
+  message: string; // learner's English message
+  corrected?: string; // optional AI correction
+  band?: "A1" | "A2" | "B1" | "B2" | "C1";
+  skills: string[];
+  rewards: string[];
+  validatedAt: number;
   updatedAt: number;
 }

@@ -2,7 +2,7 @@
 // Local-first persistence (IndexedDB via Dexie). Works offline; optional cloud sync in sync.ts.
 import Dexie, { type Table } from "dexie";
 import type {
-  Capture, JournalEntry, Memory, MediaBlob, MissionProgress,
+  Capture, JournalEntry, Memory, MediaBlob, MissionProgress, Postcard,
   AchievementRecord, Book, LessonProgress, BookContent, CacheEntry, Card, CollectionEntry, Conversation, DailySession, DayActivity, GameResult, GameState, Novel, WishItem,
   GrammarProgress, ImageAsset, KnownWord, Mistake, ReviewLog, Settings, SrsState, TestResult,
 } from "./types";
@@ -43,6 +43,7 @@ export class FluentDB extends Dexie {
   memories!: Table<Memory, string>;
   media!: Table<MediaBlob, string>;
   missions!: Table<MissionProgress, string>;
+  postcards!: Table<Postcard, string>;
 
   constructor() {
     super("fluent30");
@@ -76,6 +77,8 @@ export class FluentDB extends Dexie {
       media: "key, createdAt",
       missions: "id, status, completedAt, updatedAt",
     });
+    // v6 — Atlas postcards
+    this.version(6).stores({ postcards: "id, destId, validatedAt, updatedAt" });
 
     // Every write stamps updatedAt (used by sync), except for local-only tables.
     const localOnly = new Set(["cache", "tombstones", "media"]);
@@ -106,7 +109,7 @@ export function setSyncApplying(v: boolean) {
 export const SYNCED_TABLES = [
   "settings", "cards", "srs", "reviewLogs", "known", "books", "bookContent", "activity", "mistakes",
   "grammar", "games", "conversations", "images", "tests", "sessions", "game", "wishlist", "achievements", "collection", "novels", "lessons",
-  "captures", "journal", "memories", "missions",
+  "captures", "journal", "memories", "missions", "postcards",
 ] as const;
 
 let _db: FluentDB | null = null;
