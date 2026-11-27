@@ -63,8 +63,9 @@ function wrap(title: string, maxChars: number, max = 4): string[] {
 }
 
 export function BookCover({ book, className, showText = true, showLevel = false }: { book: CoverInput; className?: string; showText?: boolean; showLevel?: boolean }) {
-  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const h = hash(`${book.title}|${book.author ?? ""}`);
+  // useId alone can repeat across separately rendered trees: suffix with a content hash.
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, "") + h.toString(36);
   const pal = book.cover?.palette ?? FALLBACK_PALETTES[h % FALLBACK_PALETTES.length];
   const motif = book.cover?.motif ?? (book.cat && CAT_MOTIF[book.cat] && h % 3 === 0 ? CAT_MOTIF[book.cat] : COVER_MOTIFS[h % COVER_MOTIFS.length]);
   const [dark, mid, accent] = pal;
@@ -75,7 +76,7 @@ export function BookCover({ book, className, showText = true, showLevel = false 
   const longestLine = Math.max(...lines.map((l) => l.length));
   const fs = Math.max(17, Math.min(34, 236 / (longestLine * 0.62)));
   const lh = fs * 1.12;
-  const titleTop = 312 - ((lines.length - 1) * lh) / 2;
+  const titleTop = Math.max(296, 318 - ((lines.length - 1) * lh) / 2);
   const author = (book.author ?? "").toUpperCase();
 
   return (
@@ -113,7 +114,7 @@ export function BookCover({ book, className, showText = true, showLevel = false 
         {/* halo + motif */}
         <circle cx="150" cy="166" r="92" fill={accent} opacity="0.1" />
         <circle cx="150" cy="166" r="92" fill="none" stroke={accent} strokeOpacity="0.35" strokeWidth="1" strokeDasharray="2 5" />
-        <g transform="translate(70 86)">{drawMotif(motif, { a: accent, d: dark, m: mid, uid })}</g>
+        <g transform={lines.length >= 3 ? "translate(84 92) scale(0.82)" : "translate(70 86)"}>{drawMotif(motif, { a: accent, d: dark, m: mid, uid })}</g>
         {showText && (
           <>
             <path d={`M110 ${titleTop - lh + 2} L190 ${titleTop - lh + 2}`} stroke={accent} strokeOpacity="0.6" strokeWidth="1" />

@@ -14,7 +14,7 @@ export function numberToWords(n: number, american = false): string {
   for (const [value, name] of [[1_000_000_000, "billion"], [1_000_000, "million"], [1000, "thousand"]] as [number, string][]) {
     if (n >= value) {
       const rest = n % value;
-      const joiner = rest === 0 ? "" : rest < 100 && !american ? " and " : rest < 100 ? " " : ", ";
+      const joiner = rest === 0 ? "" : rest < 100 && !american ? " and " : " ";
       return `${numberToWords(Math.floor(n / value), american)} ${name}${rest ? joiner + numberToWords(rest, american) : ""}`;
     }
   }
@@ -35,12 +35,13 @@ export function timeToWords(h24: number, m: number): string {
   const h12 = (x: number) => ((x + 11) % 12) + 1;
   const name = (x: number) => (x % 24 === 0 ? "midnight" : x % 24 === 12 ? "midday" : numberToWords(h12(x)));
   if (m === 0) return h24 % 12 === 0 ? `It's ${name(h24)}.` : `It's ${numberToWords(h12(h24))} o'clock.`;
-  if (m === 15) return `It's quarter past ${name(h24)}.`;
-  if (m === 30) return `It's half past ${name(h24)}.`;
-  if (m === 45) return `It's quarter to ${name(h24 + 1)}.`;
+  const hr = (x: number) => numberToWords(h12(x));
+  if (m === 15) return `It's quarter past ${hr(h24)}.`;
+  if (m === 30) return `It's half past ${hr(h24)}.`;
+  if (m === 45) return `It's quarter to ${hr(h24 + 1)}.`;
   const minutes = (x: number) => `${numberToWords(x)}${x % 5 === 0 ? "" : x === 1 ? " minute" : " minutes"}`;
-  if (m < 30) return `It's ${minutes(m)} past ${name(h24)}.`;
-  return `It's ${minutes(60 - m)} to ${name(h24 + 1)}.`;
+  if (m < 30) return `It's ${minutes(m)} past ${hr(h24)}.`;
+  return `It's ${minutes(60 - m)} to ${hr(h24 + 1)}.`;
 }
 
 /** Digital reading: "It's three forty-five p.m." */

@@ -1,11 +1,10 @@
 // The learner's tourist, drawn in SVG: chosen appearance + items bought in the shop.
 import { useId, type ReactNode } from "react";
 import { SHOP_BY_ID, type Spec } from "@/lib/data/shop";
+import { O, W, Limb, armL, armR, shade, type Ctx } from "./style";
 import { LONG_LITERARY_DRESSES, literaryDress, literaryFace, literaryHand, literaryHat, literaryNeck, literaryOuter } from "./literary";
 import type { Appearance, AvatarSlot } from "@/lib/types";
 
-export const O = "#3A3352"; // soft outline ink
-export const W = 1.9; // outline width
 // The head is drawn in its own coordinate space, then scaled down onto the neck (more human proportions).
 const HEAD_T = "translate(100 94) scale(0.78) translate(-100 -108)";
 const FACES: Record<NonNullable<Appearance["face"]>, string> = {
@@ -22,13 +21,6 @@ export const DEFAULT_APPEARANCE: Appearance = {
 
 type Equipped = Partial<Record<AvatarSlot, string>>;
 
-/** Darken (amt < 0) or lighten (amt > 0) a hex colour. */
-export function shade(hex: string, amt: number) {
-  const h = hex.replace("#", "");
-  const n = parseInt(h.length === 3 ? h.split("").map((x) => x + x).join("") : h, 16);
-  const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.round(amt < 0 ? v * (1 + amt) : v + (255 - v) * amt));
-  return `#${ch.map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, "0")).join("")}`;
-}
 
 export function Tourist({ equipped = {}, appearance, className, animate = true, title, portrait, celebrate = false }: { equipped?: Equipped; appearance?: Appearance; className?: string; animate?: boolean; title?: string; portrait?: boolean; celebrate?: boolean }) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
@@ -121,16 +113,6 @@ export function Tourist({ equipped = {}, appearance, className, animate = true, 
   );
 }
 
-export interface Ctx {
-  uid: string;
-  a: Appearance;
-  skinShade: string;
-  fem: boolean;
-  sx: number;
-  torso: string;
-  facePath: string;
-  up: boolean;
-}
 
 // ---------------- patterns ----------------
 function patternDefs(id: string, p: Spec["p"], c: string, c2?: string): ReactNode {
@@ -164,11 +146,6 @@ const TORSO_FEM = "M76 116 Q78 103 90 101 L110 101 Q122 103 124 116 Q125 131 120
 const TORSO_L = "M68 116 Q70 103 86 101 L94 101 L94 172 L73 172 Q64 170 66 146Z";
 const TORSO_R = "M132 116 Q130 103 114 101 L106 101 L106 172 L127 172 Q136 170 134 146Z";
 /** Arm path from the shoulder down to y (sx = shoulder inset, 2 for a slimmer female silhouette). */
-/** Arm path; with `up` the arms are raised (celebration pose). */
-export const armL = (sx: number, end = 163, up = false) =>
-  up ? `M${74 + sx} 110 Q${60 + sx} 100 ${56 + sx} 84 Q${53 + sx} 72 ${52 + sx} ${58 + (163 - end)}` : `M${74 + sx} 110 Q${61 + sx} 124 ${57 + sx} 140 Q${54 + sx} 153 ${54 + sx} ${end}`;
-export const armR = (sx: number, end = 163, up = false) =>
-  up ? `M${126 - sx} 110 Q${140 - sx} 100 ${144 - sx} 84 Q${147 - sx} 72 ${148 - sx} ${58 + (163 - end)}` : `M${126 - sx} 110 Q${139 - sx} 124 ${143 - sx} 140 Q${146 - sx} 153 ${146 - sx} ${end}`;
 const sleeveL = (sx: number) => `M${74 + sx} 110 Q${64 + sx} 120 ${60 + sx} 132`;
 const sleeveR = (sx: number) => `M${126 - sx} 110 Q${136 - sx} 120 ${140 - sx} 132`;
 const LEG_L = "M89 166 Q88 192 87 214";
@@ -176,15 +153,6 @@ const LEG_R = "M111 166 Q112 192 113 214";
 const torsoShade = <path d="M123 103 Q130 105 132 116 L134 146 Q136 170 127 172 L119 172 Q127 140 123 103Z" fill="#000" opacity="0.09" />;
 const torsoGloss = <path d="M75 114 Q71 132 73 158" stroke="#fff" strokeWidth="4" opacity="0.25" fill="none" strokeLinecap="round" />;
 
-/** A limb drawn as a thick rounded stroke with an outline (organic, no boxy corners). */
-export function Limb({ d, w, color, outline = true }: { d: string; w: number; color: string; outline?: boolean }) {
-  return (
-    <>
-      {outline && <path d={d} stroke={O} strokeWidth={w + W * 2} strokeLinecap="round" fill="none" />}
-      <path d={d} stroke={color} strokeWidth={w} strokeLinecap="round" fill="none" />
-    </>
-  );
-}
 
 function Hand({ cx, cy, flip, skin }: { cx: number; cy: number; flip?: boolean; skin: string }) {
   const tx = flip ? -1 : 1;
@@ -807,3 +775,5 @@ function renderBackground(sp: Spec, uid: string): ReactNode {
       return <><rect width="200" height="240" fill="#F1EEFF" /><rect y="190" width="200" height="50" fill="#E3DDFB" /><rect x="18" y="30" width="54" height="48" rx="6" fill="#CFE9FF" stroke="#CFCCFF" strokeWidth="4" /><path d="M45 30 L45 78 M18 54 L72 54" stroke="#CFCCFF" strokeWidth="3" /><rect x="150" y="150" width="20" height="40" rx="4" fill="#FF8F80" /><circle cx="160" cy="142" r="16" fill="#5FD3B5" /><circle cx="170" cy="34" r="10" fill="#FFD166" opacity="0.6" /></>;
   }
 }
+
+export { shade, O, W };

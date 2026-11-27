@@ -2,7 +2,7 @@
 // Same art direction as Tourist.tsx: soft outline, flat colours with a light shading pass.
 import type { ReactNode } from "react";
 import type { Spec } from "@/lib/data/shop";
-import { armL, armR, Limb, O, W, shade, type Ctx } from "./Tourist";
+import { armL, armR, Limb, O, W, shade, type Ctx } from "./style";
 
 export const LONG_LITERARY_DRESSES = ["regency"];
 
