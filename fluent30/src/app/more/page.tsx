@@ -11,6 +11,7 @@ export default function MorePage() {
     { href: "/learn", icon: "sparkle", title: t("Nouveaux mots", "New words") },
     { href: "/cards", icon: "cards", title: t("Mes flashcards", "My flashcards") },
     { href: "/cards/add", icon: "plus", title: t("Ajouter du vocabulaire", "Add vocabulary") },
+    { href: "/around", icon: "sparkle", title: t("Autour de moi (nommer ce que je vois)", "Around me") },
     { href: "/translate", icon: "translate", title: t("Assistant de traduction", "Translation assistant") },
     { href: "/shop", icon: "sparkle", title: t("Boutique du touriste", "Tourist shop") },
     { href: "/stats", icon: "stats", title: t("Statistiques", "Statistics") },

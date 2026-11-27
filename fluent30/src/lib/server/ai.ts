@@ -238,3 +238,14 @@ export async function assessWriting(text: string, taskPrompt: string, taskLevel:
     user: `Task given (target level ${taskLevel}): ${taskPrompt}\n\nLearner's text:\n"""${text}"""`,
   });
 }
+
+// ---------------- "Autour de moi": name the objects in a photo ----------------
+
+export const IdentifySchema = z.object({
+  objects: z.array(z.object({
+    en: z.string().describe("Natural everyday English name (with a/an only if needed), e.g. 'mug', 'kettle', 'phone charger'"),
+    fr: z.string().describe("French translation"),
+    pos: z.string().describe("noun, verb, adjective…"),
+    example: z.string().describe("Short natural sentence using the word, about this scene"),
+  })).describe("3 to 8 clearly visible, useful objects, most useful first"),
+});

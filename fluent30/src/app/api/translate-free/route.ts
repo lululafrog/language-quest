@@ -1,19 +1,21 @@
 import { NextResponse } from "next/server";
 import { jsonError } from "@/lib/server/guard";
 
-// Free word/short-phrase translation EN→FR without any API key, via the MyMemory public API
+// Free word/short-phrase translation EN→FR (or FR→EN with from=fr) without any API key, via the MyMemory public API
 // (translation memory; anonymous use is limited to ~5,000 characters/day per server IP,
 // or 50,000 with MYMEMORY_EMAIL set). Used when the Claude key is not configured.
 const cache = new Map<string, unknown>();
 
 export async function GET(req: Request) {
-  const q = new URL(req.url).searchParams.get("q")?.trim();
+  const params = new URL(req.url).searchParams;
+  const q = params.get("q")?.trim();
+  const pair = params.get("from") === "fr" ? "fr|en" : "en|fr";
   if (!q || q.length > 200) return jsonError(400, "bad_input", "Texte invalide.");
-  const key = q.toLowerCase();
+  const key = `${pair}:${q.toLowerCase()}`;
   if (cache.has(key)) return NextResponse.json(cache.get(key));
   const url = new URL("https://api.mymemory.translated.net/get");
   url.searchParams.set("q", q);
-  url.searchParams.set("langpair", "en|fr");
+  url.searchParams.set("langpair", pair);
   if (process.env.MYMEMORY_EMAIL) url.searchParams.set("de", process.env.MYMEMORY_EMAIL);
   try {
     const r = await fetch(url, { signal: AbortSignal.timeout(6000) });

@@ -55,6 +55,18 @@ export default function Dashboard() {
         </div>
       </section>
 
+      {/* Quick add: my own words */}
+      <div className="grid grid-cols-2 gap-3">
+        <Link href="/around" className="card-shadow flex items-center gap-3 rounded-3xl bg-gradient-to-br from-mint-400 to-mint-600 p-4 text-white transition active:scale-[0.98]">
+          <span className="text-3xl">👀</span>
+          <span className="min-w-0"><span className="block font-bold leading-tight" style={{ fontFamily: "var(--font-display)" }}>{t("Autour de moi", "Around me")}</span><span className="block text-xs text-white/85">{t("Nomme ce que tu vois", "Name what you see")}</span></span>
+        </Link>
+        <Link href="/cards/add" className="card-shadow flex items-center gap-3 rounded-3xl border border-line/70 bg-surface p-4 transition active:scale-[0.98]">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-ink-600 text-2xl font-bold text-white">+</span>
+          <span className="min-w-0"><span className="block font-bold leading-tight" style={{ fontFamily: "var(--font-display)" }}>{t("Ajouter un mot", "Add a word")}</span><span className="block text-xs text-muted">{t("Mot, phrase, capture", "Word, sentence, screenshot")}</span></span>
+        </Link>
+      </div>
+
       {!s.onboarded && (
         <Panel className="border-ink-200 bg-gradient-to-br from-ink-600 to-ink-800 text-white">
           <p className="text-lg font-semibold">{t("Bienvenue sur Fluent30 !", "Welcome to Fluent30!")}</p>

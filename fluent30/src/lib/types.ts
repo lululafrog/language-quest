@@ -4,7 +4,7 @@ export type Skill = "recognition" | "production" | "listening";
 export const SKILLS: Skill[] = ["recognition", "production", "listening"];
 
 export type EntryKind = "word" | "verb" | "expression" | "phrase" | "phrasal";
-export type CardSource = "seed" | "user" | "reader" | "conversation" | "translator" | "verbs" | "grammar";
+export type CardSource = "seed" | "user" | "reader" | "conversation" | "translator" | "verbs" | "grammar" | "around";
 export type Register = "familier" | "courant" | "professionnel" | "soutenu";
 
 /** A learning item (word, verb, expression, sentence). */
@@ -115,6 +115,7 @@ export interface DayActivity {
   chatMessages: number;
   grammarExercises: number;
   xp: number;
+  around?: number; // things named in English with the "Autour de moi" exercise
   updatedAt: number;
 }
 

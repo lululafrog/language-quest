@@ -58,6 +58,7 @@ const QUEST_POOL: QuestDef[] = [
   { id: "grammar", fr: "Faire 8 exercices de grammaire", en: "Do 8 grammar exercises", emoji: "✍️", target: 8, reward: 30, href: "/grammar", value: (d) => d?.grammarExercises ?? 0 },
   { id: "time", fr: "Apprendre pendant 10 minutes", en: "Study for 10 minutes", emoji: "⏱️", target: 600, reward: 25, href: "/session", value: (d) => d?.seconds ?? 0 },
   { id: "chat", fr: "Envoyer 6 messages en anglais", en: "Send 6 messages in English", emoji: "💬", target: 6, reward: 35, href: "/chat", value: (d) => d?.chatMessages ?? 0, needsAI: true },
+  { id: "around", fr: "Nommer 5 choses autour de toi en anglais", en: "Name 5 things around you in English", emoji: "👀", target: 5, reward: 35, href: "/around", value: (d) => d?.around ?? 0 },
   { id: "correct", fr: "Donner 25 bonnes réponses", en: "Get 25 right answers", emoji: "🎯", target: 25, reward: 30, href: "/review", value: (d) => d?.correct ?? 0 },
 ];
 
