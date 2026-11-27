@@ -2,7 +2,7 @@
 // Local-first persistence (IndexedDB via Dexie). Works offline; optional cloud sync in sync.ts.
 import Dexie, { type Table } from "dexie";
 import type {
-  AchievementRecord, Book, BookContent, CacheEntry, Card, CollectionEntry, Conversation, DailySession, DayActivity, GameResult, GameState, Novel, WishItem,
+  AchievementRecord, Book, LessonProgress, BookContent, CacheEntry, Card, CollectionEntry, Conversation, DailySession, DayActivity, GameResult, GameState, Novel, WishItem,
   GrammarProgress, ImageAsset, KnownWord, Mistake, ReviewLog, Settings, SrsState, TestResult,
 } from "./types";
 
@@ -36,6 +36,7 @@ export class FluentDB extends Dexie {
   achievements!: Table<AchievementRecord, string>;
   collection!: Table<CollectionEntry, string>;
   novels!: Table<Novel, string>;
+  lessons!: Table<LessonProgress, string>;
 
   constructor() {
     super("fluent30");
@@ -60,6 +61,7 @@ export class FluentDB extends Dexie {
     });
     this.version(2).stores({ game: "id, updatedAt" });
     this.version(3).stores({ wishlist: "id, addedAt, updatedAt", achievements: "id, unlockedAt, updatedAt", collection: "bookId, finishedAt, updatedAt", novels: "id, createdAt, updatedAt" });
+    this.version(4).stores({ lessons: "id, status, due, lastAt, updatedAt" });
 
     // Every write stamps updatedAt (used by sync), except for local-only tables.
     const localOnly = new Set(["cache", "tombstones"]);
@@ -89,7 +91,7 @@ export function setSyncApplying(v: boolean) {
 
 export const SYNCED_TABLES = [
   "settings", "cards", "srs", "reviewLogs", "known", "books", "bookContent", "activity", "mistakes",
-  "grammar", "games", "conversations", "images", "tests", "sessions", "game", "wishlist", "achievements", "collection", "novels",
+  "grammar", "games", "conversations", "images", "tests", "sessions", "game", "wishlist", "achievements", "collection", "novels", "lessons",
 ] as const;
 
 let _db: FluentDB | null = null;

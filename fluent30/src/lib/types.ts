@@ -229,7 +229,9 @@ export interface Settings {
   id: "me";
   displayName?: string;
   dailyNewWords: number; // default 10
-  sessionMinutes: 5 | 10 | 15 | 30 | 60;
+  sessionMinutes: 5 | 10 | 15 | 20 | 30 | 60;
+  /** level the learner follows in the course path (from placement or chosen) */
+  pathLevel?: "A1" | "A2" | "B1" | "B2" | "C1";
   immersion: boolean; // UI fully in English
   theme: "system" | "light" | "dark";
   accent: "en-GB" | "en-US";
@@ -355,5 +357,24 @@ export interface Novel {
   cover: { palette: string[]; motif: string; subtitle?: string };
   status: "writing" | "done";
   createdAt: number;
+  updatedAt: number;
+}
+
+/** Progress on a structured lesson (course path / real-life module), with FSRS review scheduling. */
+export interface LessonProgress {
+  id: string; // lesson id
+  status: "started" | "done";
+  bestScore: number; // 0..1
+  lastScore: number;
+  attempts: number;
+  lastAt: number;
+  weakTags: string[]; // concept tags missed in the last attempt
+  // FSRS state for spaced review of the lesson
+  due: number;
+  stability: number;
+  difficulty: number;
+  reps: number;
+  lapses: number;
+  state: number;
   updatedAt: number;
 }
