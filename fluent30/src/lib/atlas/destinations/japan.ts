@@ -18,7 +18,6 @@ const fix = (bands: Band[], sentence: string, answers: string[], explain: string
 const lis = (bands: Band[], audio: string, question: string, options: string[], answer: number, explain: string): AtlasExercise => ({ type: "listen", audio, question, options, answer, explain, bands });
 const dic = (bands: Band[], audio: string, answers: string[], explain: string): AtlasExercise => ({ type: "dictation", audio, answers, explain, bands });
 const mat = (bands: Band[], pairs: [string, string][], explain?: string): AtlasExercise => ({ type: "match", pairs, explain, bands });
-const spk = (bands: Band[], text: string, fr: string): AtlasExercise => ({ type: "speak", text, fr, bands });
 const say = (speaker: string, en: string, fr?: string): DialogueLine => ({ speaker, en, fr });
 const you = (fr: string, ...choices: [string, boolean, string][]): DialogueLine => {
   const list = choices.map(([en, correct, why]) => ({ en, correct, why }));
