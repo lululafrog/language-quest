@@ -20,11 +20,27 @@ const MOTIFS: Record<Landmark, string> = {
   harbour: "M10 44q6 4 11 0t11 0t11 0t11 0M18 40h28l-4-8H22zM32 32V16l10 12H32M10 50q6 4 11 0t11 0t11 0t11 0",
   maple: "M32 50V38M32 38l-10 4 2-6-8-4 4-2-2-8 7 3 2-5 5 6V14l0 0M32 38l10 4-2-6 8-4-4-2 2-8-7 3-2-5-5 6",
   tower: "M32 14l-8 36M32 14l8 36M26 36h12M28 26h8M22 50h20",
+  // Atlas countries (original simplified line drawings)
+  candi: "M12 50h40M18 50V42h3V36h3V30h3V22l3-5v33M46 50V42h-3V36h-3V30h-3V22l-3-5v33M30 44l2-4 2 4M32 13m-2.5 0a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0-5 0",
+  karst: "M8 46q6 3 12 0t12 0t12 0t12 0M12 42q-2-14 5-20q6 6 4 20M24 42q-1-22 8-26q8 6 5 26M42 42q-2-12 5-16q6 5 4 16M28 52h10l-2 3h-6zM33 52v-6l4 4",
+  torii: "M8 42l12-18 6 6 8-12 22 24M18 52V30M46 52V30M12 28q20-6 40 0M15 35h34M32 35v-6",
+  canyon: "M6 50h52M6 50V34h8v-8h8v10M58 50V30h-8v-8h-8v14M28 50l3-14M36 50l-3-14M32 48v-2M32 42v-2",
+  colosseum: "M10 48h44M10 48V26q22-8 44 0v22M10 35q22-6 44 0M14 48v-6a2 2 0 0 1 4 0v6M22 48v-7a2 2 0 0 1 4 0v7M30 48v-7a2 2 0 0 1 4 0v7M38 48v-7a2 2 0 0 1 4 0v7M46 48v-6a2 2 0 0 1 4 0v6M16 30v-2M24 28v-2M32 27v-2M40 28v-2M48 30v-2",
+  fern: "M6 38l12-16 6 6 8-12 12 20M30 54q2-14 14-24M33 46l-6-2M35 42l-6-3M38 38l-5-3M41 34l-4-3M35 44l5-4M38 40l5-4M41 36l4-3",
+  pyramids: "M8 50h48M12 50l14-24 14 24M30 50l12-18 12 18M19 38h14M47 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0",
+  table: "M6 46h52M8 46l8-14h6l4-6h18l4 6h4l8 14M18 24q4-4 8 0q4-4 8 0q4-4 8 0M10 52q6 3 12 0t12 0t12 0t12 0",
 };
+
+/** Very light palette colours (white, cream) can't be used as stamp ink. */
+function isLight(hex: string) {
+  const n = parseInt(hex.replace("#", ""), 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  return 0.299 * r + 0.587 * g + 0.114 * b > 200;
+}
 
 export function Stamp({ dest, locked, size = 96, className, tilt = 0 }: { dest: Destination; locked?: boolean; size?: number; className?: string; tilt?: number }) {
   const [a, , c] = dest.colors;
-  const ink = locked ? "currentColor" : a === "#FFFFFF" ? c : a;
+  const ink = locked ? "currentColor" : isLight(a) ? c : a;
   const id = `arc-${dest.id}`;
   return (
     <svg viewBox="0 0 96 96" width={size} height={size} className={cx(locked && "text-line", className)} style={{ transform: tilt ? `rotate(${tilt}deg)` : undefined }} role="img" aria-label={dest.nameFr}>

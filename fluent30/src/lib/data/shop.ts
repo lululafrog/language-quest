@@ -292,6 +292,86 @@ SHOP_ITEMS.push(
   L("trv-flapper-black", "dress", "robes", "Robe années 20 noire", "Black 1920s dress", 260, { k: "flapper", c: "#1F1F2B" }, undefined, "citytrip"),
 );
 
+// ---------- Atlas destination rewards (granted by the destination missions, see lib/atlas) ----------
+const A = (dest: string, nameFr: string, nameEn: string) =>
+  (id: string, slot: AvatarSlot, cat: ShopCategory, fr: string, en: string, spec: Spec, n: number, col?: Collection, rarity: ShopItem["rarity"] = "épique"): ShopItem =>
+    ({ id, slot, cat, fr, en, price: 0, rarity, spec, col, earn: { kind: "missions", dest, n, fr: `${n} missions réussies — ${nameFr}`, en: `${n} missions completed — ${nameEn}` } });
+const UKa = A("uk", "Royaume-Uni", "United Kingdom");
+const IDa = A("indonesia", "Indonésie", "Indonesia");
+const VNa = A("vietnam", "Vietnam", "Vietnam");
+const JPa = A("japan", "Japon", "Japan");
+const AUa = A("australia", "Australie", "Australia");
+const USa = A("usa", "États-Unis", "United States");
+const ITa = A("italy", "Italie", "Italy");
+const NZa = A("new-zealand", "Nouvelle-Zélande", "New Zealand");
+const EGa = A("egypt", "Égypte", "Egypt");
+const ZAa = A("south-africa", "Afrique du Sud", "South Africa");
+SHOP_ITEMS.push(
+  // United Kingdom
+  UKa("uk-fair-isle-jumper", "top", "pulls", "Pull Fair Isle", "Fair Isle jumper", { k: "sweater", c: "#7A8F6E", c2: "#F3E9D2", t: "fairisle" }, 2, "winter"),
+  UKa("uk-flat-cap", "hat", "casquettes", "Casquette plate en tweed", "Tweed flat cap", { k: "flatcap", c: "#7A6A55" }, 4, "citytrip"),
+  UKa("uk-umbrella", "hand", "objets", "Parapluie de Londres", "London umbrella", { k: "umbrella", c: "#2B3A55" }, 3, "citytrip", "rare"),
+  UKa("uk-tote-bag", "bag", "objets", "Tote bag de librairie", "Bookshop tote bag", { k: "tote", c: "#F3E9D2", t: "BOOKS" }, 6, "citytrip", "rare"),
+  UKa("uk-tea-set", "background", "decors", "Service à thé (ma chambre)", "Tea set (my room)", { k: "room", t: "teaset" }, 8, undefined, "légendaire"),
+  // Indonesia
+  IDa("indonesia-sarong", "bottom", "jupes", "Sarong de visite", "Visiting sarong", { k: "sarong", c: "#2B3A55", p: "flowers", c2: "#C9785A" }, 2, "tropical"),
+  IDa("indonesia-batik-shirt", "top", "chemises", "Chemise en batik", "Batik shirt", { k: "batik", c: "#6B4A2E", c2: "#E6D2A8" }, 4, "tropical"),
+  IDa("indonesia-travel-bag", "hand", "valises", "Sac de voyage", "Travel duffel bag", { k: "duffel", c: "#3F6B4F", c2: "#E9C46A" }, 3, "backpacker", "rare"),
+  IDa("indonesia-dive-gear", "hand", "sport", "Palmes de plongée", "Diving fins", { k: "fins", c: "#E9C46A" }, 6, "diving", "rare"),
+  IDa("indonesia-surfboard", "background", "decors", "Planche de surf (ma chambre)", "Surfboard (my room)", { k: "room", t: "surfboard" }, 7, "surf", "légendaire"),
+  IDa("indonesia-tropical-decor", "background", "decors", "Coin tropical (ma chambre)", "Tropical corner (my room)", { k: "room", t: "tropical" }, 9, "tropical", "légendaire"),
+  // Vietnam
+  VNa("vietnam-non-la", "hat", "chapeaux", "Nón lá (chapeau conique)", "Nón lá conical hat", { k: "conical" }, 2, "tropical"),
+  VNa("vietnam-tailored-shirt", "top", "chemises", "Chemise sur mesure de Hội An", "Hội An tailored shirt", { k: "shirt", c: "#9FB4C7" }, 4, "citytrip"),
+  VNa("vietnam-canvas-bag", "bag", "objets", "Sac en toile", "Canvas bag", { k: "tote", c: "#C9B48A" }, 3, "backpacker", "rare"),
+  VNa("vietnam-embroidered-scarf", "neck", "bijoux", "Écharpe brodée", "Embroidered scarf", { k: "scarf", c: "#B23A3A", c2: "#E9C46A" }, 6, "citytrip", "rare"),
+  VNa("vietnam-lantern", "background", "decors", "Lanternes de soie (ma chambre)", "Silk lanterns (my room)", { k: "room", t: "lantern" }, 8, undefined, "légendaire"),
+  VNa("vietnam-coffee-corner", "background", "decors", "Coin café (ma chambre)", "Coffee corner (my room)", { k: "room", t: "coffee" }, 9, undefined, "légendaire"),
+  // Japan
+  JPa("japan-yukata", "dress", "robes", "Yukata d'été", "Summer yukata", { k: "yukata", c: "#2B3A55", c2: "#E9C46A" }, 4, "eusummer"),
+  JPa("japan-streetwear", "top", "pulls", "Sweat streetwear", "Streetwear hoodie", { k: "hoodie", c: "#2F2A28", c2: "#E9C46A" }, 2, "citytrip"),
+  JPa("japan-tenugui", "neck", "objets", "Tenugui (serviette en coton)", "Tenugui cotton towel", { k: "tenugui", c: "#2F4A6B" }, 3, "citytrip", "rare"),
+  JPa("japan-ski-goggles", "glasses", "lunettes", "Masque de ski", "Ski goggles", { k: "glSki", c: "#E9C46A", c2: "#2B3A55" }, 6, "winter", "rare"),
+  JPa("japan-sakura-lantern", "background", "decors", "Lanterne et sakura (ma chambre)", "Sakura lantern (my room)", { k: "room", t: "sakura" }, 8, undefined, "légendaire"),
+  // Australia
+  AUa("australia-rash-vest", "top", "maillots", "Lycra anti-UV", "Rash vest", { k: "rashguard", c: "#4C8DA8", c2: "#F3E9D2" }, 2, "surf"),
+  AUa("australia-wide-brim-hat", "hat", "chapeaux", "Chapeau à larges bords", "Wide-brim hat", { k: "bushhat", c: "#D8C8A8" }, 4, "beach"),
+  AUa("australia-snorkel-mask", "glasses", "lunettes", "Masque et tuba", "Snorkel mask", { k: "glSnorkel" }, 3, "diving", "rare"),
+  AUa("australia-sunnies", "glasses", "lunettes", "Lunettes de soleil (« sunnies »)", "Sunnies", { k: "glBig" }, 6, "beach", "rare"),
+  AUa("australia-surfboard-wall", "background", "decors", "Planche au mur (ma chambre)", "Surfboard on the wall (my room)", { k: "room", t: "surfwall" }, 8, "surf", "légendaire"),
+  // United States
+  USa("usa-denim-jacket", "outer", "vestes", "Veste en jean du road trip", "Road-trip denim jacket", { k: "jacket", c: "#4A6E96" }, 2, "adventure"),
+  USa("usa-ny-cap", "hat", "casquettes", "Casquette NY bleu nuit", "Navy NY cap", { k: "cap", c: "#1F2A44", t: "NY" }, 4, "citytrip"),
+  USa("usa-ranger-hat", "hat", "chapeaux", "Chapeau de ranger", "Ranger hat", { k: "ranger", c: "#B5966A", c2: "#5A3A1E" }, 6, "hiking", "rare"),
+  USa("usa-tote-bag", "bag", "objets", "Tote bag NYC", "NYC tote bag", { k: "tote", c: "#F3E9D2", t: "NYC" }, 3, "citytrip", "rare"),
+  USa("usa-road-map", "background", "decors", "Carte routière (ma chambre)", "Road map (my room)", { k: "room", t: "roadmap" }, 8, "adventure", "légendaire"),
+  // Italy
+  ITa("italy-linen-shirt", "top", "chemises", "Chemise en lin bleu ciel", "Sky-blue linen shirt", { k: "shirt", c: "#DDE6EC" }, 2, "eusummer"),
+  ITa("italy-summer-dress", "dress", "robes", "Robe d'été aux citrons", "Lemon summer dress", { k: "dress", c: "#FBF7F0", p: "flowers", c2: "#F2D16B" }, 4, "eusummer"),
+  ITa("italy-leather-bag", "bag", "objets", "Pochette en cuir", "Leather pouch bag", { k: "pouch", c: "#8C5A3C" }, 3, "eusummer", "rare"),
+  ITa("italy-hiking-poles", "hand", "sport", "Bâtons de randonnée", "Hiking poles", { k: "poles", c: "#C9785A" }, 6, "hiking", "rare"),
+  ITa("italy-lemon-tree", "background", "decors", "Citronnier (ma chambre)", "Lemon tree (my room)", { k: "room", t: "lemon" }, 8, "eusummer", "légendaire"),
+  // New Zealand
+  NZa("nz-jumpsuit", "dress", "sport", "Combinaison de saut", "Skydiving jumpsuit", { k: "wetsuit", c: "#C9785A", c2: "#2B3A55" }, 4, "adventure"),
+  NZa("nz-rugby-jersey", "top", "tshirts", "Maillot de rugby", "Rugby jersey", { k: "football", c: "#1F1F2B", t: "7" }, 2, "adventure"),
+  NZa("nz-hiking-boots", "shoes", "chaussures", "Chaussures de randonnée", "Hiking boots", { k: "boots", c: "#6D4C41", t: "low" }, 3, "hiking", "rare"),
+  NZa("nz-keepcup", "hand", "objets", "Gobelet réutilisable", "Reusable coffee cup", { k: "keepcup", c: "#7F9C7A" }, 6, "backpacker", "rare"),
+  NZa("nz-fiord-print", "background", "decors", "Affiche de fjord (ma chambre)", "Fiord print (my room)", { k: "room", t: "fiord" }, 8, "hiking", "légendaire"),
+  // Egypt
+  EGa("egypt-linen-shirt", "top", "chemises", "Chemise en lin crème", "Cream linen shirt", { k: "shirt", c: "#EFE6D6" }, 2, "safari"),
+  EGa("egypt-desert-scarf", "neck", "bijoux", "Foulard léger du désert", "Light desert scarf", { k: "scarf", c: "#D8C8A8", c2: "#C9785A" }, 4, "safari"),
+  EGa("egypt-explorer-hat", "hat", "chapeaux", "Chapeau d'explorateur", "Explorer's hat", { k: "fedora", c: "#CDB894", c2: "#5A3A1E" }, 3, "adventure", "rare"),
+  EGa("egypt-dive-log", "hand", "objets", "Carnet de plongée", "Dive logbook", { k: "journal" }, 6, "diving", "rare"),
+  EGa("egypt-papyrus-print", "background", "decors", "Estampe façon papyrus (ma chambre)", "Papyrus-style print (my room)", { k: "room", t: "papyrus" }, 8, undefined, "légendaire"),
+  // South Africa
+  ZAa("south-africa-safari-shirt", "top", "chemises", "Chemise de safari", "Safari shirt", { k: "shirt", c: "#BFA77A" }, 2, "safari"),
+  ZAa("south-africa-hiking-jacket", "outer", "vestes", "Veste de randonnée", "Hiking jacket", { k: "jacket", c: "#3F6B4F", c2: "#E9C46A" }, 4, "hiking"),
+  ZAa("south-africa-jersey", "top", "tshirts", "Maillot de rugby vert et or", "Green-and-gold rugby jersey", { k: "football", c: "#2E6B3F", t: "15" }, 5, "adventure"),
+  ZAa("south-africa-camera", "neck", "objets", "Appareil photo de safari", "Safari camera", { k: "camera" }, 3, "safari", "rare"),
+  ZAa("south-africa-binoculars", "neck", "objets", "Jumelles d'observation", "Wildlife binoculars", { k: "binoculars" }, 6, "safari", "rare"),
+  ZAa("south-africa-penguin-print", "background", "decors", "Affiche des manchots (ma chambre)", "Penguin print (my room)", { k: "room", t: "penguin" }, 8, "beach", "légendaire"),
+);
+
 export const SHOP_BY_ID = new Map(SHOP_ITEMS.map((i) => [i.id, i]));
 
 /** Legacy ids from the first wardrobe → new ids. */

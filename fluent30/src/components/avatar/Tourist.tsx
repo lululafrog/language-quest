@@ -5,6 +5,7 @@
 import { useId, type ReactNode } from "react";
 import { SHOP_BY_ID, type Spec } from "@/lib/data/shop";
 import { O, W, Limb, armL, armR, shade, type Ctx } from "./style";
+import { atlasDress, atlasGlasses, atlasHand, atlasHat, atlasNeck, atlasRoom, atlasTop } from "./atlas";
 import { LONG_LITERARY_DRESSES, literaryDress, literaryFace, literaryHand, literaryHat, literaryNeck, literaryOuter } from "./literary";
 import type { Appearance, AvatarSlot } from "@/lib/types";
 
@@ -102,7 +103,7 @@ export function Tourist({
     return (
       <svg viewBox="0 0 200 240" className={className} role="img" aria-label={title ?? "Décor"}>
         <defs><clipPath id={`${uid}clip`}><rect width="200" height="240" rx="28" /></clipPath></defs>
-        <g clipPath={`url(#${uid}clip)`}>{bg && renderBackground(bg, uid)}</g>
+        <g clipPath={`url(#${uid}clip)`}>{bg && (atlasRoom(bg) ?? renderBackground(bg, uid))}</g>
       </svg>
     );
   }
@@ -123,7 +124,7 @@ export function Tourist({
       </defs>
       {a2 && <style>{ANIM_CSS}</style>}
       <g clipPath={mq ? undefined : `url(#${uid}clip)`}>
-        {bg && renderBackground(bg, uid)}
+        {bg && (atlasRoom(bg) ?? renderBackground(bg, uid))}
         {!mq && <ellipse cx="100" cy="226" rx={50 * k} ry="7" fill="#3A2A20" opacity="0.13" />}
         <g className={bodyClass}>
           <g transform="translate(0 -10)">
@@ -166,8 +167,8 @@ export function Tourist({
                   </>
                 )}
                 {dress
-                  ? dress.k !== "dressLong" && !LONG_LITERARY_DRESSES.includes(dress.k) ? literaryDress(dress, ctx) ?? renderDress(dress, ctx) : null
-                  : topSpec ? renderTop(topSpec, ctx) : mq && <path d={ctx.torso} fill={a.skin} stroke={O} strokeWidth={W} strokeLinejoin="round" />}
+                  ? dress.k !== "dressLong" && !LONG_LITERARY_DRESSES.includes(dress.k) ? atlasDress(dress, ctx) ?? literaryDress(dress, ctx) ?? renderDress(dress, ctx) : null
+                  : topSpec ? atlasTop(topSpec, ctx) ?? renderTop(topSpec, ctx) : mq && <path d={ctx.torso} fill={a.skin} stroke={O} strokeWidth={W} strokeLinejoin="round" />}
                 {outer && (literaryOuter(outer, ctx) ?? renderOuter(outer, ctx))}
                 {bag && bag.k !== "backpack" && renderBag(bag)}
                 {bag?.k === "backpack" && <path d="M80 104 L82 150 M120 104 L118 150" stroke={shade(bag.c ?? "#C9785A", -0.35)} strokeWidth={6} strokeLinecap="round" />}
@@ -180,7 +181,7 @@ export function Tourist({
               <Hand cx={handX(-1)} cy={handY} skin={a.skin} />
               <Hand cx={handX(1)} cy={handY} flip skin={a.skin} />
               {hand?.k === "duck" && handItem(hand)}
-              {neck && (literaryNeck(neck) ?? renderNeck(neck))}
+              {neck && (atlasNeck(neck) ?? literaryNeck(neck) ?? renderNeck(neck))}
             </g>
             {/* neck + head */}
             {!mq || mq === "hat" || mq === "glasses" || mq === "face" || mq === "neck" ? (
@@ -198,13 +199,13 @@ export function Tourist({
                     {(!mq || mq === "face") && renderFace(a, face, ctx, expr, a2)}
                     {face && (literaryFace(face) ?? renderFaceItem(face))}
                     {!mq && hairFront(a, `url(#${uid}hair)`)}
-                    {glasses && renderGlasses(glasses)}
-                    {hat && (literaryHat(hat) ?? renderHat(hat, ctx))}
+                    {glasses && (atlasGlasses(glasses) ?? renderGlasses(glasses))}
+                    {hat && (atlasHat(hat) ?? literaryHat(hat) ?? renderHat(hat, ctx))}
                   </g>
                 </g>
               </>
             ) : null}
-            {hand && !hideHandItem && !HAND_BEHIND.includes(hand.k) && hand.k !== "duck" && <g transform={`translate(${handDx} 0)`}>{literaryHand(hand) ?? handItem(hand)}</g>}
+            {hand && !hideHandItem && !HAND_BEHIND.includes(hand.k) && hand.k !== "duck" && <g transform={`translate(${handDx} 0)`}>{atlasHand(hand) ?? literaryHand(hand) ?? handItem(hand)}</g>}
           </g>
         </g>
       </g>
