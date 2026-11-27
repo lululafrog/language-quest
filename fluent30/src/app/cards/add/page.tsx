@@ -218,8 +218,10 @@ function ScreenshotImport({ onPick, disabled }: { onPick: (items: string[]) => v
     try {
       let text: string;
       try {
-        const data = await fileToBase64(file);
-        text = (await postApi<{ text: string }>("/api/ai/ocr", { image: { data, mediaType: file.type } })).text;
+        // downscale + JPEG before sending: smaller request, lower cost, faster
+        const { compressImage, blobToBase64 } = await import("@/lib/media");
+        const img = await blobToBase64(await compressImage(file, 1280, 0.8));
+        text = (await postApi<{ text: string }>("/api/ai/ocr", { image: img })).text;
       } catch (err) {
         if (!(err instanceof ApiError) || err.status === 400) throw err;
         // online reading unavailable → read the text on the device (free, private)
@@ -306,12 +308,4 @@ function ManualAdd({ onSaved }: { onSaved: () => void }) {
 }
 
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res(String(r.result).replace(/^data:[^,]+,/, ""));
-    r.onerror = () => rej(r.error);
-    r.readAsDataURL(file);
-  });
-}
 

@@ -204,14 +204,17 @@ async function maybeGenerateImage(card: Card, prompt?: string) {
 }
 
 export async function setCardImageFromFile(card: Card, file: File) {
+  // a flashcard picture never needs more than ~600 px: keeps local storage small
+  const { compressImage } = await import("./media");
+  const small = await compressImage(file, 600, 0.8);
   const data = await new Promise<string>((res, rej) => {
     const r = new FileReader();
     r.onload = () => res(String(r.result));
     r.onerror = () => rej(r.error);
-    r.readAsDataURL(file);
+    r.readAsDataURL(small);
   });
   const key = `upload-${card.id}`;
-  await getDb().images.put({ key, data, mime: file.type, provider: "upload", createdAt: Date.now(), updatedAt: Date.now() });
+  await getDb().images.put({ key, data, mime: small.type || file.type, provider: "upload", createdAt: Date.now(), updatedAt: Date.now() });
   await getDb().cards.update(card.id, { imageKey: key });
 }
 

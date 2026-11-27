@@ -111,6 +111,8 @@ export async function chatText(opts: { system: string; messages: Anthropic.Beta.
       max_tokens: max,
       ...(supportsServerFallback(model) ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
       system: [{ type: "text", text: opts.system, cache_control: { type: "ephemeral" } }],
+      // automatic caching of the growing conversation history (cache reads cost a fraction of input tokens)
+      cache_control: { type: "ephemeral" },
       output_config: { effort: effortFor(r.tier, opts.effort) },
       messages: opts.messages,
     }),

@@ -80,7 +80,30 @@ export function POST(req: Request) {
           : "If the idea is abstract, use a clear visual metaphor.";
 
     let out: ImageOut | null = null;
-    if (config.openaiKey) {
+    // Cost order: shared cache (above) → 1) free openly licensed image → 2) cheap pictogram → 3) paid generation.
+    const paidAllowed = process.env.FLUENT30_PAID_IMAGES === "1" || body.allowFree === false;
+    if (body.allowFree !== false) out = await fromOpenverse(term);
+    // 2) pictogram drawn by the cheapest model (fraction of a cent), stored in the shared cache
+    if (!out && config.anthropicKey) {
+      try {
+      const res = await structured({
+        schema: SvgSchema,
+        effort: "low",
+        maxTokens: 6000,
+        system: `Task: draw a memorable pictogram as SVG (viewBox 0 0 200 200) that conveys a meaning WITHOUT any text. Style: soft rounded shapes, 4px dark indigo (#2E2A6B) outlines, palette #2E2A6B, #FF7A6B, #5FD3B5, #FFD166, #FFF8EE background rect with rx=28. No <text>, no scripts, no external references, no filters. Under 4 KB.`,
+        user: `Meaning to illustrate: "${term}"${meaning ? ` = ${meaning}` : ""}. ${scene} ${kindHint}`,
+      });
+      const svg = sanitizeSvg(res.svg);
+      if (svg) {
+        out = { data: `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`, mime: "image/svg+xml", provider: "claude-svg" };
+        if (bucket) await bucket.upload(`${key}.svg`, Buffer.from(svg), { contentType: "image/svg+xml", upsert: true });
+      }
+      } catch (e) {
+        console.warn("image: AI pictogram failed, trying Openverse:", (e as Error)?.message);
+      }
+    }
+    // 3) paid generation (≈ $0.04/image) only when explicitly enabled, or for a personal illustration the learner asked for
+    if (!out && config.openaiKey && paidAllowed) {
       const started = Date.now();
       const prompt = `${STYLE}\nSubject: the meaning of the English "${term}"${meaning ? ` (${meaning})` : ""}. ${scene} ${kindHint}`;
       const r = await fetch("https://api.openai.com/v1/images/generations", {
@@ -106,26 +129,6 @@ export function POST(req: Request) {
         }
       }
     }
-    if (!out && config.anthropicKey) {
-      try {
-      const res = await structured({
-        schema: SvgSchema,
-        effort: "low",
-        maxTokens: 6000,
-        system: `Task: draw a memorable pictogram as SVG (viewBox 0 0 200 200) that conveys a meaning WITHOUT any text. Style: soft rounded shapes, 4px dark indigo (#2E2A6B) outlines, palette #2E2A6B, #FF7A6B, #5FD3B5, #FFD166, #FFF8EE background rect with rx=28. No <text>, no scripts, no external references, no filters. Under 4 KB.`,
-        user: `Meaning to illustrate: "${term}"${meaning ? ` = ${meaning}` : ""}. ${scene} ${kindHint}`,
-      });
-      const svg = sanitizeSvg(res.svg);
-      if (svg) {
-        out = { data: `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`, mime: "image/svg+xml", provider: "claude-svg" };
-        if (bucket) await bucket.upload(`${key}.svg`, Buffer.from(svg), { contentType: "image/svg+xml", upsert: true });
-      }
-      } catch (e) {
-        console.warn("image: AI pictogram failed, trying Openverse:", (e as Error)?.message);
-      }
-    }
-    // free openly licensed image, unless the caller wants a custom illustration only (e.g. a personal memory)
-    if (!out && body.allowFree !== false) out = await fromOpenverse(term);
     if (!out) return jsonError(503, "service_unavailable", "Aucune illustration n'a pu être trouvée pour ce mot pour le moment.");
     if (memory.size > 500) memory.delete(memory.keys().next().value as string);
     memory.set(key, out);

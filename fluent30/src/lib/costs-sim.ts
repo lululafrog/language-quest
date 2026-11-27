@@ -34,7 +34,8 @@ export function simulateCosts(cfg: SimConfig = { profiles: DEFAULT_PROFILES }) {
       if (!calls) continue;
       const spec = FEATURES[f];
       let unit = typicalCallCost(f, cfg.env);
-      if (f === "images") unit = IMAGE_COST_USD * (1 - freeImg);
+      // illustrations: free banks first, then a cheap pictogram; paid generation only if FLUENT30_PAID_IMAGES=1
+      if (f === "images") unit = (1 - freeImg) * ((cfg.env ?? process.env).FLUENT30_PAID_IMAGES === "1" ? IMAGE_COST_USD : typicalCallCost("images", cfg.env));
       const paidCalls = spec.sharedCache && f !== "images" ? calls * (1 - hit) : calls;
       const c = paidCalls * unit;
       byFeature[f] = Math.round(c * 10000) / 10000;
@@ -46,9 +47,28 @@ export function simulateCosts(cfg: SimConfig = { profiles: DEFAULT_PROFILES }) {
 }
 
 /** Monthly bill for a population mix (e.g. 100 / 1k / 10k / 100k users). */
-export function simulatePopulation(users: number, mix: Record<string, number> = { occasional: 0.6, regular: 0.3, intensive: 0.1 }, cfg?: SimConfig) {
+export function simulatePopulation(
+  users: number,
+  mix: Record<string, number> = { occasional: 0.6, regular: 0.3, intensive: 0.1 },
+  cfg?: SimConfig,
+  /** per-user monthly cap (FLUENT30_USER_MONTHLY_BUDGET_USD); beyond it paid AI is paused and free engines take over */
+  userCapUsd: number | null = 0.8,
+) {
   const per = simulateCosts(cfg ?? { profiles: DEFAULT_PROFILES });
   let usd = 0;
-  for (const [p, share] of Object.entries(mix)) usd += (per[p]?.usd ?? 0) * share * users;
-  return { users, usd: Math.round(usd * 100) / 100, perUserUsd: Math.round((usd / users) * 10000) / 10000 };
+  let uncapped = 0;
+  for (const [p, share] of Object.entries(mix)) {
+    const c = per[p]?.usd ?? 0;
+    uncapped += c * share * users;
+    usd += (userCapUsd == null ? c : Math.min(c, userCapUsd)) * share * users;
+  }
+  const fx = cfg?.usdToEur ?? 0.92;
+  return {
+    users,
+    usd: Math.round(usd * 100) / 100,
+    eur: Math.round(usd * fx * 100) / 100,
+    perUserUsd: Math.round((usd / users) * 10000) / 10000,
+    perUserEur: Math.round((usd * fx / users) * 10000) / 10000,
+    uncappedUsd: Math.round(uncapped * 100) / 100,
+  };
 }

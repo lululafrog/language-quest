@@ -6,7 +6,7 @@ import "server-only";
 // - Storage: Supabase (ai_usage_daily, ai_error_log, ai_budget_alerts, ai_usage_users) when SUPABASE_SERVICE_ROLE_KEY
 //   is set; otherwise in memory (per server instance — resets on each deploy/restart, approximate on serverless).
 // - Quotas per user and feature: daily AND monthly (PLAN + FLUENT30_LIMIT_<FEATURE>_PER_DAY / _PER_MONTH).
-// - Per-user monthly cost cap: FLUENT30_USER_MONTHLY_BUDGET_USD (default 0.40).
+// - Per-user monthly cost cap: FLUENT30_USER_MONTHLY_BUDGET_USD (default 0.80).
 // - Global caps: FLUENT30_DAILY_BUDGET_USD / FLUENT30_MONTHLY_BUDGET_USD, with alerts at 50 / 80 / 100 % of the
 //   monthly cap (once per threshold per month), optionally POSTed to FLUENT30_ALERT_WEBHOOK_URL ({ text }).
 //   When a cap is reached, paid calls are refused with a friendly message; free services keep working.
@@ -183,7 +183,7 @@ export function budgetCaps() {
   return {
     dailyCapUsd: num(process.env.FLUENT30_DAILY_BUDGET_USD),
     monthlyCapUsd: num(process.env.FLUENT30_MONTHLY_BUDGET_USD),
-    userMonthlyCapUsd: userCap === "0" || userCap === "off" ? null : (num(userCap) ?? 0.4),
+    userMonthlyCapUsd: userCap === "0" || userCap === "off" ? null : (num(userCap) ?? 0.8),
   };
 }
 
