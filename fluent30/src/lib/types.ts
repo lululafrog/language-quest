@@ -239,6 +239,8 @@ export interface Settings {
   pathLevel?: "A1" | "A2" | "B1" | "B2" | "C1";
   /** explicit consent to send personal content (photos, screenshots, journal, voice) to the AI service. Asked once, revocable. */
   personalAiConsent?: boolean;
+  /** sync personal content (captures, journal, memories — text only, never photos/audio) to the learner's own cloud account. Off by default. */
+  syncPersonalContent?: boolean;
   /** world map: destination chosen at onboarding */
   homeDestination?: string;
   immersion: boolean; // UI fully in English
@@ -254,6 +256,7 @@ export interface Settings {
   reader: { font: "serif" | "sans" | "dyslexic"; size: number; theme: "light" | "sepia" | "dark"; lineHeight: number; brightness?: number; margin?: number; voice?: "en-GB" | "en-US" };
   autoImages: boolean; // generate illustrations automatically when an image API is configured
   reduceMotion?: boolean; // accessibility: disable celebrations/animations
+  textScale?: number; // accessibility: 0.9 … 1.3 (root font-size multiplier)
   readingMode?: "immersive" | "assisted" | "bilingual";
   readingGoals?: { minutesPerWeek: number; wordsPerWeek: number; booksPerMonth: number };
   lastSyncAt?: number;

@@ -43,3 +43,29 @@ export function download(blob: Blob, filename: string) {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
+
+/** Deletes every personal item (Real Life captures, journal, memory cards, local photos & recordings). Flashcards are kept. */
+export async function wipePersonalContent(): Promise<number> {
+  const db = getDb();
+  const n = (await db.captures.count()) + (await db.journal.count()) + (await db.memories.count()) + (await db.media.count());
+  await db.transaction("rw", [db.captures, db.journal, db.memories, db.media], async () => {
+    // bulkDelete (not clear) so the sync layer records tombstones and cloud copies are deleted too
+    await db.captures.bulkDelete(await db.captures.toCollection().primaryKeys());
+    await db.journal.bulkDelete(await db.journal.toCollection().primaryKeys());
+    await db.memories.bulkDelete(await db.memories.toCollection().primaryKeys());
+    await db.media.clear();
+  });
+  return n;
+}
+
+export async function personalContentStats() {
+  const db = getDb();
+  const media = await db.media.toArray();
+  return {
+    captures: await db.captures.count(),
+    journal: await db.journal.count(),
+    memories: await db.memories.count(),
+    media: media.length,
+    mediaBytes: media.reduce((a, m) => a + (m.size || 0), 0),
+  };
+}

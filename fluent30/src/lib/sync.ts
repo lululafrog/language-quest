@@ -5,6 +5,7 @@ import { getDb, setSyncApplying, SYNCED_TABLES } from "./db";
 import { supabase } from "./supabase";
 
 const TABLE = "fluent_rows";
+export const PERSONAL_TABLES = new Set<string>(["captures", "journal", "memories"]);
 const SKIP = new Set(["images"]); // illustrations are cached server-side and regenerated on demand
 const MAX_ROW_BYTES = 2_000_000;
 
@@ -43,10 +44,17 @@ async function doSync(): Promise<SyncResult> {
 
   // ---- Push local changes
   const rows: Row[] = [];
+  // Personal content (Real Life captures, journal, memory cards) stays on the device unless the learner opts in.
+  const settings = await db.settings.get("me");
+  const personalOn = !!settings?.syncPersonalContent;
+  const personalKey = `fluent30.sync.personal.${user.id}`;
+  const personalPush = Number(localStorage.getItem(personalKey) ?? 0);
   for (const name of SYNCED_TABLES) {
     if (SKIP.has(name)) continue;
+    const personal = PERSONAL_TABLES.has(name);
+    if (personal && !personalOn) continue;
     const table = db.table(name);
-    const changed = (await table.where("updatedAt").above(state.push).toArray()) as Record<string, unknown>[];
+    const changed = (await table.where("updatedAt").above(personal ? personalPush : state.push).toArray()) as Record<string, unknown>[];
     for (const r of changed) {
       const size = JSON.stringify(r).length;
       if (size > MAX_ROW_BYTES) continue;
@@ -71,6 +79,7 @@ async function doSync(): Promise<SyncResult> {
     try {
       for (const r of data as Omit<Row, "user_id">[]) {
         if (!(SYNCED_TABLES as readonly string[]).includes(r.tbl)) continue;
+        if (PERSONAL_TABLES.has(r.tbl) && !personalOn) continue;
         const table = db.table(r.tbl);
         const local = (await table.get(r.row_id)) as { updatedAt?: number } | undefined;
         if (local && (local.updatedAt ?? 0) >= r.updated_at) continue;
@@ -85,6 +94,7 @@ async function doSync(): Promise<SyncResult> {
     if (data.length < 500) break;
   }
 
+  if (personalOn) localStorage.setItem(personalKey, String(startedAt));
   const next = { push: startedAt, pull: Math.max(cursor, state.pull) };
   localStorage.setItem(lsKey, JSON.stringify(next));
   return { pushed: rows.length, pulled, at: Date.now() };

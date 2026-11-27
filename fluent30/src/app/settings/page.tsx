@@ -6,7 +6,8 @@ import { useStatus } from "@/hooks/useStatus";
 import { useT } from "@/hooks/useT";
 import { THEMES } from "@/lib/data/types";
 import { ACCENT_LABELS, availableAccents, englishVoices, loadVoices, speak, type Accent } from "@/lib/speech";
-import { download, exportAll, importAll, wipeLocal } from "@/lib/backup";
+import { download, exportAll, importAll, personalContentStats, wipeLocal, wipePersonalContent } from "@/lib/backup";
+import { useLiveQuery } from "dexie-react-hooks";
 import { getAccessCode, setAccessCode } from "@/lib/api";
 import { Badge, Button, PageHeader, Panel, Segmented, Toggle, cx, toast } from "@/components/ui";
 import { AccountPanel } from "@/components/AccountPanel";
@@ -170,9 +171,11 @@ export default function SettingsPage() {
         )}
       </Panel>
 
+      <PersonalContentPanel />
+
       <Panel>
         <h2 className="mb-1 font-semibold">{t("Mes données", "My data")}</h2>
-        <p className="mb-3 text-sm text-muted">{t("Tes données sont stockées sur cet appareil (et dans ton compte si la synchronisation est active). Les captures d'écran et enregistrements vocaux ne sont jamais conservés : ils sont seulement transmis le temps du traitement.", "Your data is stored on this device (and your account if sync is on). Screenshots and voice recordings are never kept.")}</p>
+        <p className="mb-3 text-sm text-muted">{t("Tes données sont stockées sur cet appareil (et dans ton compte si la synchronisation est active). Tes photos et enregistrements restent sur l'appareil : ils ne sont jamais envoyés vers le cloud, seulement à l'IA le temps d'une analyse que tu demandes.", "Your data is stored on this device (and your account if sync is on). Photos and recordings stay on the device.")}</p>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={async () => download(await exportAll(), `fluent30-${new Date().toISOString().slice(0, 10)}.json`)}>{t("Exporter (JSON)", "Export (JSON)")}</Button>
           <Button variant="outline" onClick={() => fileRef.current?.click()}>{t("Importer une sauvegarde", "Import a backup")}</Button>
@@ -182,5 +185,48 @@ export default function SettingsPage() {
       </Panel>
       <p className="pb-4 text-center text-xs text-muted">Fluent30 · {t("Listes de fréquence : NGSL / NGSL-Spoken (CC BY-SA 4.0) · Dictionnaire : Wiktionary via dictionaryapi.dev", "Frequency lists: NGSL (CC BY-SA 4.0)")}</p>
     </div>
+  );
+}
+
+function PersonalContentPanel() {
+  const s = useSettings();
+  const stats = useLiveQuery(() => personalContentStats(), []);
+  const mb = stats ? (stats.mediaBytes / 1_048_576).toFixed(1) : "0";
+  return (
+    <Panel>
+      <h2 className="mb-1 font-semibold">Contenus personnels</h2>
+      <p className="mb-3 text-sm text-muted">
+        Captures, journal, photos souvenirs et enregistrements sont privés par défaut. Ils ne servent jamais à entraîner un modèle.
+      </p>
+      {stats && (
+        <p className="mb-3 text-sm">
+          {stats.captures} capture{stats.captures > 1 ? "s" : ""} · {stats.journal} page{stats.journal > 1 ? "s" : ""} de journal · {stats.memories} souvenir{stats.memories > 1 ? "s" : ""} · {stats.media} fichier{stats.media > 1 ? "s" : ""} ({mb} Mo sur l&apos;appareil)
+        </p>
+      )}
+      <div className="space-y-3">
+        <Toggle
+          checked={!!s.personalAiConsent}
+          onChange={(v) => void saveSettings({ personalAiConsent: v })}
+          label="Autoriser l'analyse par l'IA"
+          hint="Nécessaire pour analyser une capture, une photo ou une page de journal. Le contenu est transmis le temps du traitement, rien n'est conservé par le serveur."
+        />
+        <Toggle
+          checked={!!s.syncPersonalContent}
+          onChange={(v) => void saveSettings({ syncPersonalContent: v })}
+          label="Sauvegarder les textes personnels dans mon compte"
+          hint="Désactivé par défaut. Seuls les textes sont synchronisés (jamais les photos ni l'audio), uniquement si tu es connecté(e)."
+        />
+        <Button
+          variant="danger"
+          onClick={async () => {
+            if (!confirm("Supprimer toutes tes captures, pages de journal, souvenirs, photos et enregistrements ? Tes flashcards sont conservées.")) return;
+            const n = await wipePersonalContent();
+            toast(`${n} élément${n > 1 ? "s" : ""} supprimé${n > 1 ? "s" : ""}`);
+          }}
+        >
+          Supprimer mes contenus personnels
+        </Button>
+      </div>
+    </Panel>
   );
 }
