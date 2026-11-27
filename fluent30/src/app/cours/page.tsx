@@ -124,6 +124,13 @@ export default function CoursHub() {
         <Panel tone="subtle"><p className="text-sm text-muted">{t("Les modules de vie réelle arrivent bientôt.", "Real-life modules are coming soon.")}</p></Panel>
       )}
 
+      {/* Essential vocabulary */}
+      <SectionHeader title={t("Vocabulaire essentiel", "Essential vocabulary")} />
+      <ListGroup>
+        <ListRow href="/learn" tone="mint" icon={<Icon name="sparkle" size={20} />} title={t("Les mots les plus fréquents", "The most frequent words")} subtitle={t("Par paliers : 100, 500, 1 000, 2 000 mots", "In tiers: 100, 500, 1,000, 2,000 words")} />
+        <ListRow href="/themes" tone="mint" icon={<Icon name="globe" size={20} />} title={t("Vocabulaire par thème", "Vocabulary by theme")} subtitle={t("Indispensables d'abord, puis tes centres d'intérêt", "Essentials first, then your interests")} />
+      </ListGroup>
+
       {/* Sheets */}
       <SectionHeader title={t("Fiches de révision", "Revision sheets")} />
       <ListGroup>

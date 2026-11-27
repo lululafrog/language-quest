@@ -1,6 +1,6 @@
 "use client";
 // Create a Memory Card: personal photo → (consent) AI vocabulary → pick words → flashcards with the photo.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, errorMessage } from "@/lib/api";
 import { analysePhoto, createMemory, type PhotoVocab } from "@/lib/memories";
@@ -19,7 +19,6 @@ export function NewMemory({ onCancel }: { onCancel: () => void }) {
   const s = useSettings();
   const consent = usePersonalAiConsent();
   const [photo, setPhoto] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<{ msg: string; notConfigured?: boolean } | null>(null);
@@ -35,12 +34,10 @@ export function NewMemory({ onCancel }: { onCancel: () => void }) {
   const [saving, setSaving] = useState(false);
   const input = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!photo) return;
-    const u = URL.createObjectURL(photo);
-    setPreview(u);
-    return () => URL.revokeObjectURL(u);
-  }, [photo]);
+  const preview = useMemo(() => (photo ? URL.createObjectURL(photo) : null), [photo]);
+  useEffect(() => () => {
+    if (preview) URL.revokeObjectURL(preview);
+  }, [preview]);
 
   const analyse = async () => {
     if (!photo) return;

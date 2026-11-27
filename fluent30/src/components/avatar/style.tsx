@@ -1,7 +1,7 @@
 // Shared drawing primitives for the avatar (kept separate to avoid circular imports).
 import type { Appearance } from "@/lib/types";
 
-export const O = "#3A3352"; // soft outline ink
+export const O = "#3B2E2C"; // warm soft outline ink (cozy travel-journal style)
 export const W = 1.9; // outline width
 
 /** Darken (amt < 0) or lighten (amt > 0) a hex colour. */
@@ -12,11 +12,17 @@ export function shade(hex: string, amt: number) {
   return `#${ch.map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, "0")).join("")}`;
 }
 
-/** Arm path; with `up` the arms are raised (celebration pose). */
-export const armL = (sx: number, end = 163, up = false) =>
-  up ? `M${74 + sx} 110 Q${60 + sx} 100 ${56 + sx} 84 Q${53 + sx} 72 ${52 + sx} ${58 + (163 - end)}` : `M${74 + sx} 110 Q${61 + sx} 124 ${57 + sx} 140 Q${54 + sx} 153 ${54 + sx} ${end}`;
-export const armR = (sx: number, end = 163, up = false) =>
-  up ? `M${126 - sx} 110 Q${140 - sx} 100 ${144 - sx} 84 Q${147 - sx} 72 ${148 - sx} ${58 + (163 - end)}` : `M${126 - sx} 110 Q${139 - sx} 124 ${143 - sx} 140 Q${146 - sx} 153 ${146 - sx} ${end}`;
+/** Pose of the arms: false = down, true = raised (celebration), "read" = bent, holding a book. */
+export type ArmPose = boolean | "read";
+/** Arm path from the shoulder; `end` < 163 stops earlier (sleeves). */
+export const armL = (sx: number, end = 163, up: ArmPose = false) =>
+  up === "read"
+    ? `M${74 + sx} 110 Q${61 + sx} 124 ${63 + sx} 138 Q${66 + sx} 148 ${end < 163 ? 76 : 82} ${end < 163 ? 146 : 143}`
+    : up ? `M${74 + sx} 110 Q${60 + sx} 100 ${56 + sx} 84 Q${53 + sx} 72 ${52 + sx} ${58 + (163 - end)}` : `M${74 + sx} 110 Q${61 + sx} 124 ${57 + sx} 140 Q${54 + sx} 153 ${54 + sx} ${end}`;
+export const armR = (sx: number, end = 163, up: ArmPose = false) =>
+  up === "read"
+    ? `M${126 - sx} 110 Q${139 - sx} 124 ${137 - sx} 138 Q${134 - sx} 148 ${end < 163 ? 124 : 118} ${end < 163 ? 146 : 143}`
+    : up ? `M${126 - sx} 110 Q${140 - sx} 100 ${144 - sx} 84 Q${147 - sx} 72 ${148 - sx} ${58 + (163 - end)}` : `M${126 - sx} 110 Q${139 - sx} 124 ${143 - sx} 140 Q${146 - sx} 153 ${146 - sx} ${end}`;
 
 /** A limb drawn as a thick rounded stroke with an outline (organic, no boxy corners). */
 export function Limb({ d, w, color, outline = true }: { d: string; w: number; color: string; outline?: boolean }) {
@@ -36,5 +42,5 @@ export interface Ctx {
   sx: number;
   torso: string;
   facePath: string;
-  up: boolean;
+  up: ArmPose;
 }

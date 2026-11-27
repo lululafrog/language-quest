@@ -57,8 +57,8 @@ export function Panel({ className, children, as: As = "div", tone = "default", .
 export function Badge({ children, tone = "ink", className }: { children: ReactNode; tone?: "ink" | "coral" | "mint" | "sun" | "gray"; className?: string }) {
   const tones = {
     ink: "bg-ink-100 text-ink-800 dark:bg-ink-900/70 dark:text-ink-200",
-    coral: "bg-coral-100 text-coral-600 dark:bg-coral-600/20 dark:text-coral-400",
-    mint: "bg-mint-100 text-mint-600 dark:bg-mint-600/20 dark:text-mint-400",
+    coral: "bg-coral-100 text-coral-700 dark:bg-coral-600/20 dark:text-coral-300",
+    mint: "bg-mint-100 text-mint-700 dark:bg-mint-600/20 dark:text-mint-300",
     sun: "bg-sun-100 text-sun-800 dark:bg-sun-500/20 dark:text-sun-300",
     gray: "bg-surface-2 text-muted",
   };
@@ -285,8 +285,8 @@ export function SectionHeader({ title, subtitle, action, className }: { title: R
 export function IconTile({ children, tone = "ink", size = "md" }: { children: ReactNode; tone?: "ink" | "coral" | "mint" | "sun" | "gray"; size?: "sm" | "md" | "lg" }) {
   const tones = {
     ink: "bg-ink-50 text-ink-600 dark:bg-ink-900/60 dark:text-ink-300",
-    coral: "bg-coral-100 text-coral-600 dark:bg-coral-600/20 dark:text-coral-400",
-    mint: "bg-mint-100 text-mint-600 dark:bg-mint-600/20 dark:text-mint-400",
+    coral: "bg-coral-100 text-coral-700 dark:bg-coral-600/20 dark:text-coral-300",
+    mint: "bg-mint-100 text-mint-700 dark:bg-mint-600/20 dark:text-mint-300",
     sun: "bg-sun-100 text-sun-800 dark:bg-sun-500/20 dark:text-sun-300",
     gray: "bg-surface-2 text-muted",
   };

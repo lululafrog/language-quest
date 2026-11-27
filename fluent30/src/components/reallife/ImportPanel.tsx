@@ -27,12 +27,12 @@ export function ImportPanel() {
   const status = useStatus();
   const { ask, dialog } = usePersonalAiConsent();
   const [kind, setKind] = useState<CaptureKind>("text");
-  const [text, setText] = useState("");
+  const [text, setText] = useState(() => params.get("text") ?? "");
   const [file, setFile] = useState<Blob | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  const [notice, setNotice] = useState("");
+  const notice = params.get("shareFailed") ? "L'image partagée n'a pas pu être reçue. Ouvre l'app une fois puis réessaie, ou importe-la ici." : "";
   const fileInput = useRef<HTMLInputElement>(null);
 
   // voice
@@ -42,12 +42,6 @@ export function ImportPanel() {
 
   // Content shared from another app (PWA share target)
   useEffect(() => {
-    const t = params.get("text");
-    if (t) {
-      setKind("text");
-      setText(t);
-    }
-    if (params.get("shareFailed")) setNotice("L'image partagée n'a pas pu être reçue. Ouvre l'app une fois puis réessaie, ou importe-la ici.");
     if (params.get("shared") || params.get("sharedFile")) {
       void takeSharedFile().then(({ file: f, text: tx }) => {
         if (f) {

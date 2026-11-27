@@ -29,8 +29,8 @@ async function handleShare(req) {
       await c.put("/__shared/text", new Response(text));
       return Response.redirect("/practice/real-life?shared=1", 303);
     }
-  } catch (err) {
-    /* fall through */
+  } catch {
+    /* fall through to the import page */
   }
   return Response.redirect("/practice/real-life", 303);
 }

@@ -90,7 +90,7 @@ export function Tourist({
   const longTop = !!topSpec && LONG_TOPS.includes(topSpec.k);
   const fullDress = !!dress && FULL_SUITS.includes(dress.k);
   const longSleeves = (outer && ["jacket", "puffer", "trench", "tuxedo", "hoodieZip", "souvenir", "raincoat", "fleece"].includes(outer.k)) || longTop || fullDress;
-  const sleeveColor = dress ? (dress.k === "swimsuit" ? undefined : undefined) : topSpec && topSpec.k !== "tank" ? topSpec.c : undefined;
+  const sleeveColor = dress || !topSpec || topSpec.k === "tank" ? undefined : topSpec.c;
   const handDx = 46 * (k - 1);
   const bodyT = `translate(100 0) scale(${k} 1) translate(-100 0)`;
   const a2 = animate && !mq;
@@ -195,7 +195,7 @@ export function Tourist({
                     <path d="M60 65 Q57 70 61 76 M140 65 Q143 70 139 76" stroke={ctx.skinShade} strokeWidth="2" fill="none" strokeLinecap="round" />
                     <path d={ctx.facePath} fill={`url(#${uid}skin)`} stroke={O} strokeWidth={W} />
                     <path d="M126 44 Q138 62 132 84 Q126 98 112 104 Q130 86 126 44Z" fill="#3A2A20" opacity="0.06" />
-                    {!mq && renderFace(a, face, ctx, expr, a2)}
+                    {(!mq || mq === "face") && renderFace(a, face, ctx, expr, a2)}
                     {face && (literaryFace(face) ?? renderFaceItem(face))}
                     {!mq && hairFront(a, `url(#${uid}hair)`)}
                     {glasses && renderGlasses(glasses)}
@@ -284,9 +284,9 @@ function Hand({ cx, cy, flip, skin }: { cx: number; cy: number; flip?: boolean; 
 }
 
 // ---------------- hair ----------------
-function hairBack(a: Appearance): ReactNode {
+function hairBack(a: Appearance, fill?: string): ReactNode {
   const c = a.hairColor;
-  const s = { fill: c, stroke: O, strokeWidth: W, strokeLinejoin: "round" as const };
+  const s = { fill: fill ?? c, stroke: O, strokeWidth: W, strokeLinejoin: "round" as const };
   switch (a.hair) {
     case "long":
       return <path d="M58 64 Q54 22 100 22 Q146 22 142 64 L150 156 Q134 168 122 150 L78 150 Q66 168 50 156Z" {...s} />;
@@ -313,10 +313,16 @@ function hairBack(a: Appearance): ReactNode {
   }
 }
 
-function hairFront(a: Appearance): ReactNode {
+function hairFront(a: Appearance, fill?: string): ReactNode {
   const c = a.hairColor;
-  const s = { fill: c, stroke: O, strokeWidth: W, strokeLinejoin: "round" as const };
-  const shine = <path d="M80 36 Q92 30 104 32" stroke="#fff" strokeWidth="3" opacity="0.35" fill="none" strokeLinecap="round" />;
+  const s = { fill: fill ?? c, stroke: O, strokeWidth: W, strokeLinejoin: "round" as const };
+  const strand = shade(c, -0.28);
+  const shine = (
+    <>
+      <path d="M80 36 Q92 30 104 32" stroke="#fff" strokeWidth="3" opacity="0.3" fill="none" strokeLinecap="round" />
+      <path d="M76 44 Q86 38 96 40 M108 36 Q120 38 128 46" stroke={strand} strokeWidth="1.3" opacity="0.55" fill="none" strokeLinecap="round" />
+    </>
+  );
   switch (a.hair) {
     case "bald":
       return <ellipse cx="86" cy="40" rx="10" ry="5" fill="#fff" opacity="0.35" transform="rotate(-20 86 40)" />;
@@ -360,28 +366,41 @@ function facialHairOf(a: Appearance): NonNullable<Appearance["facialHair"]> {
   return a.facialHair ?? (a.beard ? "full" : "none");
 }
 
-function renderFace(a: Appearance, face: Spec | undefined, ctx: Ctx): ReactNode {
+function renderFace(a: Appearance, face: Spec | undefined, ctx: Ctx, expr: Expression = "smile", animate = false): ReactNode {
   const browC = shade(a.hairColor === "#F2F2F2" ? "#9E9E9E" : a.hairColor, -0.3);
   const iris = a.eyeColor ?? "#5D4037";
   const makeup = a.makeup ?? "none";
-  const lip = makeup === "lipstick" ? "#C2185B" : shade("#D9727C", a.skin < "#B0" ? -0.25 : 0);
+  const lip = makeup === "lipstick" ? "#B5414F" : shade("#D47A78", isDark(a.skin) ? -0.3 : 0);
   const fh = facialHairOf(a);
   const hairC = a.hairColor;
   const lips = a.lips ?? "normal";
   const browW = a.brows === "thin" ? 0.9 : a.brows === "thick" ? 3.4 : 1.7;
   const lashes = a.eyes === "lashes" || makeup === "eyeliner";
+  const happyEyes = a.eyes === "happy" || expr === "laugh";
+  const surprised = expr === "surprised";
+  const focused = expr === "focused";
+  // eyebrows: raised when surprised, lowered towards the nose when focused
+  const by = surprised ? -5 : 0;
+  const tilt = focused ? 3 : 0;
   const eye = (cx: number) => {
     const out = cx < 100 ? -1 : 1;
+    const r = surprised ? 5.2 : 4.7;
     return (
       <g key={cx}>
-        <path d={`M${cx - 9} 68 Q${cx} 59 ${cx + 9} 68 Q${cx} 74 ${cx - 9} 68Z`} fill="#FFFFFF" stroke={O} strokeWidth="1.4" />
-        <circle cx={cx} cy="67.5" r="4.6" fill={iris} />
-        <circle cx={cx} cy="67.5" r="2.2" fill="#1B1426" />
-        <circle cx={cx + 1.6} cy="65.8" r="1.4" fill="#fff" />
-        <path d={`M${cx - 9.5} 67.5 Q${cx} 57.5 ${cx + 9.5} 67.5`} stroke="#2A2238" strokeWidth={makeup === "eyeliner" ? 3.4 : 2.6} fill="none" strokeLinecap="round" />
-        {makeup === "eyeliner" && <path d={`M${cx + 9 * out} 67 l${4 * out} -3`} stroke="#2A2238" strokeWidth="2.4" strokeLinecap="round" />}
-        {lashes && <path d={`M${cx + 9 * out} 66 l${3 * out} -3 M${cx + 6 * out} 62.5 l${2 * out} -3 M${cx + 2 * out} 60.5 l${1 * out} -3`} stroke="#2A2238" strokeWidth="1.5" strokeLinecap="round" />}
-        <path d={`M${cx - 7} 72 Q${cx} 75 ${cx + 7} 72`} stroke={ctx.skinShade} strokeWidth="1.2" fill="none" opacity="0.8" />
+        <g className={animate ? "tv-blink" : undefined}>
+          <path d={`M${cx - 9} 68 Q${cx} ${surprised ? 57 : 59} ${cx + 9} 68 Q${cx} ${surprised ? 76 : 74} ${cx - 9} 68Z`} fill="#FFFDF8" stroke={O} strokeWidth="1.4" />
+          <circle cx={cx} cy="67.6" r={r} fill={iris} />
+          <circle cx={cx} cy="67.6" r={r} fill="none" stroke={shade(iris, -0.35)} strokeWidth="0.9" />
+          <circle cx={cx} cy="68.2" r={r * 0.48} fill="#1E1614" />
+          <circle cx={cx + 1.7} cy="65.6" r="1.5" fill="#fff" />
+          <circle cx={cx - 1.6} cy="69.6" r="0.7" fill="#fff" opacity="0.8" />
+          {/* upper lid */}
+          <path d={`M${cx - 9.5} 67.5 Q${cx} ${surprised ? 55.5 : 57.5} ${cx + 9.5} 67.5`} stroke="#2A1E1C" strokeWidth={makeup === "eyeliner" ? 3.4 : 2.5} fill="none" strokeLinecap="round" />
+          {focused && <path d={`M${cx - 9} 66 Q${cx} 61 ${cx + 9} 66 L${cx + 9} 63 Q${cx} 58 ${cx - 9} 63Z`} fill={a.skin} />}
+          {makeup === "eyeliner" && <path d={`M${cx + 9 * out} 67 l${4 * out} -3`} stroke="#2A1E1C" strokeWidth="2.4" strokeLinecap="round" />}
+          {lashes && <path d={`M${cx + 9 * out} 66 l${3 * out} -3 M${cx + 6 * out} 62.5 l${2 * out} -3 M${cx + 2 * out} 60.5 l${1 * out} -3`} stroke="#2A1E1C" strokeWidth="1.5" strokeLinecap="round" />}
+        </g>
+        <path d={`M${cx - 7} 72.5 Q${cx} 75.5 ${cx + 7} 72.5`} stroke={ctx.skinShade} strokeWidth="1.2" fill="none" opacity="0.7" />
       </g>
     );
   };
@@ -395,23 +414,51 @@ function renderFace(a: Appearance, face: Spec | undefined, ctx: Ctx): ReactNode 
     );
   const mouthW = lips === "full" ? 14 : lips === "thin" ? 11 : 13;
   const mouthD = lips === "full" ? 14 : lips === "thin" ? 9 : 12;
+  const cheek = makeup === "blush" ? "#E2687E" : "#E98B7F";
+  const mouth = (() => {
+    if (face?.k === "moustache") return null;
+    switch (expr) {
+      case "neutral":
+        return <path d={`M${100 - mouthW + 4} 93 Q100 ${lips === "full" ? 97 : 96} ${100 + mouthW - 4} 93`} stroke={shade(lip, -0.15)} strokeWidth={lips === "full" ? 3.4 : 2.4} fill="none" strokeLinecap="round" />;
+      case "focused":
+        return <path d={`M${100 - mouthW + 6} 94 Q100 93 ${100 + mouthW - 6} 94.5`} stroke={shade(lip, -0.2)} strokeWidth="2.4" fill="none" strokeLinecap="round" />;
+      case "surprised":
+        return <><ellipse cx="100" cy="95" rx="5" ry="6.5" fill={shade(lip, -0.45)} stroke={shade(lip, -0.3)} strokeWidth="1.6" /><ellipse cx="100" cy="98" rx="3" ry="2" fill="#E07A7A" /></>;
+      case "laugh":
+        return (
+          <>
+            <path d={`M${100 - mouthW - 1} 90 Q100 ${92 + mouthD + 5} ${100 + mouthW + 1} 90 Q100 93 ${100 - mouthW - 1} 90Z`} fill={shade(lip, -0.5)} stroke={shade(lip, -0.3)} strokeWidth="1.4" strokeLinejoin="round" />
+            <path d={`M${100 - mouthW + 2} 91 Q100 94.5 ${100 + mouthW - 2} 91 L${100 + mouthW - 4} 93.5 Q100 96 ${100 - mouthW + 4} 93.5Z`} fill="#FFFDF8" />
+            <ellipse cx="100" cy={97 + mouthD * 0.35} rx="6" ry="3" fill="#E07A7A" />
+          </>
+        );
+      default:
+        return (
+          <>
+            <path d={`M${100 - mouthW} 92 Q100 ${92 + mouthD} ${100 + mouthW} 92 Q100 96 ${100 - mouthW} 92Z`} fill={lip} stroke={shade(lip, -0.3)} strokeWidth="1.3" strokeLinejoin="round" />
+            <path d={`M${100 - mouthW + 3} 93.2 Q100 ${92 + mouthD * 0.5} ${100 + mouthW - 3} 93.2 Q100 95.4 ${100 - mouthW + 3} 93.2Z`} fill="#FFFDF8" />
+            {lips === "full" && <path d="M92 90 Q100 87.5 108 90" stroke={lip} strokeWidth="2.2" fill="none" strokeLinecap="round" />}
+          </>
+        );
+    }
+  })();
   return (
     <>
-      {face?.k === "sunburn" && <path d={ctx.facePath} fill="#FF5A4A" opacity="0.25" />}
-      <ellipse cx="76" cy="84" rx="8" ry="4.5" fill={makeup === "blush" ? "#FF4F7B" : "#FF7F7F"} opacity={makeup === "blush" ? 0.42 : 0.26} />
-      <ellipse cx="124" cy="84" rx="8" ry="4.5" fill={makeup === "blush" ? "#FF4F7B" : "#FF7F7F"} opacity={makeup === "blush" ? 0.42 : 0.26} />
+      {face?.k === "sunburn" && <path d={ctx.facePath} fill="#E8553F" opacity="0.22" />}
+      <ellipse cx="76" cy={expr === "laugh" ? 82 : 84} rx="8" ry="4.5" fill={cheek} opacity={makeup === "blush" ? 0.45 : expr === "laugh" ? 0.38 : 0.26} />
+      <ellipse cx="124" cy={expr === "laugh" ? 82 : 84} rx="8" ry="4.5" fill={cheek} opacity={makeup === "blush" ? 0.45 : expr === "laugh" ? 0.38 : 0.26} />
       {a.freckles && <g fill={shade(a.skin, -0.35)} opacity="0.55">{[[72, 80], [77, 83], [81, 79], [119, 79], [123, 83], [128, 80], [95, 78], [105, 78]].map(([x, y], i) => <circle key={i} cx={x} cy={y} r="1.1" />)}</g>}
       {face?.k === "tanline" && <><ellipse cx="85" cy="67" rx="13" ry="10" fill="#fff" opacity="0.45" /><ellipse cx="115" cy="67" rx="13" ry="10" fill="#fff" opacity="0.45" /></>}
       {face?.k === "zinc" && <><path d="M96 74 L104 74 L103 86 L97 86Z" fill="#fff" /><path d="M68 82 Q76 78 82 84" stroke="#fff" strokeWidth={5} strokeLinecap="round" fill="none" /><path d="M118 84 Q124 78 132 82" stroke="#fff" strokeWidth={5} strokeLinecap="round" fill="none" /></>}
       {/* eyebrows */}
-      <path d="M74 55 Q84 49 94 53 Q84 52 75 57Z" fill={browC} stroke={browC} strokeWidth={browW} strokeLinejoin="round" />
-      <path d="M126 55 Q116 49 106 53 Q116 52 125 57Z" fill={browC} stroke={browC} strokeWidth={browW} strokeLinejoin="round" />
+      <path d={`M74 ${55 + by - tilt * 0.3} Q84 ${49 + by} 94 ${53 + by + tilt} Q84 ${52 + by} 75 ${57 + by}Z`} fill={browC} stroke={browC} strokeWidth={browW} strokeLinejoin="round" />
+      <path d={`M126 ${55 + by - tilt * 0.3} Q116 ${49 + by} 106 ${53 + by + tilt} Q116 ${52 + by} 125 ${57 + by}Z`} fill={browC} stroke={browC} strokeWidth={browW} strokeLinejoin="round" />
       {/* eyes */}
-      {a.eyes === "happy" ? (
+      {happyEyes ? (
         <>
-          <path d="M76 68 Q85 60 94 68" stroke="#2A2238" strokeWidth="2.8" fill="none" strokeLinecap="round" />
-          <path d="M106 68 Q115 60 124 68" stroke="#2A2238" strokeWidth="2.8" fill="none" strokeLinecap="round" />
-          {lashes && <path d="M76 68 l-3 -2 M124 68 l3 -2" stroke="#2A2238" strokeWidth="1.6" strokeLinecap="round" />}
+          <path d="M76 68 Q85 60 94 68" stroke="#2A1E1C" strokeWidth="2.8" fill="none" strokeLinecap="round" />
+          <path d="M106 68 Q115 60 124 68" stroke="#2A1E1C" strokeWidth="2.8" fill="none" strokeLinecap="round" />
+          {lashes && <path d="M76 68 l-3 -2 M124 68 l3 -2" stroke="#2A1E1C" strokeWidth="1.6" strokeLinecap="round" />}
         </>
       ) : (
         <>{eye(85)}{eye(115)}</>
@@ -429,17 +476,32 @@ function renderFace(a: Appearance, face: Spec | undefined, ctx: Ctx): ReactNode 
           <path d="M100 89 Q90 83 82 89 Q76 95 70 89 Q74 99 86 97 Q96 95 100 91 Q104 95 114 97 Q126 99 130 89 Q124 95 118 89 Q110 83 100 89Z" fill="#4A2C18" stroke={O} strokeWidth={1.4} />
           <path d="M92 99 Q100 102 108 99" stroke={lip} strokeWidth={2.4} fill="none" strokeLinecap="round" />
         </>
-      ) : (
-        <>
-          <path d={`M${100 - mouthW} 92 Q100 ${92 + mouthD} ${100 + mouthW} 92 Q100 96 ${100 - mouthW} 92Z`} fill={lip} stroke={shade(lip, -0.3)} strokeWidth="1.3" strokeLinejoin="round" />
-          <path d={`M${100 - mouthW + 3} 93.2 Q100 ${92 + mouthD * 0.5} ${100 + mouthW - 3} 93.2 Q100 95.4 ${100 - mouthW + 3} 93.2Z`} fill="#FFFFFF" />
-          {lips === "full" && <path d="M92 90 Q100 87.5 108 90" stroke={lip} strokeWidth="2.2" fill="none" strokeLinecap="round" />}
-        </>
-      )}
+      ) : mouth}
       {(fh === "moustache" || fh === "goatee") && <path d="M86 90 Q93 85 100 88 Q107 85 114 90 Q107 89 100 91 Q93 89 86 90Z" fill={hairC} stroke={O} strokeWidth="1.3" strokeLinejoin="round" />}
       {fh === "full" && <path d="M85 90 Q93 84 100 87 Q107 84 115 90 Q107 89 100 91 Q93 89 85 90Z" fill={hairC} />}
     </>
   );
+}
+
+/** Perceived darkness of a hex colour (for lip / contrast choices). */
+function isDark(hex: string) {
+  const n = parseInt(hex.replace("#", ""), 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return 0.299 * r + 0.587 * g + 0.114 * b < 120;
+}
+
+/** Face items not drawn by renderFace (head coordinate space). */
+function renderFaceItem(sp: Spec): ReactNode {
+  switch (sp.k) {
+    case "earrings":
+      return <g>{[61, 139].map((x) => <circle key={x} cx={x} cy="84" r="4.2" fill="none" stroke={sp.c ?? "#D4A64A"} strokeWidth="2" />)}</g>;
+    case "studs":
+      return <g>{[61, 139].map((x) => <circle key={x} cx={x} cy="80" r="2.6" fill={sp.c ?? "#F4F1EA"} stroke={O} strokeWidth="1" />)}</g>;
+    case "facepaint":
+      return <g><path d="M70 80 L82 80 M70 85 L82 85" stroke={sp.c ?? "#C9785A"} strokeWidth="2.6" strokeLinecap="round" /><path d="M118 80 L130 80 M118 85 L130 85" stroke={sp.c ?? "#C9785A"} strokeWidth="2.6" strokeLinecap="round" /></g>;
+    default:
+      return null;
+  }
 }
 
 // ---------------- clothes ----------------

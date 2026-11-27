@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { getDb } from "@/lib/db";
 import { errorMessage } from "@/lib/api";
-import { deleteMemory, illustrateMemory, masteryOf } from "@/lib/memories";
+import { deleteMemory, illustrateMemory, masteryOf, type Mastery } from "@/lib/memories";
 import { Button, EmptyState, ErrorNote, PageHeader, Panel, Sheet, SpeakButton, toast } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import { MemoryPhoto } from "@/components/memories/MemoryPhoto";
@@ -16,7 +16,7 @@ export default function MemoryDetail() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const memory = useLiveQuery(async () => (await getDb().memories.get(id)) ?? null, [id]);
-  const mastery = useLiveQuery(async () => (memory ? masteryOf(memory.words.flatMap((w) => (w.cardId ? [w.cardId] : []))) : {}), [memory]);
+  const mastery = useLiveQuery(async () => (memory ? masteryOf(memory.words.flatMap((w) => (w.cardId ? [w.cardId] : []))) : ({} as Record<string, Mastery>)), [memory]);
   const [quiz, setQuiz] = useState(false);
   const [showIllus, setShowIllus] = useState(false);
   const [illusBusy, setIllusBusy] = useState(false);
