@@ -50,11 +50,11 @@ export function Bargain({ ex, accent, onDone }: { ex: Extract<Mechanic, { type: 
         </div>
         <div className="relative mt-2 h-2 rounded-full bg-surface-2" aria-hidden>
           <div className="absolute inset-y-0 left-0 rounded-full bg-sun-500 transition-all" style={{ width: `${pct(price)}%` }} />
-          <div className="absolute -top-1 h-4 w-0.5 bg-mint-600" style={{ left: `${pct(ex.target)}%` }} title="Prix juste" />
+          <div className="absolute -top-1 h-4 w-0.5 bg-mint-600" style={{ left: `${pct(ex.target)}%` }} title="Bon compromis" />
         </div>
         <div className="mt-1 flex justify-between text-[11.5px] text-muted">
           <span>Départ {fmt(ex.start)}</span>
-          <span>Prix juste ≈ {fmt(ex.target)}</span>
+          <span>Bon compromis ≈ {fmt(ex.target)}</span>
         </div>
       </div>
       <div className="space-y-2">
@@ -86,10 +86,10 @@ export function Bargain({ ex, accent, onDone }: { ex: Extract<Mechanic, { type: 
         <Verdict ok={rude === 0 && good >= Math.ceil(ex.turns.length / 2)} title={deal ? `Marché conclu à ${fmt(price)}` : "Pas d'accord cette fois"}>
           <p>
             {rude > 0
-              ? "Une phrase trop brusque a refroidi le vendeur : en négociation, la politesse compte plus que le prix."
+              ? "Une phrase trop brusque a refroidi ton interlocuteur : en négociation, la politesse compte plus que le résultat."
               : price <= ex.target
-                ? "Prix juste obtenu tout en restant aimable : c'est exactement l'objectif."
-                : "Tu es resté(e) poli(e) ; avec une contre-proposition plus claire, le prix aurait pu baisser davantage."}
+                ? "Bon compromis obtenu tout en restant aimable : c'est exactement l'objectif."
+                : "Tu es resté(e) poli(e) ; avec une contre-proposition plus claire, tu aurais pu obtenir davantage."}
           </p>
         </Verdict>
       )}

@@ -1,4 +1,566 @@
-import type { AtlasDestination } from "../types";
+// Atlas — New Zealand / Aotearoa. Original content written for Fluent30.
+// Te reo Māori and New Zealand Sign Language are official languages; English is the most widely spoken.
+// Māori culture is presented respectfully and factually. Activity missions are language exercises, never real training.
+import type { DialogueLine } from "../../curriculum/types";
+import type { AtlasDestination, AtlasExercise, Band, Mechanic, StoryNode } from "../types";
 
-// TODO(content agent): complete destination — see src/lib/atlas/types.ts
-export const NEWZEALAND: AtlasDestination | null = null;
+// ---------- builders ----------
+const E: Band[] = ["A1", "A2"];
+const EM: Band[] = ["A1", "A2", "B1"];
+const M: Band[] = ["A2", "B1", "B2"];
+const MH: Band[] = ["B1", "B2", "C1"];
+const H: Band[] = ["B2", "C1"];
+const ALL: Band[] = ["A1", "A2", "B1", "B2", "C1"];
+
+const mcq = (bands: Band[], prompt: string, options: string[], answer: number, explain: string, fr?: string): AtlasExercise => ({ type: "mcq", prompt, options, answer, explain, fr, bands });
+const fill = (bands: Band[], sentence: string, answers: string[], explain: string, fr?: string, hint?: string): AtlasExercise => ({ type: "fill", sentence, answers, explain, fr, hint, bands });
+const listen = (bands: Band[], audio: string, question: string, options: string[], answer: number, explain: string): AtlasExercise => ({ type: "listen", audio, question, options, answer, explain, bands });
+const dict = (bands: Band[], audio: string, answers: string[], explain: string): AtlasExercise => ({ type: "dictation", audio, answers, explain, bands });
+const tr = (bands: Band[], from: "fr" | "en", text: string, answers: string[], explain: string): AtlasExercise => ({ type: "translate", from, text, answers, explain, bands });
+const reorder = (bands: Band[], answer: string, explain: string, fr?: string): AtlasExercise => ({ type: "reorder", words: answer.split(" "), answer, explain, fr, bands });
+const fix = (bands: Band[], sentence: string, answers: string[], explain: string): AtlasExercise => ({ type: "fix", sentence, answers, explain, bands });
+const match = (bands: Band[], pairs: [string, string][], explain?: string): AtlasExercise => ({ type: "match", pairs, explain, bands });
+const speak = (bands: Band[], text: string, fr: string): AtlasExercise => ({ type: "speak", text, fr, bands });
+const say = (speaker: string, en: string, fr?: string): DialogueLine => ({ speaker, en, fr });
+/** Learner's turn; choices rotated deterministically so the right one is not always first. */
+const pick = (fr: string, ...choices: [string, boolean, string][]): DialogueLine => {
+  const list = choices.map(([en, correct, why]) => ({ en, correct, why }));
+  const r = [...fr].reduce((a, c) => a + c.charCodeAt(0), 0) % list.length;
+  return { speaker: "You", fr, choices: [...list.slice(r), ...list.slice(0, r)] };
+};
+const dlg = (bands: Band[], intro: string, ...lines: DialogueLine[]): AtlasExercise => ({ type: "dialogue", intro, lines, bands });
+const decide = (bands: Band[], title: string, doc: string, question: string, options: [string, boolean, string][], audio?: boolean): AtlasExercise => ({
+  type: "decide", title, doc, audio, question, options: options.map(([en, correct, why]) => ({ en, correct, why })), bands,
+});
+const steps = (bands: Band[], title: string, brief: string, list: string[], explain: string, fr?: string[]): AtlasExercise => ({ type: "steps", title, brief, steps: list, explain, fr, bands });
+const assemble = (bands: Band[], title: string, brief: string, options: [string, string, string][], correct: string[], explain: string, audio?: string): AtlasExercise => ({
+  type: "assemble", title, brief, audio, options: options.map(([id, en, fr]) => ({ id, en, fr })), correct, explain, bands,
+});
+const identify = (bands: Band[], title: string, audio: string, options: [string, string, string?][], answer: number, explain: string): AtlasExercise => ({
+  type: "identify", title, audio, options: options.map(([en, fr, motif]) => ({ en, fr, motif })), answer, explain, bands,
+});
+const produceM = (title: string, prompt: string, fr: string, mustInclude: string[][], minWords: number, samples: string[], tip: string): Extract<Mechanic, { type: "produce" }> => ({
+  type: "produce", title, prompt, fr, mustInclude, minWords, samples, tip,
+});
+const produce = (bands: Band[], ...a: Parameters<typeof produceM>): AtlasExercise => ({ ...produceM(...a), bands });
+
+// =====================================================================
+export const NEWZEALAND: AtlasDestination = {
+  id: "new-zealand",
+  tagline: "Aotearoa : fjords, volcans, randonnées et une culture māorie bien vivante.",
+  intro:
+    "La Nouvelle-Zélande (Aotearoa en te reo Māori) se compose principalement de deux grandes îles, l'île du Nord et l'île du Sud. Le te reo Māori et la langue des signes néo-zélandaise sont langues officielles ; l'anglais, langue la plus parlée, l'est de fait. Le pays est connu pour ses grands espaces protégés, ses sentiers de randonnée et ses sports d'aventure, et la culture māorie y occupe une place importante dans la vie publique.",
+  palette: { sky: "#C9DCE3", land: "#8FA884", sea: "#3E7C8C", accent: "#C46A3D", ink: "#1F3A3D" },
+  landscape: "fiord",
+  capitalNote: "Capitale : Wellington (Te Whanganui-a-Tara). La plus grande ville est Auckland (Tāmaki Makaurau).",
+  places: [
+    { id: "akl", name: "Auckland Airport", kind: "aéroport", fr: "Principal aéroport international du pays. Les contrôles de biosécurité y sont stricts." },
+    { id: "cuba-street", name: "Cuba Street, Wellington", kind: "café", fr: "Rue animée de la capitale, connue pour ses cafés et sa vie culturelle." },
+    { id: "depot", name: "Campervan depot, Christchurch", kind: "agence de location", fr: "Point de départ fréquent des road trips sur l'île du Sud." },
+    { id: "routeburn", name: "Routeburn Track", kind: "sentier", fr: "Un des Great Walks gérés par le Department of Conservation, entre les parcs de Fiordland et du Mount Aspiring." },
+    { id: "taupo", name: "Taupō drop zone", kind: "aérodrome", fr: "Taupō, au bord du plus grand lac du pays, est un lieu réputé pour le saut en parachute." },
+    { id: "milford", name: "Milford Sound / Piopiotahi", kind: "fjord", fr: "Fjord du Fiordland, inscrit au patrimoine mondial (Te Wāhipounamu)." },
+    { id: "eden-park", name: "Eden Park, Auckland", kind: "stade", fr: "Le plus grand stade du pays, haut lieu du rugby." },
+    { id: "marae", name: "A marae near Rotorua", kind: "lieu culturel", fr: "Un marae est un lieu de rassemblement communautaire māori ; certains accueillent des visiteurs lors d'expériences culturelles guidées." },
+    { id: "zealandia", name: "Zealandia Te Māra a Tāne", kind: "sanctuaire", fr: "Écosanctuaire clôturé à Wellington, où des oiseaux natifs sont réintroduits." },
+  ],
+  characters: [
+    { id: "aroha", name: "Aroha", role: "Guide culturelle à Rotorua", origin: "local", personality: "Accueillante, patiente, aime expliquer le sens des traditions.", register: "courant", accent: "en-NZ", hello: "Kia ora! Welcome — have you been to a marae before?" },
+    { id: "jake", name: "Jake", role: "Instructeur de parachutisme à Taupō", origin: "local", personality: "Détendu, blagueur, mais très sérieux pendant le briefing.", register: "familier", accent: "en-NZ", hello: "Kia ora, mate! Ready for the best view of your life?" },
+    { id: "mere", name: "Mere", role: "Ranger du Department of Conservation", origin: "local", personality: "Passionnée d'oiseaux, précise sur les règles.", register: "courant", accent: "en-NZ", hello: "Morena! The weather changes fast up there — let's check your gear." },
+    { id: "tom", name: "Tom", role: "Barista et fan de rugby à Wellington", origin: "local", personality: "Bavard, utilise beaucoup d'expressions kiwis.", register: "familier", accent: "en-NZ", hello: "Kia ora! What can I get you — flat white?" },
+    { id: "yuki", name: "Yuki", role: "Voyageuse japonaise en working holiday", origin: "traveller", personality: "Curieuse, prend tout en photo, ravie de pratiquer l'anglais.", register: "courant", accent: "en-NZ", hello: "Hi! Are you doing the Routeburn too?" },
+  ],
+  culture: [
+    { title: "Te reo Māori", fr: "Langue officielle depuis 1987. De nombreux mots sont utilisés au quotidien par tous les Néo-Zélandais : kia ora (bonjour, merci), kai (nourriture), whānau (famille élargie)." },
+    { title: "Le marae et le pōwhiri", fr: "Le marae est un lieu de rassemblement communautaire. Les visiteurs y sont accueillis par une cérémonie, le pōwhiri ; le hongi, front et nez qui se touchent, est une salutation traditionnelle pratiquée dans certains contextes. On suit toujours les indications des hôtes." },
+    { title: "Manaakitanga", fr: "Valeur māorie d'hospitalité, de bienveillance et de respect envers les invités, très présente dans le tourisme néo-zélandais." },
+    { title: "Le rugby et le haka", fr: "Le rugby est le sport le plus suivi ; l'équipe nationale, les All Blacks, a été plusieurs fois championne du monde. Le haka est une danse cérémonielle māorie : on l'écoute avec respect, on ne l'imite pas pour plaisanter." },
+    { title: "Conservation", fr: "Beaucoup d'oiseaux natifs ne volent pas ou nichent au sol, ce qui les rend vulnérables aux prédateurs introduits. Le pays s'est fixé l'objectif « Predator Free 2050 »." },
+    { title: "Biosécurité", fr: "À l'arrivée, il faut déclarer les aliments, plantes et équipements de plein air (chaussures de randonnée, tentes) pour protéger l'agriculture et la nature." },
+  ],
+  food: [
+    { en: "hāngī", fr: "hāngī", desc: "Cuisson traditionnelle māorie dans un four creusé dans la terre, avec des pierres chaudes." },
+    { en: "kūmara", fr: "patate douce", desc: "Patate douce cultivée depuis l'arrivée des ancêtres polynésiens des Māori." },
+    { en: "pavlova", fr: "pavlova", desc: "Dessert meringué aux fruits, revendiqué à la fois par la Nouvelle-Zélande et l'Australie." },
+    { en: "flat white", fr: "flat white", desc: "Café au lait à la mousse fine, emblème de la culture café locale (l'Australie le revendique aussi)." },
+    { en: "hokey pokey ice cream", fr: "glace hokey pokey", desc: "Glace à la vanille avec des éclats de caramel croquant." },
+  ],
+  vocab: [
+    { id: "kia-ora", en: "kia ora", fr: "bonjour / merci (te reo Māori)" },
+    { id: "declare", en: "to declare", fr: "déclarer (douane)", example: "I need to declare my hiking boots.", concept: "to-declare" },
+    { id: "biosecurity", en: "biosecurity", fr: "biosécurité" },
+    { id: "flat-white", en: "a flat white", fr: "un flat white (café au lait)" },
+    { id: "takeaway", en: "takeaway", fr: "à emporter (NZ / UK)", example: "A flat white, takeaway, please.", concept: "takeaway" },
+    { id: "campervan", en: "campervan", fr: "camping-car aménagé", concept: "campervan" },
+    { id: "self-contained", en: "self-contained", fr: "autonome (avec toilettes et eau)" },
+    { id: "keep-left", en: "keep left", fr: "rouler à gauche", concept: "drive-left" },
+    { id: "give-way", en: "give way", fr: "cédez le passage", concept: "give-way" },
+    { id: "one-lane-bridge", en: "one-lane bridge", fr: "pont à voie unique" },
+    { id: "to-book", en: "to book", fr: "réserver", example: "We booked the huts months ahead.", concept: "to-book" },
+    { id: "tramping", en: "tramping", fr: "randonnée (mot néo-zélandais)", concept: "hiking" },
+    { id: "hut", en: "a hut", fr: "un refuge" },
+    { id: "layers", en: "layers", fr: "couches (de vêtements)", example: "Wear warm layers.", concept: "layers" },
+    { id: "rain-jacket", en: "rain jacket", fr: "veste imperméable", concept: "rain-jacket" },
+    { id: "forecast", en: "the forecast", fr: "la météo (prévisions)", concept: "forecast" },
+    { id: "itinerary", en: "itinerary", fr: "itinéraire", concept: "itinerary" },
+    { id: "sunscreen", en: "sunscreen", fr: "crème solaire", concept: "sunscreen" },
+    { id: "harness", en: "harness", fr: "harnais", concept: "harness" },
+    { id: "altimeter", en: "altimeter", fr: "altimètre" },
+    { id: "freefall", en: "freefall", fr: "chute libre" },
+    { id: "parachute", en: "parachute / canopy", fr: "parachute / voile" },
+    { id: "goggles", en: "goggles", fr: "lunettes de protection", concept: "goggles" },
+    { id: "tandem", en: "tandem jump", fr: "saut en tandem" },
+    { id: "breathtaking", en: "breathtaking", fr: "à couper le souffle", concept: "breathtaking" },
+    { id: "fiord", en: "fiord", fr: "fjord" },
+    { id: "waterfall", en: "waterfall", fr: "cascade", concept: "waterfall" },
+    { id: "cliff", en: "cliff", fr: "falaise", concept: "cliff" },
+    { id: "try", en: "a try", fr: "un essai (rugby)" },
+    { id: "match", en: "a match / a game", fr: "un match" },
+    { id: "whanau", en: "whānau", fr: "famille élargie (te reo Māori)" },
+    { id: "manaaki", en: "manaakitanga", fr: "hospitalité, bienveillance (te reo Māori)" },
+    { id: "flightless", en: "flightless", fr: "qui ne vole pas", concept: "flightless" },
+    { id: "nocturnal", en: "nocturnal", fr: "nocturne", concept: "nocturnal" },
+    { id: "predator", en: "predator", fr: "prédateur", concept: "predator" },
+    { id: "endangered", en: "endangered", fr: "menacé d'extinction", concept: "endangered" },
+    { id: "sweet-as", en: "sweet as", fr: "super / pas de souci (familier NZ)" },
+    { id: "jandals", en: "jandals", fr: "tongs (NZ)" },
+    { id: "togs", en: "togs", fr: "maillot de bain (NZ)" },
+  ],
+  expressions: [
+    { en: "Kia ora!", fr: "Bonjour ! / Merci !", note: "Salutation en te reo Māori utilisée par tous." },
+    { en: "Sweet as!", fr: "Super ! / Pas de souci !", note: "Très familier, typiquement néo-zélandais." },
+    { en: "No worries.", fr: "Pas de souci." },
+    { en: "Chur!", fr: "Merci ! / Cool ! (très familier)" },
+    { en: "How are you going?", fr: "Comment ça va ?" },
+    { en: "She'll be right.", fr: "Ça va aller, t'inquiète." },
+    { en: "Good as gold.", fr: "Parfait, tout va bien." },
+    { en: "Keen?", fr: "Ça te dit ? / Partant ?" },
+    { en: "Heaps of…", fr: "Plein de…" },
+    { en: "Cheers!", fr: "Merci ! / Santé !" },
+    { en: "Better check the forecast.", fr: "Mieux vaut vérifier la météo." },
+    { en: "It's a bit of a mission.", fr: "C'est toute une expédition (c'est long, compliqué)." },
+    { en: "Ka kite anō!", fr: "À bientôt ! (te reo Māori)" },
+    { en: "Mōrena!", fr: "Bonjour ! (le matin, te reo Māori)" },
+  ],
+  missions: [
+    // 1 ─────────────────────────────────────────────
+    {
+      id: "nz-arrival", order: 1, title: "Arriver à Auckland", titleEn: "Arrival and biosecurity", place: "akl", minutes: 7,
+      briefing: "Tu atterris à Auckland. Sur la carte d'arrivée, il faut déclarer certains objets : aliments, plantes, chaussures de randonnée. Un agent de biosécurité te pose quelques questions.",
+      objectives: { A1: "Comprendre « Do you have any food? » et répondre.", A2: "Déclarer un objet et expliquer pourquoi tu l'as.", B1: "Comprendre une consigne de biosécurité.", B2: "Expliquer à quelqu'un pourquoi ces règles existent.", C1: "Discuter des enjeux de la biosécurité pour un pays insulaire." },
+      grammar: ["Have you got / Do you have", "Present perfect (Have you been… ?)"],
+      phrases: [
+        { en: "I have some cheese in my bag.", fr: "J'ai du fromage dans mon sac." },
+        { en: "I'd like to declare my hiking boots.", fr: "Je voudrais déclarer mes chaussures de randonnée." },
+        { en: "They've been cleaned.", fr: "Elles ont été nettoyées." },
+        { en: "Have you been on a farm recently?", fr: "Êtes-vous allé(e) dans une ferme récemment ?" },
+      ],
+      vocab: ["declare", "biosecurity", "kia-ora"],
+      exercises: [
+        mcq(E, "The officer asks: \"Do you have any food with you?\" You have an apple.", ["Yes, I have an apple.", "No, I'm hungry.", "Yes, I am an apple."], 0, "Réponse directe : Yes, I have + objet. Mieux vaut déclarer : les fruits frais sont surveillés."),
+        fill(E, "I'd like to ___ my hiking boots.", ["declare"], "Déclarer à la douane : to declare."),
+        match(E, [["food", "nourriture"], ["boots", "chaussures montantes"], ["tent", "tente"], ["seeds", "graines"]], "Des objets souvent à déclarer."),
+        listen(EM, "Kia ora, welcome to New Zealand. Have you got any outdoor equipment, like a tent or hiking boots?", "Que demande l'agent ?", ["Si tu as du matériel de plein air", "Si tu as un visa de travail", "Combien de temps tu restes"], 0, "« Outdoor equipment » = matériel de plein air (tente, chaussures)."),
+        decide(ALL, "La carte d'arrivée", "PASSENGER ARRIVAL CARD — Are you bringing into New Zealand: any food? · plants or seeds? · outdoor equipment (hiking boots, tents, fishing gear)? If you are unsure, DECLARE IT. Undeclared risk items can lead to a fine.", "Tu as des chaussures de randonnée propres et un paquet de biscuits. Que fais-tu ?", [
+          ["Tick 'yes' and declare both.", true, "La carte dit « If you are unsure, declare it » : on déclare, l'agent vérifie."],
+          ["Tick 'no' because the boots are clean.", false, "Même propres, le matériel de plein air se déclare."],
+          ["Throw the boots away in the plane.", false, "Inutile : il suffit de déclarer."],
+        ]),
+        dlg(EM, "Contrôle de biosécurité.",
+          say("Officer", "You declared hiking boots. Have they been used recently?", "Vous avez déclaré des chaussures. Ont-elles servi récemment ?"),
+          pick("Oui, en France, mais tu les as nettoyées.", ["Yes, in France, but I've cleaned them.", true, "Present perfect « I've cleaned » : résultat présent (elles sont propres)."], ["Yes, I clean yesterday them.", false, "Temps et ordre incorrects : « I cleaned them yesterday »."]),
+          say("Officer", "Great, I'll just have a quick look. Sweet as, you're good to go.", "Parfait, je jette un œil. C'est bon, vous pouvez y aller."),
+          pick("Tu remercies.", ["Thanks, have a good day!", true, "Simple et naturel."], ["Sweet as you!", false, "« Sweet as » ne se dit pas à quelqu'un ainsi ; ici, un simple « thanks » suffit."]),
+        ),
+        tr(M, "fr", "Elles ont été nettoyées hier.", ["They were cleaned yesterday.", "I cleaned them yesterday.", "They got cleaned yesterday."], "Avec « yesterday » (moment passé précis) : prétérit, ici passif « were cleaned »."),
+        reorder(M, "Have you been on a farm in the last thirty days", "Question au present perfect : Have + you + been…", "Êtes-vous allé(e) dans une ferme ces trente derniers jours ?"),
+        fix(MH, "I didn't declare the apple because I forget it.", ["I didn't declare the apple because I forgot it.", "I didn't declare the apple because I forgot about it."], "Récit au passé : forget → forgot."),
+        produce(H, "Expliquer la règle", "A fellow traveller thinks the biosecurity check is too strict. Explain why New Zealand does it.", "Explique pourquoi la Nouvelle-Zélande fait ces contrôles.", [["protect", "keep", "prevent", "stop"], ["nature", "plant", "animal", "bird", "farm", "agriculture", "pest", "disease"], ["island", "isolated", "native", "unique", "outside"]], 15, ["It's an island with unique native plants and birds, so they want to stop pests and diseases from arriving.", "Farming is huge here, and because the country is so isolated, one new pest could damage nature and agriculture."], "Cause (because / so) + ce qui est protégé + pourquoi c'est fragile."),
+        listen(H, "Honestly, it's a bit of a mission at the airport, but it's worth it to keep the bush healthy.", "Quel est l'avis de la personne ?", ["C'est contraignant mais justifié", "C'est inutile", "C'est rapide et facile"], 0, "« A bit of a mission » = compliqué ; « worth it » = ça vaut le coup. « The bush » = la forêt native."),
+        speak(H, "I'd like to declare my hiking boots; they've been cleaned, but I wanted to be sure.", "Je voudrais déclarer mes chaussures ; elles ont été nettoyées, mais je voulais être sûr(e)."),
+      ],
+      tags: ["nature"], lesson: "theme-airport", scenario: "problem-abroad", reward: "nz-luggage-strap",
+    },
+    // 2 ─────────────────────────────────────────────
+    {
+      id: "nz-cafe", order: 2, title: "Un flat white sur Cuba Street", titleEn: "Café culture in Wellington", place: "cuba-street", minutes: 6,
+      briefing: "Wellington est réputée pour ses cafés. Tom, barista, te sert ton premier flat white et en profite pour te glisser quelques expressions kiwis.",
+      objectives: { A1: "Commander une boisson.", A2: "Préciser une option (lait, taille, sur place).", B1: "Comprendre des expressions familières néo-zélandaises.", B2: "Engager une conversation légère avec le barista.", C1: "Reformuler une expression familière dans un registre neutre." },
+      grammar: ["Can I get / I'll have", "Questions courtes (Takeaway or have in?)"],
+      phrases: [
+        { en: "Kia ora! Can I get a flat white, please?", fr: "Bonjour ! Je pourrais avoir un flat white ?" },
+        { en: "To have in, please.", fr: "Sur place, s'il vous plaît." },
+        { en: "Could I get it with oat milk?", fr: "Je pourrais l'avoir au lait d'avoine ?" },
+        { en: "Sweet as, thanks!", fr: "Super, merci !" },
+      ],
+      vocab: ["kia-ora", "flat-white", "takeaway", "sweet-as"],
+      exercises: [
+        mcq(E, "Tom asks: \"Takeaway or having in?\"", ["Having in, thanks.", "Away, thanks.", "Yes, take."], 0, "« Having in » = sur place ; « takeaway » = à emporter."),
+        fill(E, "Can I ___ a flat white, please?", ["get", "have"], "Commander : Can I get / have…"),
+        match(E, [["kia ora", "bonjour / merci"], ["sweet as", "super, pas de souci"], ["takeaway", "à emporter"], ["cheers", "merci"]]),
+        listen(EM, "That'll be five fifty. Tap your card whenever you're ready.", "Combien coûte le café ?", ["5,50 $", "15,50 $", "5,15 $"], 0, "« Five fifty » = 5,50 (dollars néo-zélandais)."),
+        dlg(ALL, "Au comptoir.",
+          say("Tom", "Kia ora! What can I get you?", "Bonjour ! Qu'est-ce que je te sers ?"),
+          pick("Un flat white au lait d'avoine, sur place.", ["Kia ora! A flat white with oat milk, to have in, please.", true, "Tout est dit : boisson, lait, sur place, poli."], ["Coffee milk oat here.", false, "Liste de mots : fais une phrase."]),
+          say("Tom", "Sweet as. First time in Welly?", "Super. Première fois à Wellington ?"),
+          pick("Oui, tu es arrivé(e) hier.", ["Yeah, I got here yesterday!", true, "« Get here » = arriver ; passé avec « yesterday »."], ["Yes, I arrive yesterday.", false, "Avec yesterday : prétérit (arrived / got here)."]),
+          say("Tom", "Welcome! Bring a jacket — it's windy here.", "Bienvenue ! Prends une veste, ça souffle ici."),
+        ),
+        assemble(EM, "Les commandes de Tom", "Écoute et sélectionne ce que la cliente a commandé.", [
+          ["fw", "flat white", "flat white"], ["lb", "long black", "café allongé"], ["oat", "oat milk", "lait d'avoine"], ["muffin", "a muffin", "un muffin"], ["scone", "a cheese scone", "un scone au fromage"], ["juice", "orange juice", "jus d'orange"],
+        ], ["lb", "scone"], "Elle prend un long black et un scone au fromage, pas de muffin ni de lait.", "Can I get a long black and a cheese scone, please? Oh, and no milk for me, thanks."),
+        tr(M, "en", "Sweet as, see you tomorrow!", ["Super, à demain !", "Pas de souci, à demain !", "Parfait, à demain !", "Cool, à demain !"], "« Sweet as » est une approbation familière ; on le rend par « super / pas de souci »."),
+        decide(M, "Une expression mystère", "Tom says: \"She'll be right, the wind usually drops by lunchtime.\"", "Que veut dire « she'll be right » ?", [
+          ["Don't worry, it will be fine.", true, "Expression rassurante typique de NZ et d'Australie ; « she » ne désigne personne ici."],
+          ["A woman will arrive at lunchtime.", false, "Piège ! Rien à voir avec une personne."],
+          ["The weather will get worse.", false, "C'est l'inverse : le vent tombe."],
+        ]),
+        fix(MH, "Can I get a flat white for take away to my hotel?", ["Can I get a flat white to take away?", "Can I get a takeaway flat white?", "Can I get a flat white, takeaway?"], "« Takeaway » (ou « to take away ») suffit ; inutile de préciser la destination."),
+        produce(H, "Traduire le familier", "Rewrite Tom's sentence in neutral English for an email: \"Keen for a coffee tomorrow? Sweet as if not, no worries!\"", "Réécris la phrase de Tom en anglais neutre pour un e-mail.", [["would you", "would you like", "are you interested", "available"], ["coffee"], ["no problem", "not a problem", "fine", "understand", "okay", "if not"]], 10, ["Would you like to have a coffee tomorrow? If you're not available, that's no problem at all.", "Are you available for a coffee tomorrow? If not, I completely understand."], "Keen → would you like / are you available ; sweet as / no worries → no problem."),
+        mcq(H, "\"Heaps good\" in casual NZ/Australian English means…", ["very good", "a pile of goods", "not good"], 0, "« Heaps » = beaucoup ; « heaps good » = vraiment bien (très familier)."),
+        speak(H, "Kia ora! Could I get a flat white with oat milk, to have in?", "Bonjour ! Je pourrais avoir un flat white au lait d'avoine, sur place ?"),
+      ],
+      tags: ["coffee-tea", "food", "capital", "city"], lesson: "theme-restaurant", scenario: "restaurant", reward: "nz-keepcup",
+    },
+    // 3 ─────────────────────────────────────────────
+    {
+      id: "nz-campervan", order: 3, title: "Partir en campervan", titleEn: "Campervan road trip", place: "depot", minutes: 8,
+      briefing: "À Christchurch, tu récupères un campervan pour l'île du Sud. On roule à gauche, beaucoup de ponts n'ont qu'une voie, et on ne campe pas n'importe où.",
+      objectives: { A1: "Comprendre « keep left » et des panneaux simples.", A2: "Poser des questions sur le véhicule.", B1: "Comprendre les règles de camping.", B2: "Négocier une modification de réservation.", C1: "Expliquer les règles à un autre voyageur avec nuance." },
+      grammar: ["Modaux (must, mustn't, don't have to)", "Questions indirectes (Could you tell me…)"],
+      phrases: [
+        { en: "Remember to keep left.", fr: "N'oublie pas de rouler à gauche." },
+        { en: "Is the van self-contained?", fr: "Le van est-il autonome (toilettes, eau) ?" },
+        { en: "Where are we allowed to camp?", fr: "Où avons-nous le droit de camper ?" },
+        { en: "Could you tell me how the water tank works?", fr: "Pourriez-vous m'expliquer comment marche le réservoir d'eau ?" },
+      ],
+      vocab: ["campervan", "self-contained", "keep-left", "give-way", "one-lane-bridge", "itinerary"],
+      exercises: [
+        mcq(E, "In New Zealand, you drive on the…", ["left", "right", "middle"], 0, "On roule à gauche, comme au Royaume-Uni et en Australie : « keep left »."),
+        match(E, [["give way", "cédez le passage"], ["one-lane bridge", "pont à voie unique"], ["keep left", "roulez à gauche"], ["slow down", "ralentissez"]]),
+        fill(EM, "You ___ camp anywhere; you must use an allowed site.", ["can't", "cannot", "mustn't", "must not"], "Interdiction : can't / mustn't + base verbale."),
+        decide(ALL, "Le pont à voie unique", "ONE LANE BRIDGE — a small red arrow points your way, a big white arrow points the other way: GIVE WAY to oncoming traffic.", "Une voiture arrive en face. Que fais-tu ?", [
+          ["Stop and let the other car cross first.", true, "La petite flèche rouge de ton côté signifie que tu dois céder le passage."],
+          ["Speed up to cross before it.", false, "Dangereux et contraire au panneau."],
+          ["Drive on the right to pass.", false, "Le pont n'a qu'une voie."],
+        ]),
+        listen(EM, "This van is certified self-contained, so you can stay at more freedom camping sites. Check the local rules first, though.", "Pourquoi le statut « self-contained » est-il utile ?", ["Il donne accès à plus de sites de camping libre", "Il permet de rouler plus vite", "Il évite de payer l'essence"], 0, "Un véhicule certifié autonome peut accéder à davantage de sites, en respectant les règles locales."),
+        dlg(M, "À l'agence de location.",
+          say("Agent", "Here are the keys. Any questions about the van?", "Voici les clés. Des questions sur le van ?"),
+          pick("Tu demandes comment marche le réservoir d'eau.", ["Could you tell me how the water tank works?", true, "Question indirecte : « how the water tank works » (pas d'inversion)."], ["Could you tell me how does the water tank work?", false, "Dans une question indirecte, pas d'inversion ni de « does »."]),
+          say("Agent", "Sure — fill it here, and empty the grey water only at a dump station.", "Bien sûr : remplissez-le ici, et videz les eaux grises seulement à une station de vidange."),
+          pick("Tu reformules pour vérifier.", ["So we can only empty it at a dump station, right?", true, "Reformuler pour vérifier est une excellente stratégie."], ["So we empty it in the river.", false, "Contraire à la consigne et à la protection de la nature."]),
+        ),
+        steps(M, "Le premier jour", "Remets le programme dans l'ordre logique.", ["Pick up the campervan in Christchurch.", "Buy food and fill the water tank.", "Drive to Lake Tekapo, keeping left.", "Check the app for an allowed campsite.", "Park for the night at the campsite."], "Récupérer → s'équiper → rouler → vérifier où dormir → s'installer."),
+        tr(MH, "fr", "On n'est pas obligés de rendre le van avant midi.", ["We don't have to return the van before noon.", "We don't have to return the van before midday.", "We don't need to return the van before noon.", "We don't have to bring the van back before noon."], "Absence d'obligation : don't have to (≠ mustn't, interdiction)."),
+        fix(MH, "We mustn't to pay for the second driver.", ["We don't have to pay for the second driver.", "We don't need to pay for the second driver."], "« Pas obligé » = don't have to ; « mustn't » signifie « interdit », et jamais suivi de « to »."),
+        dlg(H, "Tu veux prolonger ta location de deux jours.",
+          say("Agent", "Extending is possible, but it's peak season, so the daily rate is higher.", "Prolonger est possible, mais c'est la haute saison, le tarif journalier est plus élevé."),
+          pick("Tu tentes de garder l'ancien tarif.", ["I understand. Since we booked early, would you be able to keep the original rate?", true, "Comprendre + argument + demande polie au conditionnel."], ["No, I want the old price.", false, "Trop direct ; un argument et une formule polie fonctionnent mieux."]),
+          say("Agent", "Let me check… Okay, I can do it for the same rate. Good as gold.", "Je vérifie… D'accord, même tarif. Parfait."),
+        ),
+        produce(H, "Expliquer les règles", "A French traveller wants to park on a beach for the night. Explain the rules politely.", "Un voyageur veut dormir sur une plage : explique les règles avec tact.", [["can't", "cannot", "not allowed", "isn't allowed", "mustn't", "shouldn't"], ["campsite", "site", "allowed", "designated", "app"], ["fine", "protect", "nature", "rules", "local"]], 15, ["I'm not sure you're allowed to park here overnight — you usually have to use a designated site. Check the app, because you could get a fine.", "Sorry, but camping isn't allowed on most beaches; the rules protect nature. There's a campsite ten minutes away."], "Adoucis (I'm not sure…, Sorry, but…) puis donne la règle et une solution."),
+      ],
+      tags: ["nature", "adventure-sport"], lesson: "a2-modals", scenario: "transport", reward: "nz-camper-sticker",
+    },
+    // 4 ─────────────────────────────────────────────
+    {
+      id: "nz-tramping", order: 4, title: "Préparer une Great Walk", titleEn: "Getting ready for a Great Walk", place: "routeburn", minutes: 8, activityDisclaimer: true,
+      briefing: "Avec Yuki, tu prépares la Routeburn Track, l'un des Great Walks. Mere, ranger, vérifie votre équipement : en montagne, la météo change vite. (Exercice de langue, pas une formation.)",
+      objectives: { A1: "Nommer des affaires de randonnée.", A2: "Comprendre une météo simple.", B1: "Préparer son sac selon des consignes.", B2: "Comprendre un bulletin et adapter son plan.", C1: "Argumenter un choix de prudence." },
+      grammar: ["Futur et probabilité (will, might, likely)", "Conditionnel (If it rains, we'll…)"],
+      phrases: [
+        { en: "We've booked the huts for two nights.", fr: "On a réservé les refuges pour deux nuits." },
+        { en: "The weather can change quickly.", fr: "La météo peut changer vite." },
+        { en: "Pack warm layers and a rain jacket.", fr: "Prends des couches chaudes et une veste imperméable." },
+        { en: "If the track closes, we'll come back tomorrow.", fr: "Si le sentier ferme, on reviendra demain." },
+      ],
+      vocab: ["tramping", "hut", "layers", "rain-jacket", "forecast", "to-book", "sunscreen"],
+      exercises: [
+        mcq(E, "In New Zealand, \"tramping\" means…", ["hiking", "taking a tram", "dancing"], 0, "« Tramping » = randonnée, mot néo-zélandais."),
+        match(E, [["hut", "refuge"], ["rain jacket", "veste imperméable"], ["layers", "couches de vêtements"], ["forecast", "prévisions météo"]]),
+        fill(EM, "If it rains, we ___ stay in the hut.", ["will", "'ll"], "Condition réelle : If + présent, will + base verbale."),
+        assemble(ALL, "Le sac de Mere", "Écoute Mere et prends exactement ce qu'elle conseille.", [
+          ["rain", "rain jacket", "veste imperméable"], ["layers", "warm layers", "couches chaudes"], ["hat", "warm hat", "bonnet"], ["sun", "sunscreen", "crème solaire"], ["food", "enough food", "assez de nourriture"], ["jeans", "jeans", "un jean"], ["speaker", "a speaker", "une enceinte"],
+        ], ["rain", "layers", "hat", "sun", "food"], "Mere cite veste imperméable, couches chaudes, bonnet, crème solaire et nourriture. Le jean (lourd et froid une fois mouillé) et l'enceinte sont déconseillés.", "Bring a rain jacket, warm layers and a warm hat — even in summer. Don't forget sunscreen and enough food. Leave the jeans behind: cotton gets cold when wet. And please, no speakers on the track."),
+        listen(EM, "Tomorrow: fine in the morning, heavy rain and strong winds from mid-afternoon.", "Quand faut-il être arrivé au refuge ?", ["Avant le milieu de l'après-midi", "Le soir", "Peu importe"], 0, "Pluie et vent forts « from mid-afternoon » : partir tôt pour arriver avant."),
+        decide(M, "Le bulletin de la ranger", "TRACK UPDATE — Heavy rain warning from 2 p.m. Rivers may rise quickly. Do not attempt to cross flooded streams. Huts remain open.", "Que décidez-vous ?", [
+          ["Start early and wait in the hut if streams flood.", true, "Partir tôt, ne pas traverser de cours d'eau en crue : c'est exactement le message."],
+          ["Cross the flooded stream quickly.", false, "« Do not attempt to cross flooded streams »."],
+          ["Leave at 3 p.m. to avoid the crowds.", false, "La pluie forte commence à 14 h."],
+        ]),
+        dlg(M, "Mere vérifie ton plan.",
+          say("Mere", "Have you booked your huts?", "Vous avez réservé vos refuges ?"),
+          pick("Oui, deux nuits, réservées il y a trois mois.", ["Yes, two nights. We booked them three months ago.", true, "« Ago » → prétérit (booked)."], ["Yes, we have booked them three months ago.", false, "« Ago » impose le prétérit, pas le present perfect."]),
+          say("Mere", "Great. And what will you do if the weather turns?", "Parfait. Et si la météo tourne ?"),
+          pick("Vous resterez au refuge.", ["We'll stay in the hut until it's safe.", true, "Futur (we'll) + until : plan clair et prudent."], ["We continue, it's ok.", false, "Pas prudent, et il faut un futur."]),
+        ),
+        tr(MH, "fr", "La météo peut changer très vite en montagne.", ["The weather can change very quickly in the mountains.", "Weather can change very quickly in the mountains.", "The weather can change really fast in the mountains.", "In the mountains, the weather can change very quickly."], "Possibilité générale : can + base verbale."),
+        fix(MH, "We will leave when it will stop raining.", ["We'll leave when it stops raining.", "We will leave when it stops raining."], "Après « when » (futur), on emploie le présent : when it stops."),
+        produce(H, "Justifier un choix prudent", "Yuki wants to continue despite the warning. Convince her to wait, giving two reasons.", "Yuki veut continuer malgré l'alerte : convaincs-la d'attendre, avec deux raisons.", [["wait", "stay", "tomorrow", "later"], ["river", "stream", "flood", "rain", "wind", "dangerous", "risk"], ["because", "since", "if", "otherwise"]], 18, ["I'd rather wait in the hut — the streams could flood, and if we get stuck, it'll be dangerous. We can finish tomorrow morning.", "Let's stay here tonight. The ranger said rivers may rise quickly, and since the hut is warm, there's no reason to take the risk."], "Proposition (let's / I'd rather) + deux raisons reliées par because / and."),
+        speak(H, "The weather can change quickly, so pack warm layers even in summer.", "La météo peut changer vite, alors prends des couches chaudes même en été."),
+      ],
+      tags: ["hiking", "nature"], lesson: "b1-conditionals", scenario: "plans", reward: "nz-hiking-boots",
+    },
+    // 5 ─────────────────────────────────────────────
+    {
+      id: "nz-skydive", order: 5, title: "Le saut en parachute", titleEn: "The skydive", place: "taupo", minutes: 9, activityDisclaimer: true,
+      briefing: "Jake, instructeur à Taupō, te donne un briefing (fictif) avant un saut en tandem. Comprends le vocabulaire de l'équipement et les consignes, puis raconte tes sensations. Ceci est un exercice de langue, pas une formation au parachutisme.",
+      objectives: { A1: "Nommer l'équipement de base.", A2: "Comprendre des consignes simples.", B1: "Comprendre un briefing complet.", B2: "Raconter des sensations avec précision.", C1: "Employer des expressions imagées pour raconter." },
+      grammar: ["Impératif", "Passé simple pour raconter", "Adjectifs forts (terrifying, incredible)"],
+      phrases: [
+        { en: "Cross your arms over the harness.", fr: "Croise les bras sur le harnais." },
+        { en: "Tilt your head back.", fr: "Penche la tête en arrière." },
+        { en: "Lift your legs for the landing.", fr: "Lève les jambes pour l'atterrissage." },
+        { en: "It was absolutely terrifying — and amazing!", fr: "C'était absolument terrifiant… et génial !" },
+      ],
+      vocab: ["harness", "altimeter", "freefall", "parachute", "goggles", "tandem", "breathtaking"],
+      exercises: [
+        match(E, [["harness", "harnais"], ["goggles", "lunettes de protection"], ["parachute", "parachute"], ["altimeter", "altimètre"]], "Le vocabulaire de l'équipement."),
+        mcq(E, "Jake says: \"Put on your goggles.\" You…", ["protect your eyes", "take off your shoes", "open the door"], 0, "« Goggles » = lunettes de protection ; « put on » = mettre."),
+        identify(EM, "L'équipement", "This is a small device on the instructor's wrist. It shows how high you are.", [["the altimeter", "l'altimètre", "gauge"], ["the harness", "le harnais", "straps"], ["the goggles", "les lunettes", "goggles"]], 0, "« Shows how high you are » : l'altimètre indique l'altitude."),
+        steps(ALL, "Le briefing de Jake", "Remets les étapes du saut (fictif) dans l'ordre.", ["Put on the jumpsuit, harness and goggles.", "Board the plane and sit close to your instructor.", "At the door, cross your arms and tilt your head back.", "Enjoy the freefall while the instructor opens the parachute.", "Lift your legs for the landing."], "S'équiper → embarquer → position à la porte → chute libre puis ouverture → atterrissage jambes levées."),
+        listen(EM, "When we land, lift your legs up high and let me touch the ground first.", "Que dois-tu faire à l'atterrissage ?", ["Lever les jambes", "Courir", "Sauter"], 0, "« Lift your legs up high » : lève les jambes."),
+        fill(M, "___ your head back when we leave the plane.", ["Tilt", "Put"], "Impératif : Tilt your head back = penche la tête en arrière."),
+        decide(M, "Le bon moment ?", "Jake: \"The wind's picked up above the limit, so we're putting jumps on hold. Grab a coffee — we'll check again at eleven.\"", "Que se passe-t-il ?", [
+          ["The jumps are paused because of the wind; they'll check again later.", true, "« On hold » = en attente ; « above the limit » = au-dessus de la limite autorisée."],
+          ["The jump is cancelled forever.", false, "Ils revérifient à 11 h."],
+          ["You must jump now before the wind.", false, "C'est l'inverse : on attend."],
+        ]),
+        dlg(MH, "Après le saut, Yuki t'attend.",
+          say("Yuki", "So? How was it?", "Alors ? C'était comment ?"),
+          pick("Terrifiant au début, puis incroyable.", ["Terrifying at first, then absolutely incredible!", true, "Adjectifs forts + « absolutely » : naturel pour une émotion intense."], ["It was very incredible.", false, "Avec un adjectif fort (incredible), on dit « absolutely », pas « very »."]),
+          say("Yuki", "Were you scared when the door opened?", "Tu avais peur quand la porte s'est ouverte ?"),
+          pick("Oui, ton cœur battait à tout rompre.", ["Yes! My heart was pounding.", true, "« My heart was pounding » : image idiomatique."], ["Yes, my heart was dancing.", false, "Ce n'est pas une expression anglaise pour la peur."]),
+        ),
+        tr(MH, "fr", "La vue sur le lac était à couper le souffle.", ["The view of the lake was breathtaking.", "The view over the lake was breathtaking.", "The view of the lake was absolutely breathtaking.", "The view of the lake took my breath away."], "« Breathtaking » ou « took my breath away » = à couper le souffle."),
+        fix(H, "During the freefall, I was very terrified.", ["During the freefall, I was absolutely terrified.", "During the freefall, I was terrified.", "During the freefall, I was really terrified."], "Adjectif fort (terrified) : « absolutely » ou « really », pas « very »."),
+        produce(H, "Raconter tes sensations", "Tell a friend about your (virtual) skydive: before, during and after.", "Raconte ton saut (virtuel) : avant, pendant et après.", [["before", "at first", "when", "the door"], ["during", "freefall", "falling", "wind", "flew", "fell"], ["after", "landed", "landing", "then", "finally"]], 25, ["Before the jump I was so nervous I couldn't talk. When the door opened, the wind was incredibly loud. The freefall felt like flying, and after we landed I couldn't stop smiling.", "At first my heart was pounding. Then we fell through the clouds and the view of Lake Taupō was breathtaking. Finally we landed softly, and I wanted to do it again!"], "Trois temps (before / during / after) + adjectifs forts + une image (like flying)."),
+        speak(H, "My heart was pounding, but the view of the lake was absolutely breathtaking.", "Mon cœur battait à tout rompre, mais la vue sur le lac était à couper le souffle."),
+      ],
+      tags: ["adventure-sport", "sport", "nature"], lesson: "b1-telling-a-story", scenario: "passions", reward: "nz-jumpsuit",
+    },
+    // 6 ─────────────────────────────────────────────
+    {
+      id: "nz-fiord", order: 6, title: "Croisière à Milford Sound", titleEn: "Cruising Milford Sound", place: "milford", minutes: 7,
+      briefing: "Milford Sound / Piopiotahi est un fjord du Fiordland. Pendant la croisière, le guide décrit le paysage : falaises, cascades, phoques, parfois des dauphins.",
+      objectives: { A1: "Nommer des éléments du paysage.", A2: "Comprendre un commentaire de guide simple.", B1: "Décrire un paysage avec des comparatifs.", B2: "Comprendre une explication géologique simple.", C1: "Écrire une description évocatrice et précise." },
+      grammar: ["Comparatifs et superlatifs", "Passif (was carved by…)"],
+      phrases: [
+        { en: "Look at that waterfall!", fr: "Regarde cette cascade !" },
+        { en: "The cliffs are higher than I expected.", fr: "Les falaises sont plus hautes que je pensais." },
+        { en: "The fiord was carved by glaciers.", fr: "Le fjord a été creusé par des glaciers." },
+        { en: "It's one of the wettest places in the country.", fr: "C'est l'un des endroits les plus pluvieux du pays." },
+      ],
+      vocab: ["fiord", "waterfall", "cliff", "breathtaking"],
+      exercises: [
+        match(E, [["waterfall", "cascade"], ["cliff", "falaise"], ["seal", "phoque"], ["glacier", "glacier"]]),
+        mcq(E, "\"Look! Dolphins next to the boat!\" — where are the dolphins?", ["Next to the boat", "On the cliff", "In the sky"], 0, "« Next to » = à côté de."),
+        fill(EM, "The cliffs are ___ than I expected.", ["higher", "taller", "bigger"], "Comparatif d'un adjectif court : high → higher than."),
+        listen(EM, "On your left, you can see seals resting on the rocks.", "Que voit-on à gauche ?", ["Des phoques sur les rochers", "Des dauphins", "Une cascade"], 0, "« Seals resting on the rocks » : des phoques qui se reposent."),
+        identify(ALL, "Qu'est-ce que c'est ?", "This long, narrow inlet of the sea has very steep sides. It was carved by glaciers thousands of years ago.", [["a fiord", "un fjord", "fiord"], ["a lake", "un lac", "lake"], ["a beach", "une plage", "beach"]], 0, "Bras de mer étroit, parois abruptes, creusé par des glaciers : un fjord."),
+        reorder(M, "The fiord was carved by glaciers", "Passif au passé : was + participe passé + by.", "Le fjord a été creusé par des glaciers."),
+        decide(M, "Le commentaire du guide", "Milford Sound gets a lot of rain. Many visitors hope for sunshine, but on rainy days hundreds of temporary waterfalls appear on the cliffs.", "Que veut dire le guide ?", [
+          ["Rainy days have their own beauty: many extra waterfalls.", true, "Les jours de pluie, des centaines de cascades temporaires apparaissent."],
+          ["You should never visit when it rains.", false, "Il dit plutôt l'inverse."],
+          ["The waterfalls disappear when it rains.", false, "Elles apparaissent quand il pleut."],
+        ], true),
+        tr(MH, "fr", "C'est l'endroit le plus beau que j'aie jamais vu.", ["It's the most beautiful place I've ever seen.", "It is the most beautiful place I have ever seen.", "This is the most beautiful place I've ever seen."], "Superlatif + present perfect d'expérience (I've ever seen)."),
+        fix(MH, "It was the more beautiful day of the trip.", ["It was the most beautiful day of the trip."], "Superlatif d'un adjectif long : the most + adjectif."),
+        produce(H, "Décrire le fjord", "Write three or four sentences describing Milford Sound for a travel magazine.", "Décris Milford Sound pour un magazine de voyage.", [["cliff", "mountain", "peak", "rock"], ["waterfall", "water", "rain", "mist"], ["than", "most", "-est", "steep", "dark", "green", "silent", "quiet"]], 25, ["Steep green cliffs rise straight out of the dark water, and after the rain dozens of waterfalls pour down the rock. It's quieter and wilder than any landscape I've seen.", "Mist hangs over the peaks while seals rest on the rocks below. On a rainy day, the cliffs are covered in waterfalls — the most dramatic sight of my trip."], "Verbes précis (rise, pour, hang) + couleurs + un comparatif ou superlatif."),
+        listen(H, "Funnily enough, the rain is what makes this place — on a sunny day you'd only see a couple of the permanent falls.", "Quelle est l'idée du guide ?", ["La pluie rend le lieu plus spectaculaire", "Le soleil est préférable", "Il n'y a jamais de cascades"], 0, "« The rain is what makes this place » : c'est la pluie qui fait la magie du lieu."),
+        speak(MH, "The cliffs are higher than I expected, and the waterfalls are breathtaking.", "Les falaises sont plus hautes que je pensais, et les cascades sont à couper le souffle."),
+      ],
+      tags: ["nature", "ocean", "wildlife"], lesson: "a2-comparatives", scenario: "past-story", reward: "nz-fiord-print",
+    },
+    // 7 ─────────────────────────────────────────────
+    {
+      id: "nz-rugby", order: 7, title: "Un match de rugby à Eden Park", titleEn: "Rugby at Eden Park", place: "eden-park", minutes: 7,
+      briefing: "Tom t'emmène voir un match. Comprendre les règles de base, réagir pendant le match, et débattre du sport après — avec respect pour le haka d'avant-match.",
+      objectives: { A1: "Comprendre le score et des mots de base.", A2: "Réagir pendant un match.", B1: "Donner ton avis sur un match.", B2: "Comprendre un commentaire rapide.", C1: "Débattre de la place du sport dans une culture." },
+      grammar: ["Passé simple et continu (was running when…)", "Exprimer une opinion (I reckon, In my view)"],
+      phrases: [
+        { en: "What's the score?", fr: "Quel est le score ?" },
+        { en: "What a try!", fr: "Quel essai !" },
+        { en: "I reckon they'll win.", fr: "Je pense qu'ils vont gagner." },
+        { en: "The atmosphere is electric.", fr: "L'ambiance est électrique." },
+      ],
+      vocab: ["try", "match"],
+      exercises: [
+        mcq(E, "\"What's the score?\" — \"___\"", ["Twenty-one to fourteen.", "Very good.", "In the stadium."], 0, "Le score se dit « X to Y »."),
+        match(E, [["a try", "un essai"], ["a kick", "un coup de pied"], ["the referee", "l'arbitre"], ["a fan", "un supporter"]]),
+        fill(EM, "I ___ they'll win tonight.", ["reckon", "think", "guess"], "« I reckon » = je pense (familier, très courant en NZ)."),
+        listen(EM, "And he's through! What a try! Seven points to the All Blacks after the conversion!", "Que vient-il de se passer ?", ["Un essai transformé", "Un carton rouge", "La fin du match"], 0, "« Try » + « conversion » : essai transformé (5 + 2 points)."),
+        decide(ALL, "Pendant le haka", "Before the game, the team performs the haka. Tom whispers: \"It's a ceremonial Māori dance — people usually watch quietly and respectfully.\"", "Quelle attitude adopter ?", [
+          ["Watch quietly and respectfully.", true, "Comme l'explique Tom : écouter et regarder avec respect."],
+          ["Copy the moves for a funny video.", false, "Imiter pour plaisanter manque de respect envers une tradition cérémonielle."],
+          ["Shout to distract the players.", false, "Irrespectueux."],
+        ]),
+        dlg(M, "À la mi-temps.",
+          say("Tom", "So, what do you reckon so far?", "Alors, t'en penses quoi pour l'instant ?"),
+          pick("C'est serré, mais tu penses que les All Blacks vont gagner.", ["It's close, but I reckon the All Blacks will win.", true, "Nuance (close) + prédiction (will)."], ["It's close but I reckon win the All Blacks.", false, "Ordre des mots : sujet + will + verbe."]),
+          say("Tom", "Ha, bold call! Want a pie?", "Ha, pari audacieux ! Tu veux une tourte ?"),
+          pick("Tu acceptes.", ["Sure, I'd love one, cheers!", true, "« I'd love one » + « cheers » (merci)."], ["Yes, give.", false, "Trop sec."]),
+        ),
+        tr(M, "fr", "L'ambiance dans le stade était incroyable.", ["The atmosphere in the stadium was incredible.", "The atmosphere in the stadium was amazing.", "The atmosphere at the stadium was incredible."], "« Atmosphere » = ambiance (attention à l'orthographe)."),
+        fix(MH, "He ran toward the line when the referee was blowing the whistle.", ["He was running toward the line when the referee blew the whistle.", "He was running towards the line when the referee blew the whistle."], "Action longue en cours (was running) interrompue par une action courte au prétérit (blew)."),
+        listen(MH, "They were dominant in the scrums but just couldn't finish their chances — that's what cost them the game.", "Pourquoi l'équipe a-t-elle perdu ?", ["Elle n'a pas concrétisé ses occasions", "Elle était faible en mêlée", "L'arbitre était injuste"], 0, "« Couldn't finish their chances » : elle n'a pas concrétisé."),
+        produce(H, "Débattre", "Why do you think rugby is so important in New Zealand? Give your view with nuance.", "Pourquoi le rugby est-il si important en Nouvelle-Zélande ? Donne ton avis avec nuance.", [["think", "reckon", "view", "believe", "seems"], ["community", "identity", "history", "together", "school", "club", "pride", "national"], ["but", "although", "however", "not everyone", "while"]], 20, ["I reckon rugby brings communities together and is part of the national identity, although not everyone in New Zealand is a fan.", "In my view, it's about pride and history — small towns have clubs, kids play at school — but it's also a huge business now."], "Opinion (I reckon / In my view) + deux raisons + une nuance (although / but)."),
+        mcq(H, "\"They're on fire tonight!\" means the team is…", ["playing extremely well", "in danger", "angry"], 0, "« On fire » = en pleine forme, exceptionnel."),
+        speak(H, "I reckon it'll be close, but the atmosphere is absolutely electric.", "Je pense que ce sera serré, mais l'ambiance est électrique."),
+      ],
+      tags: ["sport", "city"], lesson: "b1-opinions", scenario: "opinion", reward: "nz-rugby-jersey",
+    },
+    // 8 ─────────────────────────────────────────────
+    {
+      id: "nz-marae", order: 8, title: "Visite culturelle d'un marae", titleEn: "A guided marae visit", place: "marae", minutes: 8,
+      briefing: "Près de Rotorua, Aroha guide une expérience culturelle sur un marae. On découvre le pōwhiri (cérémonie d'accueil), des mots de te reo Māori et les gestes de respect. On suit toujours les indications des hôtes.",
+      objectives: { A1: "Saluer avec « Kia ora » et remercier.", A2: "Demander poliment ce qui est permis.", B1: "Comprendre les explications de la guide.", B2: "Poser des questions culturelles avec tact.", C1: "Exprimer ton ressenti et ce que tu as appris avec nuance." },
+      grammar: ["Questions polies (Is it okay if…, May I…)", "Passif (is called, is used)"],
+      phrases: [
+        { en: "Kia ora, thank you for welcoming us.", fr: "Kia ora, merci de nous accueillir." },
+        { en: "Is it okay if I take a photo?", fr: "Est-ce que je peux prendre une photo ?" },
+        { en: "Should we take our shoes off?", fr: "Doit-on enlever nos chaussures ?" },
+        { en: "Could you tell us more about this carving?", fr: "Pourriez-vous nous en dire plus sur cette sculpture ?" },
+      ],
+      vocab: ["kia-ora", "whanau", "manaaki"],
+      exercises: [
+        mcq(E, "\"Kia ora\" can mean…", ["hello or thank you", "goodbye forever", "be quiet"], 0, "« Kia ora » s'emploie pour saluer et remercier."),
+        match(E, [["whānau", "famille élargie"], ["kai", "nourriture"], ["kia ora", "bonjour / merci"], ["marae", "lieu de rassemblement communautaire"]], "Des mots de te reo Māori couramment utilisés."),
+        fill(EM, "Is it okay ___ I take a photo?", ["if"], "Demander la permission : Is it okay if I…?"),
+        listen(EM, "Before we go inside the meeting house, please take your shoes off and leave them by the door.", "Que faut-il faire ?", ["Enlever ses chaussures avant d'entrer", "Garder ses chaussures", "Laisser son sac dehors"], 0, "« Take your shoes off » : enlève tes chaussures."),
+        decide(ALL, "Une photo ?", "Aroha: \"During the welcome ceremony, please don't take photos. Afterwards, you're welcome to — just ask first.\"", "Quand peux-tu prendre des photos ?", [
+          ["After the ceremony, after asking.", true, "Pas pendant le pōwhiri ; ensuite, en demandant."],
+          ["During the ceremony, without flash.", false, "Aroha demande de ne pas photographier pendant la cérémonie."],
+          ["Never, it's forbidden everywhere.", false, "C'est permis après, en demandant."],
+        ]),
+        dlg(M, "Après le pōwhiri.",
+          say("Aroha", "How did you find the welcome?", "Comment as-tu trouvé l'accueil ?"),
+          pick("Très émouvant ; tu remercies.", ["It was really moving. Thank you for sharing it with us.", true, "Ressenti + remerciement : très approprié."], ["It was a funny show.", false, "Le pōwhiri est une cérémonie, pas un spectacle comique."]),
+          say("Aroha", "Kia ora. Any questions?", "Merci. Des questions ?"),
+          pick("Tu demandes le sens des sculptures.", ["Could you tell us what the carvings represent?", true, "Question ouverte et respectueuse ; question indirecte bien construite."], ["What do the carvings represent them?", false, "« them » est en trop."]),
+        ),
+        tr(M, "fr", "Merci de nous avoir accueillis.", ["Thank you for welcoming us.", "Thanks for welcoming us.", "Thank you for having us.", "Thanks for having us."], "Thank you for + -ing ; « thanks for having us » est très naturel."),
+        steps(MH, "Comprendre le pōwhiri", "D'après les explications d'Aroha, remets les grandes étapes de l'accueil dans l'ordre.", ["The visitors gather at the entrance and wait.", "A woman from the hosts gives a call of welcome (karanga).", "The visitors walk onto the marae slowly.", "Speeches are given by both sides.", "Hosts and visitors greet each other, sometimes with a hongi, then share food."], "Attente → karanga (appel) → entrée → discours → salutations puis repas partagé. Le déroulé exact varie selon les marae."),
+        fix(MH, "Can I to take a picture of the carving?", ["Can I take a picture of the carving?", "May I take a picture of the carving?", "Could I take a picture of the carving?"], "Après can / may / could : base verbale sans « to »."),
+        produce(H, "Ce que tu as appris", "Write a few sentences for your journal: what you learned at the marae and how you felt.", "Écris quelques phrases dans ton journal : ce que tu as appris et ce que tu as ressenti.", [["learned", "learnt", "discovered", "understood", "realized"], ["felt", "moving", "grateful", "touched", "welcome", "honoured", "honored"], ["respect", "community", "family", "whānau", "whanau", "manaakitanga", "hospitality", "tradition"]], 20, ["I learned that a marae is the heart of a community, and that the welcome follows a precise order. I felt really grateful for their manaakitanga — their hospitality.", "I realized how important whānau is in Māori culture. The ceremony was moving, and I felt honoured to be welcomed with such respect."], "Ce que tu as appris (I learned that…) + émotion + un mot de te reo bien employé."),
+        mcq(H, "Which question is the most respectful?", ["Could you tell me what this place means to your community?", "Is this real or just for tourists?", "Why don't you do it the normal way?"], 0, "Question ouverte et sincère ; les autres sont dévalorisantes."),
+        speak(H, "Thank you for having us; I learned so much about manaakitanga today.", "Merci de nous avoir accueillis ; j'ai tellement appris sur le manaakitanga aujourd'hui."),
+      ],
+      tags: ["history", "music", "art"], lesson: "c1-register", scenario: "travel-meet", reward: "nz-woven-kete",
+    },
+    // 9 ─────────────────────────────────────────────
+    {
+      id: "nz-birds", order: 9, title: "Les oiseaux de Zealandia", titleEn: "Native birds at Zealandia", place: "zealandia", minutes: 7,
+      briefing: "À Zealandia, écosanctuaire de Wellington, Mere te présente des oiseaux natifs. Beaucoup ne volent pas ou nichent au sol : la lutte contre les prédateurs introduits est un enjeu national.",
+      objectives: { A1: "Nommer quelques oiseaux et couleurs.", A2: "Comprendre une description simple.", B1: "Identifier un oiseau d'après une description.", B2: "Expliquer un enjeu de conservation.", C1: "Débattre de solutions avec arguments." },
+      grammar: ["Présent simple pour décrire", "Relatives (a bird that…)", "Cause et conséquence"],
+      phrases: [
+        { en: "The kiwi can't fly.", fr: "Le kiwi ne peut pas voler." },
+        { en: "It's a bird that comes out at night.", fr: "C'est un oiseau qui sort la nuit." },
+        { en: "Introduced predators are the biggest threat.", fr: "Les prédateurs introduits sont la plus grande menace." },
+        { en: "Please stay on the path.", fr: "Merci de rester sur le chemin." },
+      ],
+      vocab: ["flightless", "nocturnal", "predator", "endangered"],
+      exercises: [
+        mcq(E, "The kiwi is a bird that…", ["can't fly", "swims in the sea", "lives in cities"], 0, "Le kiwi est un oiseau qui ne vole pas (flightless)."),
+        match(E, [["flightless", "qui ne vole pas"], ["nocturnal", "nocturne"], ["feathers", "plumes"], ["beak", "bec"]]),
+        fill(EM, "It's a bird ___ comes out at night.", ["that", "which"], "Pronom relatif pour une chose / un animal : that ou which."),
+        identify(ALL, "Quel oiseau ?", "This parrot lives in the mountains of the South Island. It's olive-green, very curious and famous for playing with things — even car parts!", [["the kea", "le kéa", "parrot"], ["the kiwi", "le kiwi", "kiwi"], ["the pūkeko", "le pūkeko", "swamphen"]], 0, "Perroquet des montagnes, vert olive, très curieux : le kéa."),
+        identify(EM, "Et celui-ci ?", "This bird is small, brown and round. It can't fly, it has a long beak, and it looks for food at night.", [["the kiwi", "le kiwi", "kiwi"], ["the kea", "le kéa", "parrot"], ["the tūī", "le tūī", "songbird"]], 0, "Petit, brun, rond, sans vol, long bec, nocturne : le kiwi."),
+        listen(M, "Many of our native birds evolved without land mammals, so they nest on the ground. Rats and stoats can easily reach their eggs.", "Pourquoi ces oiseaux sont-ils vulnérables ?", ["Ils nichent au sol, accessibles aux prédateurs introduits", "Ils mangent trop", "Il fait trop froid"], 0, "Ils ont évolué sans mammifères terrestres et nichent au sol : les rats et hermines atteignent les œufs."),
+        dlg(M, "Mere répond à tes questions.",
+          say("Mere", "Any questions about the birds?", "Des questions sur les oiseaux ?"),
+          pick("Tu demandes pourquoi il y a une clôture.", ["Why is there a fence around the sanctuary?", true, "Question claire au présent : Why is there…"], ["Why there is a fence?", false, "Dans une question directe : « Why is there… »."]),
+          say("Mere", "It keeps predators like rats and stoats out, so the birds can breed safely.", "Elle empêche les prédateurs d'entrer, pour que les oiseaux se reproduisent en sécurité."),
+          pick("Tu reformules.", ["So the fence protects the eggs and chicks.", true, "Reformulation juste qui montre ta compréhension."], ["So the fence keeps the birds out.", false, "C'est l'inverse : elle tient les prédateurs dehors."]),
+        ),
+        tr(MH, "fr", "Les prédateurs introduits sont la plus grande menace pour ces oiseaux.", ["Introduced predators are the biggest threat to these birds.", "Introduced predators are the greatest threat to these birds.", "Introduced predators are the main threat to these birds."], "Superlatif (the biggest / greatest) + « threat to »."),
+        fix(MH, "The kiwi is endangered because of the predators which was introduced.", ["The kiwi is endangered because of the predators that were introduced.", "The kiwi is endangered because of introduced predators.", "The kiwi is endangered because of the predators which were introduced."], "« Predators » est pluriel : were (pas was)."),
+        produce(H, "Débattre de solutions", "Suggest two ways visitors and locals can help protect native birds, and explain why they work.", "Propose deux façons d'aider à protéger les oiseaux natifs et explique pourquoi.", [["trap", "trapping", "fence", "sanctuary", "volunteer", "donate", "plant", "dog", "lead", "cat"], ["because", "so", "since", "which"], ["predator", "rat", "stoat", "egg", "nest", "chick", "habitat"]], 20, ["People can volunteer with trapping groups, because fewer rats and stoats means more chicks survive. Visitors should also keep dogs on a lead, since dogs can disturb kiwi nests.", "Planting native trees restores habitat, which gives birds food and shelter; and supporting sanctuaries helps because fences keep predators away from nests."], "Deux actions concrètes + leur effet (because / so / which)."),
+        speak(H, "It's a nocturnal, flightless bird, which makes it especially vulnerable to predators.", "C'est un oiseau nocturne qui ne vole pas, ce qui le rend particulièrement vulnérable aux prédateurs."),
+      ],
+      tags: ["wildlife", "nature", "science"], lesson: "b2-passive", scenario: "passions", reward: "nz-kiwi-plush",
+    },
+  ],
+  final: {
+    id: "new-zealand-final", title: "Mon aventure en Aotearoa", titleEn: "My Aotearoa adventure",
+    intro: "Dernière aventure : trois jours dans la région de Queenstown avec Yuki. Une randonnée, une activité d'aventure, un imprévu… Tes choix changent l'histoire. On évalue ta communication, pas une réponse unique.",
+    start: "s1",
+    skills: ["Comprendre une consigne et une météo", "Réserver et modifier un plan", "Raconter des sensations", "Interagir avec respect"],
+    nodes: [
+      { id: "s1", scene: "Office de tourisme de Queenstown. Yuki hésite entre une randonnée et une activité d'aventure.", lines: [say("Yuki", "Tomorrow's our only free day. Hike or something more extreme?", "Demain, c'est notre seul jour libre. Randonnée ou quelque chose de plus extrême ?")],
+        step: { kind: "choice", prompt: "Que proposes-tu ?", options: [
+          { en: "Let's check the forecast first, then decide.", next: "s2", good: true, why: "Réflexe prudent et naturel en Nouvelle-Zélande." },
+          { en: "Let's do a jet boat ride — I've always wanted to try one!", next: "s3", good: true, why: "Proposition claire et enthousiaste (present perfect « I've always wanted »)." },
+        ] } },
+      { id: "s2", scene: "Le bulletin s'affiche à l'écran.", step: { kind: "exercise", exercise: { type: "decide", title: "La météo", doc: "QUEENSTOWN — Tomorrow: clear morning, cloud increasing in the afternoon, gale-force winds on the tops from 3 p.m. Alpine tracks: start early.", question: "Quel plan choisir ?", options: [
+        { en: "Do the alpine hike early and be down by 2 p.m.", correct: true, why: "Matinée dégagée, vents violents en altitude dès 15 h : partir tôt." },
+        { en: "Start the alpine hike at 2 p.m.", correct: false, why: "Vous seriez en crête au moment des rafales." },
+        { en: "Cancel everything, the weather is terrible all day.", correct: false, why: "La matinée est belle." },
+      ], bands: ALL }, next: "s4" } },
+      { id: "s3", scene: "Au comptoir, il ne reste que deux places… mais l'après-midi.", lines: [say("Staff", "We've only got two seats left at 3 p.m. Would that work for you?", "Il ne reste que deux places à 15 h. Ça vous irait ?")],
+        step: { kind: "produce", exercise: produceM("Réserver", "Book the two seats and ask one practical question.", "Réserve les deux places et pose une question pratique.", [["book", "take", "we'll", "two"], ["what", "how", "do we", "should we", "where", "?"]], 10, ["Yes, we'll take them, please. What should we bring?", "Perfect, could we book both seats? Do we need to arrive early?"], "Accepter (we'll take them) + une question (What should we bring?)."), next: "s4" } },
+      { id: "s4", scene: "Le lendemain matin, sur le sentier, vous croisez un randonneur âgé qui boite.", lines: [say("Hiker", "Sorry to bother you — I've twisted my ankle. I'm not sure I can make it down.", "Désolé de vous déranger, je me suis tordu la cheville. Pas sûr de pouvoir redescendre.")],
+        step: { kind: "choice", prompt: "Que fais-tu ?", options: [
+          { en: "Let's stay with you. Do you have a personal locator beacon, or should we call for help?", next: "s5", good: true, why: "Rester avec lui et chercher l'aide adaptée : responsable et clair." },
+          { en: "Sorry, we're in a hurry.", next: "s6", good: false, why: "Le laisser seul en montagne n'est pas acceptable ; la suite le rappelle." },
+        ] } },
+      { id: "s5", scene: "Il a une balise. Yuki appelle les secours ; tu dois décrire la situation.", step: { kind: "produce", exercise: produceM("Alerter", "Describe the situation to the emergency operator.", "Décris la situation à l'opérateur des secours.", [["ankle", "injured", "hurt", "twisted", "can't walk"], ["track", "trail", "near", "hut", "km", "kilometres", "kilometers", "minutes"], ["man", "hiker", "he", "older"]], 15, ["An older hiker has twisted his ankle and can't walk. We're on the track about two kilometres above the hut.", "A man is injured — he hurt his ankle. We're near the second bridge on the track, around forty minutes from the car park."], "Qui + quoi + où, le plus précisément possible."), next: "s7" } },
+      { id: "s6", scene: "Quelques minutes plus tard, Yuki s'arrête : « We can't just leave him. » Vous faites demi-tour.", lines: [say("Yuki", "Let's go back. In the mountains, you look after each other.", "Retournons-y. En montagne, on prend soin les uns des autres.")],
+        step: { kind: "choice", prompt: "Tu réponds :", options: [
+          { en: "You're right. Let's go back and help him.", next: "s5", good: true, why: "Reconnaître son erreur et agir : bonne décision." },
+          { en: "Okay, but I'm not happy about it.", next: "s5", good: false, why: "Tu y retournes, mais le ton n'est pas approprié." },
+        ] } },
+      { id: "s7", scene: "Les secours prennent le relais. Le soir, au café, un serveur te demande comment s'est passée ta journée.", step: { kind: "exercise", exercise: { type: "dialogue", intro: "Au café.", lines: [
+        say("Waiter", "Kia ora! Big day?", "Bonjour ! Grosse journée ?"),
+        pick("Oui, vous avez aidé un randonneur blessé.", ["Yeah, we helped an injured hiker on the track.", true, "Résumé clair au prétérit."], ["Yes, we are helping a hiker yesterday.", false, "Temps incorrect : passé simple « helped »."]),
+        say("Waiter", "Good on you! Flat white to celebrate?", "Bravo ! Un flat white pour fêter ça ?"),
+        pick("Tu acceptes avec humour.", ["Sweet as — I think I've earned it!", true, "Expression kiwi bien placée + present perfect « I've earned it »."], ["Yes I deserve coffee very.", false, "Phrase incorrecte."]),
+      ], bands: ALL }, next: "s8" } },
+      { id: "s8", scene: "Dernier soir. Tu écris ta carte postale depuis Aotearoa.", step: { kind: "produce", exercise: produceM("Raconter ton voyage", "Write your postcard: two highlights, one challenge and how you felt.", "Écris ta carte postale : deux temps forts, une difficulté et ce que tu as ressenti.", [["went", "saw", "visited", "did", "tried", "hiked", "jumped", "learned"], ["but", "although", "challenge", "difficult", "problem", "however"], ["felt", "amazing", "proud", "grateful", "incredible", "breathtaking"]], 25, ["Kia ora from Queenstown! I cruised Milford Sound and visited a marae, which was really moving. On our last hike we helped an injured man — scary, but I felt proud we stayed calm.", "This trip was incredible: a skydive over Lake Taupō and a hike in the Southern Alps. The weather was a challenge, but I learned to check the forecast and I feel so grateful."], "Prétérit pour les faits + une nuance (but / although) + une émotion."), next: "end" } },
+      { id: "end", scene: "Fin de l'aventure.", step: { kind: "end", summary: "Tu as compris une météo, réservé, aidé quelqu'un en anglais et raconté ton voyage : la Nouvelle-Zélande est validée à ton niveau. Ka kite anō !" } },
+    ] as StoryNode[],
+  },
+  rewards: [
+    { id: "nz-jumpsuit", kind: "clothing", fr: "Combinaison de parachutisme", en: "Skydiving jumpsuit", desc: "La combinaison de ton saut (virtuel) au-dessus du lac Taupō.", shopItem: "nz-jumpsuit", motif: "jumpsuit" },
+    { id: "nz-rugby-jersey", kind: "clothing", fr: "Maillot de rugby noir", en: "Black rugby jersey", desc: "Un maillot de supporter, souvenir de ta soirée à Eden Park.", shopItem: "nz-rugby-jersey", motif: "jersey" },
+    { id: "nz-hiking-boots", kind: "accessory", fr: "Chaussures de randonnée", en: "Hiking boots", desc: "Bien nettoyées avant chaque sentier, comme le demande la biosécurité.", shopItem: "nz-hiking-boots", motif: "boots" },
+    { id: "nz-keepcup", kind: "accessory", fr: "Gobelet réutilisable", en: "Reusable coffee cup", desc: "Pour tes flat whites, sans gobelet jetable.", shopItem: "nz-keepcup", motif: "cup" },
+    { id: "nz-fiord-print", kind: "decor", fr: "Affiche de Milford Sound", en: "Milford Sound print", desc: "Une affiche du fjord sous la pluie et ses cascades.", shopItem: "nz-fiord-print", motif: "fiord" },
+    { id: "nz-woven-kete", kind: "souvenir-culture", fr: "Petit panier tressé", en: "Small woven basket", desc: "Un panier en lin tressé acheté à un artisan, souvenir de la visite culturelle. Ce n'est pas un objet cérémoniel.", motif: "basket" },
+    { id: "nz-kiwi-plush", kind: "souvenir-activity", fr: "Peluche kiwi", en: "Kiwi plush", desc: "Achetée à la boutique de Zealandia, dont les recettes soutiennent la conservation.", motif: "kiwi" },
+    { id: "nz-camper-sticker", kind: "souvenir-activity", fr: "Autocollant de campervan", en: "Campervan sticker", desc: "Pour ton carnet de route de l'île du Sud.", motif: "van" },
+    { id: "nz-luggage-strap", kind: "souvenir-activity", fr: "Sangle de bagage", en: "Luggage strap", desc: "Celle de ta valise contrôlée à Auckland.", motif: "strap" },
+    { id: "nz-stamp", kind: "stamp", fr: "Tampon Nouvelle-Zélande", en: "New Zealand stamp", desc: "Tampon du passeport : un fjord et une fougère argentée.", motif: "fern" },
+    { id: "nz-postcard", kind: "postcard", fr: "Carte postale d'Aotearoa", en: "Aotearoa postcard", desc: "Ton avatar devant les falaises de Milford Sound.", motif: "fiord" },
+    { id: "nz-trophy", kind: "trophy", fr: "Trophée Grand Explorateur", en: "Great Explorer trophy", desc: "Pour avoir communiqué en randonnée, dans les airs et sur un marae.", motif: "trophy" },
+  ],
+  story: {
+    title: "The Kea and the Red Boot",
+    level: "A2",
+    text:
+      "Yuki arrived at the car park near Arthur's Pass early in the morning. The mountains were white with snow and the air was cold. She put her hiking boots next to the car and went to get her backpack.\n\nWhen she came back, one boot was gone.\n\nShe looked under the car. Nothing. Then she heard a strange noise, a loud \"keee-aa!\" On the roof of the car, a big green parrot was looking at her. It had her red boot in its beak.\n\n\"Hey! That's mine!\" Yuki said. The bird did not move. It looked very proud.\n\nAn older man walked over and laughed. \"Ah, you've met a kea,\" he said. \"They're very clever and very curious. They love shiny things, bags, and… boots, apparently.\" He was Hemi, Mere's father, and a volunteer with the Department of Conservation.\n\n\"Can I take it back?\" Yuki asked. \"Is it dangerous?\"\n\n\"Not dangerous, just cheeky,\" Hemi said. \"But please don't feed it. Human food makes them sick.\" He walked slowly toward the car and talked quietly to the bird. After a minute, the kea dropped the boot on the roof and flew to a rock.\n\nYuki was surprised. \"How did you do that?\"\n\n\"Patience,\" he smiled. \"And a bit of luck.\"\n\nWhile she put on her boots, Hemi told her about the kea. It is the only alpine parrot in the world, and there are not many left. People are working hard to protect them from predators.\n\nThat evening, Yuki wrote in her journal: \"Today a parrot stole my boot. It was the best start to a hike ever.\" Then she added a little drawing of a green bird with a red boot.",
+    glossary: [
+      { en: "car park", fr: "parking (UK / NZ)" },
+      { en: "beak", fr: "bec" },
+      { en: "curious", fr: "curieux" },
+      { en: "cheeky", fr: "effronté, coquin" },
+      { en: "to feed", fr: "nourrir" },
+      { en: "patience", fr: "patience" },
+    ],
+  },
+  postcardLine: "I cruised Milford Sound, learned about manaakitanga on a marae and jumped over Lake Taupō.",
+  sources: [
+    "New Zealand Government — Māori Language Act 1987 ; New Zealand Sign Language Act 2006 (legislation.govt.nz)",
+    "Department of Conservation — doc.govt.nz (Great Walks, réservation des refuges, oiseaux natifs, Predator Free 2050)",
+    "Tourism New Zealand — newzealand.com (culture māorie, marae et pōwhiri, régions)",
+    "Ministry for Primary Industries — mpi.govt.nz (biosécurité à l'arrivée)",
+    "UNESCO World Heritage Centre — Te Wāhipounamu – South West New Zealand ; Tongariro National Park (whc.unesco.org)",
+    "Zealandia Te Māra a Tāne — visitzealandia.com",
+    "Te Ara – The Encyclopedia of New Zealand — teara.govt.nz",
+    "Encyclopaedia Britannica — New Zealand",
+  ],
+  review: { linguistic: "auto-checked", cultural: "auto-checked", updated: "2026-11-27" },
+};

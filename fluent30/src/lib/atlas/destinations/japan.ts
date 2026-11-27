@@ -307,7 +307,7 @@ export const JAPAN: AtlasDestination = {
           you("Demande des baguettes.",
             ["Chopsticks, please.", true, "Réponse directe à une question à choix."],
             ["Yes.", false, "La question offre un choix : « yes » ne répond pas."],
-            ["Spoon of chopsticks.", false, "Phrase incohérente.")),
+            ["Spoon of chopsticks.", false, "Phrase incohérente."])),
         tr(H, "fr", "Est-ce que je peux recharger ma carte de transport ici ?", ["Can I top up my transport card here?", "Can I top up my travel card here?", "Can I recharge my transport card here?", "Can I top up my IC card here?"], "« top up » = recharger (une carte, un crédit) ; « recharge » se comprend aussi."),
         mech(H, { type: "decide", title: "Lire l'étiquette", doc: "Chicken teriyaki bento — 598 yen. Contains: wheat, soy, chicken. Best before: today 22:00.\nVegetable curry — 450 yen. Contains: wheat, milk. Best before: tomorrow 03:00.", question: "It's 22:30 and you're allergic to milk. Which can you buy?", options: [
           { en: "Neither: the bento is past its date and the curry contains milk.", correct: true, why: "Le bento était « best before 22:00 » (dépassé) et le curry « contains milk »." },
@@ -350,7 +350,7 @@ export const JAPAN: AtlasDestination = {
           you("Décris-le.",
             ["It's a small black backpack with a red keyring.", true, "Taille, couleur, détail distinctif : parfait."],
             ["It looks like a bag.", false, "Réponse inutile pour l'identifier."],
-            ["It's black small backpack.", false, "Ordre des adjectifs (small black) et article « a » manquant.")),
+            ["It's black small backpack.", false, "Ordre des adjectifs (small black) et article « a » manquant."])),
         mech(H, { type: "investigate", title: "Où est le sac ?", brief: "Interroge trois personnes pour comprendre où ton sac a été déposé.", suspects: [
           { name: "Cleaner", role: "Agent d'entretien", questions: [{ q: "Did you see a black backpack?", a: "Yes, I found one on a Yamanote train around ten and gave it to the station staff.", clue: "Trouvé dans un train de la ligne Yamanote vers 10 h et remis au personnel." }] },
           { name: "Station officer", role: "Agent de gare", questions: [{ q: "Where do you keep lost items?", a: "Items found today stay at this station until six. After that, they go to the central lost property centre.", clue: "Les objets restent dans la gare jusqu'à 18 h, puis partent au centre principal." }] },
@@ -436,7 +436,7 @@ export const JAPAN: AtlasDestination = {
           you("Dis que non, mais que tu aimerais.",
             ["Not yet, but I'd love to. Where should I start?", true, "« Not yet » + intérêt + question : conversation relancée."],
             ["No, I didn't read never.", false, "Double négation et mauvais temps."],
-            ["I never.", false, "Phrase incomplète.")),
+            ["I never.", false, "Phrase incomplète."])),
         tr(H, "fr", "Je n'ai jamais lu de manga d'horreur, mais j'aimerais essayer.", ["I've never read a horror manga, but I'd like to try.", "I have never read horror manga, but I'd like to try.", "I've never read any horror manga, but I'd like to try.", "I have never read a horror manga, but I would like to try."], "Present perfect avec « never » pour une expérience ; « I'd like to » = j'aimerais."),
         mech(H, { type: "decide", title: "Organiser la visite", doc: "Kyoto International Manga Museum — Today: Special exhibition 'Drawing Seasons' (2nd floor). Live drawing demo by a guest artist: 2 pm, room 3. The reading 'Wall of Manga' is open all day. Last entry 5 pm.", question: "Maya wants to see an artist draw live, and you arrive at 3 pm. What do you tell her?", options: [
           { en: "We've missed the live demo, but we can still see the exhibition and the Wall of Manga.", correct: true, why: "La démo était à 14 h ; à 15 h, l'expo et le mur de mangas restent accessibles (dernière entrée 17 h)." },
@@ -482,7 +482,7 @@ export const JAPAN: AtlasDestination = {
           you("Donne ta pointure européenne.",
             ["I'm a 42 in European sizes.", true, "Précise le système de tailles : utile car il varie selon les pays."],
             ["My foot is 42 years.", false, "« years » = ans : contresens."],
-            ["Big.", false, "Pas assez précis.")),
+            ["Big.", false, "Pas assez précis."])),
         mech(H, { type: "decide", title: "Le bulletin des pistes", doc: "Snow report — Visibility: poor above 1,500 m after 1 pm. Wind: strong at the summit, top lift may close. Green 'Panorama' run: groomed, sheltered by trees. Black 'Ridge' run: off the main path, avalanche risk 3/5 — guided groups only.", question: "You're an intermediate skier, it's 12:30 and you're alone. Which plan is the most sensible?", options: [
           { en: "Ski the green Panorama run below the trees.", correct: true, why: "Piste damée, abritée par les arbres, sous la zone de mauvaise visibilité : le choix prudent." },
           { en: "Take the top lift and ski the Ridge run quickly before 1 pm.", correct: false, why: "Hors piste principale, risque d'avalanche 3/5, réservée aux groupes guidés." },
@@ -525,7 +525,7 @@ export const JAPAN: AtlasDestination = {
           you("Pose une question délicate avec tact.",
             ["I have a small tattoo — could you tell me whether that's a problem here?", true, "Question indirecte polie : le règlement sur les tatouages varie selon les lieux."],
             ["Tattoos OK or not?", false, "Trop abrupt pour une question délicate."],
-            ["Do you hate tattoos?", false, "Question accusatrice et maladroite.")),
+            ["Do you hate tattoos?", false, "Question accusatrice et maladroite."])),
         tr(H, "fr", "Pourriez-vous me dire s'il y a un bain privé ?", ["Could you tell me if there's a private bath?", "Could you tell me whether there is a private bath?", "Could you tell me if there is a private bath?", "Could you tell me whether there's a private bath?"], "Question indirecte : pas d'inversion après « Could you tell me if/whether »."),
         fix(H, "Could you tell me where is the bath?", ["Could you tell me where the bath is?"], "Dans une question indirecte, l'ordre redevient sujet + verbe : where the bath is."),
         mech(H, { type: "decide", title: "Le règlement", doc: "Bath rules: 1. Please wash before entering. 2. Small towels must not touch the water. 3. Guests with tattoos are welcome to use the private family bath (reservation at the front desk, free of charge). 4. Please do not swim.", question: "Your friend has a large tattoo and wants to bathe. What do you suggest?", options: [

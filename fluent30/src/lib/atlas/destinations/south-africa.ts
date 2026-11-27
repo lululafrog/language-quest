@@ -536,7 +536,7 @@ export const SOUTHAFRICA: AtlasDestination = {
       "An hour passed. A family of warthogs came to drink, then ran off with their tails in the air. A fish eagle called from a dead tree. Kenji started to take photos of small things he had ignored before: the patterns in the dry mud, a dragonfly on a reed, the light changing on the water.\n\n" +
       "\"You're getting better,\" Thandi whispered. \"Most people only look for the big five. But the bush is full of stories.\"\n\n" +
       "Just before they left, the impala at the waterhole suddenly lifted their heads. Nobody moved. Then, very slowly, a leopard walked out of the long grass, drank for a few seconds and disappeared again. It all took less than a minute.\n\n" +
-      "Kenji had his camera in his hands, but he didn't take a single picture. He simply watched.\n\n" +
+      "Kenji had his camera in his hands, but he didn't take a single picture. He simply watched, holding his breath, afraid that even the sound of the shutter would break the moment.\n\n" +
       "Later, back at the camp, a traveller asked him if he had finally got his leopard photo. Kenji shook his head and laughed. \"No,\" he said. \"But I got something better. I learned how to wait.\"",
     glossary: [
       { en: "waterhole", fr: "point d'eau" },
