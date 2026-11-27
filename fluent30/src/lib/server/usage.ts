@@ -298,6 +298,15 @@ export function takeQuota(feature: AiFeature, who: string) {
   return null;
 }
 
+/** Gives back one unit of quota when the call failed on our side (provider down, invalid key, bad response…). */
+export function refundQuota(feature: AiFeature, who: string) {
+  const key = `${feature}:${asHash(who)}`;
+  const day = dayCounters.get(key);
+  if (day && day.count > 0) day.count--;
+  const month = monthCounters.get(key);
+  if (month && month.count > 0) month.count--;
+}
+
 const inflight = new Map<string, number>();
 const MAX_CONCURRENT = Number(process.env.FLUENT30_MAX_CONCURRENT_PER_USER) || 3;
 /** Reserves one concurrent slot for this user; returns a release function, or null when too many calls are running. */

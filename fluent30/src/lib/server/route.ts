@@ -18,7 +18,7 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { guard, jsonError } from "./guard";
 import { FEATURES, MAX_IMAGE_BASE64 } from "./costs-core";
-import { acquireSlot, hashUser, recordFailure, rememberUser, runWithAiContext, takeQuota } from "./usage";
+import { acquireSlot, hashUser, recordFailure, refundQuota, rememberUser, runWithAiContext, takeQuota } from "./usage";
 import { BadInput, classifyAiError } from "./errors";
 import type { AiFeature } from "../plan";
 
@@ -70,8 +70,11 @@ export async function withAi<B>(
 
   try {
     const data = await runWithAiContext({ feature, user }, () => handler(body, { userId: g.userId, user, feature }));
+    // a failure on our side (no engine available, provider down) must not eat the learner's quota
+    if (data instanceof Response && data.status >= 500) refundQuota(feature, user);
     return data instanceof Response ? data : NextResponse.json(data);
   } catch (e) {
+    refundQuota(feature, user);
     return runWithAiContext({ feature, user }, async () => mapError(e));
   } finally {
     release();

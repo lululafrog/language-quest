@@ -17,10 +17,10 @@ export function OfflineBanner() {
   const online = useSyncExternalStore(subscribe, () => navigator.onLine, () => true);
   if (online) return null;
   return (
-    <div role="status" className="fixed inset-x-0 top-0 z-[60] flex justify-center px-3 pt-[calc(env(safe-area-inset-top)+6px)]">
+    <div role="status" className="sticky top-0 z-[60] flex justify-center px-3 pb-1 pt-[calc(env(safe-area-inset-top)+6px)]">
       <p className="flex items-center gap-2 rounded-full bg-ink-800/90 px-3.5 py-1.5 text-[13px] font-medium text-white shadow-lg backdrop-blur dark:bg-ink-200/90 dark:text-ink-900">
         <Icon name="globe" size={15} />
-        Hors connexion · tes révisions et cours restent disponibles, tout se synchronise au retour du réseau
+        Hors connexion · révisions et cours disponibles, synchro au retour du réseau
       </p>
     </div>
   );

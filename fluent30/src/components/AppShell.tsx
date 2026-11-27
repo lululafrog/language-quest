@@ -198,6 +198,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="min-w-0 flex-1">
         {!online && <div className="bg-sun-100 px-4 py-1.5 text-center text-xs text-sun-800 md:hidden dark:bg-sun-500/15 dark:text-sun-100">{t("Hors ligne — flashcards et livres téléchargés disponibles", "Offline — flashcards and downloaded books available")}</div>}
+        {mounted && <OfflineBanner />}
         <main className="mx-auto w-full max-w-5xl px-4 pb-32 pt-5 sm:px-6 md:pb-12 md:pt-8">{mounted ? children : <div className="space-y-4"><div className="h-10 w-48 animate-pulse rounded-xl bg-surface-2" /><div className="h-40 animate-pulse rounded-2xl bg-surface-2" /></div>}</main>
       </div>
 
@@ -218,7 +219,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Toaster />
       {mounted && <RewardWatcher />}
       {mounted && <StampWatcher />}
-      {mounted && <OfflineBanner />}
       {mounted && <CeremonyWatcher />}
     </div>
   );
