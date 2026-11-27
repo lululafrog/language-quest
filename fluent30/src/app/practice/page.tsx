@@ -2,27 +2,35 @@
 import Link from "next/link";
 import { useT } from "@/hooks/useT";
 import { PageHeader } from "@/components/ui";
-import { Icon, type IconName } from "@/components/icons";
 
 export default function PracticePage() {
   const t = useT();
-  const items: { href: string; icon: IconName; title: string; desc: string; tone: string }[] = [
-    { href: "/games", icon: "play", title: t("Mini-jeux", "Mini-games"), desc: t("20 jeux qui ciblent tes mots les plus fragiles", "20 games targeting your weakest words"), tone: "from-ink-500 to-ink-700" },
-    { href: "/chat", icon: "chat", title: t("Conversation IA", "AI conversation"), desc: t("Scénarios réels, à l'écrit ou à l'oral", "Real-life scenarios, written or spoken"), tone: "from-coral-500 to-coral-600" },
-    { href: "/verbs", icon: "verbs", title: t("Verbes essentiels", "Core verbs"), desc: t("get, take, make, have… et leurs expressions", "get, take, make, have… and their chunks"), tone: "from-sun-500 to-amber-600" },
-    { href: "/verbs/irregular", icon: "review", title: t("Verbes irréguliers", "Irregular verbs"), desc: t("Les plus importants d'abord : go – went – gone…", "Most important first: go – went – gone…"), tone: "from-coral-400 to-ink-500" },
-    { href: "/grammar", icon: "grammar", title: t("Grammaire", "Grammar"), desc: t("Les temps et structures utiles à l'oral", "Tenses and structures for speaking"), tone: "from-mint-500 to-mint-600" },
-    { href: "/listen", icon: "ear", title: t("Écoute & prononciation", "Listening & speaking"), desc: t("Dialogues, dictées, shadowing, accents", "Dialogues, dictation, shadowing, accents"), tone: "from-ink-400 to-coral-500" },
-    { href: "/translate", icon: "translate", title: t("Assistant de traduction", "Translation assistant"), desc: t("Comprendre un message et bien y répondre", "Understand a message and reply well"), tone: "from-ink-700 to-ink-900" },
+  const items: { href: string; emoji: string; title: string; desc: string; tone: string; big?: boolean }[] = [
+    { href: "/games", emoji: "🎮", title: t("Mini-jeux", "Mini-games"), desc: t("20 jeux sur tes mots les plus fragiles", "20 games on your weakest words"), tone: "from-ink-500 via-ink-600 to-ink-800", big: true },
+    { href: "/chat", emoji: "💬", title: t("Parler avec l'IA", "Talk with AI"), desc: t("Restaurant, voyage, flirt… à l'écrit ou à l'oral", "Real-life role-plays"), tone: "from-coral-400 via-coral-500 to-coral-600", big: true },
+    { href: "/pronunciation", emoji: "🗣️", title: t("Prononciation", "Pronunciation"), desc: t("Les pièges des francophones", "French speakers' traps"), tone: "from-mint-400 to-mint-600" },
+    { href: "/verbs/irregular", emoji: "🔁", title: t("Verbes irréguliers", "Irregular verbs"), desc: "go – went – gone", tone: "from-sun-400 to-amber-500" },
+    { href: "/verbs", emoji: "⚡", title: t("Verbes essentiels", "Core verbs"), desc: "get, take, make…", tone: "from-ink-400 to-ink-600" },
+    { href: "/grammar", emoji: "✍️", title: t("Grammaire", "Grammar"), desc: t("Les temps, en visuel", "Tenses, visually"), tone: "from-[#8b5cf6] to-[#6d28d9]" },
+    { href: "/listen", emoji: "🎧", title: t("Écoute", "Listening"), desc: t("Dialogues, dictées, accents", "Dialogues, dictation"), tone: "from-[#38bdf8] to-[#2563eb]" },
+    { href: "/translate", emoji: "🌍", title: t("Traducteur", "Translator"), desc: t("Comprendre et répondre", "Understand & reply"), tone: "from-[#f472b6] to-[#db2777]" },
   ];
   return (
     <div>
-      <PageHeader title={t("Pratiquer", "Practice")} subtitle={t("Choisis une activité", "Pick an activity")} />
-      <div className="grid gap-3 sm:grid-cols-2">
+      <PageHeader title={t("Pratiquer", "Practice")} subtitle={t("Choisis ton activité du moment", "Pick your activity")} />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {items.map((i) => (
-          <Link key={i.href} href={i.href} className="group flex items-center gap-4 rounded-2xl border border-line bg-surface p-4 transition hover:border-ink-300">
-            <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white ${i.tone}`}><Icon name={i.icon} size={24} /></span>
-            <span className="min-w-0"><span className="block font-semibold">{i.title}</span><span className="block text-sm text-muted">{i.desc}</span></span>
+          <Link
+            key={i.href}
+            href={i.href}
+            className={`group relative flex flex-col justify-between overflow-hidden rounded-3xl bg-gradient-to-br p-4 text-white shadow-lg shadow-ink-900/10 transition hover:-translate-y-0.5 active:scale-[0.98] ${i.tone} ${i.big ? "col-span-2 min-h-36 sm:col-span-2" : "min-h-36"}`}
+          >
+            <span className="pointer-events-none absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/15" />
+            <span className={`relative ${i.big ? "text-5xl" : "text-4xl"} drop-shadow-sm transition group-hover:scale-110`}>{i.emoji}</span>
+            <span className="relative mt-3">
+              <span className="block text-lg font-bold leading-tight" style={{ fontFamily: "var(--font-display)" }}>{i.title}</span>
+              <span className="mt-0.5 block text-sm text-white/85">{i.desc}</span>
+            </span>
           </Link>
         ))}
       </div>

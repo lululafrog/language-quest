@@ -5,12 +5,20 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { getDb } from "@/lib/db";
 import { useT } from "@/hooks/useT";
 import { Badge, PageHeader, Panel } from "@/components/ui";
+import { levelName } from "@/lib/cefr";
 
 const WEEK = 7 * 86400000;
 
 export default function TestsPage() {
   const t = useT();
   const [now] = useState(() => Date.now());
+  const [lastCefr] = useState<{ at: number; overall: number | null } | null>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("fluent30.cefr.last") ?? "null");
+    } catch {
+      return null;
+    }
+  });
   const tests = useLiveQuery(() => getDb().tests.orderBy("at").reverse().toArray(), []);
   const last = (type: string) => tests?.find((x) => x.type === type);
   const due = (type: string, period: number) => {
@@ -18,7 +26,8 @@ export default function TestsPage() {
     return !l || now - l.at > period;
   };
   const cards = [
-    { href: "/tests/placement", type: "placement", title: t("Test de niveau", "Placement test"), desc: t("Repère le vocabulaire déjà connu et ton niveau de grammaire (~5 min).", "Find known vocabulary (~5 min)."), period: Infinity },
+    { href: "/tests/cefr", type: "cefr", title: t("Test de niveau complet A1–C2", "Full CEFR test A1–C2"), desc: t("5 compétences évaluées séparément, comme l'évaluation officielle du CECRL (~30 min).", "5 skills assessed separately, like official CEFR assessment (~30 min)."), period: Infinity },
+    { href: "/tests/placement", type: "placement", title: t("Test rapide de vocabulaire", "Quick vocabulary test"), desc: t("Repère le vocabulaire déjà connu et ton niveau de grammaire (~5 min).", "Find known vocabulary (~5 min)."), period: Infinity },
     { href: "/tests/weekly", type: "weekly", title: t("Test hebdomadaire", "Weekly test"), desc: t("Vocabulaire, production écrite, écoute, grammaire (~5 min).", "Vocabulary, writing, listening, grammar (~5 min)."), period: WEEK },
     { href: "/tests/monthly", type: "monthly", title: t("Test mensuel", "Monthly test"), desc: t("Bilan complet avec compréhension écrite (~12 min).", "Full review with reading (~12 min)."), period: 30 * 86400000 },
   ];
@@ -36,6 +45,7 @@ export default function TestsPage() {
               </div>
               <p className="mt-1 text-sm text-muted">{c.desc}</p>
               {l && <p className="mt-1 text-xs text-muted">{t("Dernier :", "Last:")} {new Date(l.at).toLocaleDateString()}</p>}
+              {c.type === "cefr" && lastCefr && <p className="mt-1 text-xs text-muted">{t("Dernier résultat :", "Last result:")} <b>{levelName(lastCefr.overall ?? -1)}</b> · {new Date(lastCefr.at).toLocaleDateString()}</p>}
             </Link>
           );
         })}

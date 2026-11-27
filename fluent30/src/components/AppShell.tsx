@@ -9,6 +9,7 @@ import { trackActivity } from "@/lib/track";
 import { startAutoSync } from "@/lib/sync";
 import { Icon, type IconName } from "./icons";
 import { Toaster, cx } from "./ui";
+import { RewardWatcher } from "./game/RewardWatcher";
 
 type NavItem = { href: string; fr: string; en: string; icon: IconName };
 
@@ -33,6 +34,7 @@ export const ALL_NAV: NavItem[] = [
   { href: "/chat", fr: "Conversation IA", en: "AI conversation", icon: "chat" },
   { href: "/listen", fr: "Écoute & prononciation", en: "Listening & speaking", icon: "ear" },
   { href: "/translate", fr: "Traduction", en: "Translator", icon: "translate" },
+  { href: "/shop", fr: "Boutique", en: "Shop", icon: "sparkle" },
   { href: "/stats", fr: "Statistiques", en: "Statistics", icon: "stats" },
   { href: "/tests", fr: "Tests", en: "Tests", icon: "test" },
   { href: "/settings", fr: "Réglages", en: "Settings", icon: "settings" },
@@ -40,8 +42,8 @@ export const ALL_NAV: NavItem[] = [
 
 function isActive(path: string, href: string) {
   if (href === "/") return path === "/";
-  if (href === "/practice") return ["/practice", "/games", "/grammar", "/verbs", "/chat", "/listen"].some((p) => path.startsWith(p));
-  if (href === "/more") return ["/more", "/cards", "/translate", "/stats", "/settings", "/tests"].some((p) => path.startsWith(p));
+  if (href === "/practice") return ["/practice", "/games", "/grammar", "/verbs", "/chat", "/listen", "/pronunciation"].some((p) => path.startsWith(p));
+  if (href === "/more") return ["/more", "/cards", "/translate", "/stats", "/settings", "/tests", "/shop"].some((p) => path.startsWith(p));
   if (href === "/review") return path.startsWith("/review") || path.startsWith("/learn") || path.startsWith("/session");
   return path.startsWith(href);
 }
@@ -124,7 +126,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh md:flex">
       {/* Sidebar (tablet/desktop) */}
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-line bg-surface px-3 py-5 md:flex">
+      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-line/70 bg-surface/80 px-3 py-5 backdrop-blur-xl md:flex">
         <Link href="/" className="mb-6 flex items-center gap-2 px-3">
           <Logo />
           <span className="text-lg font-semibold tracking-tight">Fluent30</span>
@@ -145,17 +147,17 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="min-w-0 flex-1">
         {!online && <div className="bg-sun-100 px-4 py-1.5 text-center text-xs text-amber-800 md:hidden dark:bg-sun-500/15 dark:text-sun-100">{t("Hors ligne — flashcards et livres téléchargés disponibles", "Offline — flashcards and downloaded books available")}</div>}
-        <main className="mx-auto w-full max-w-5xl px-4 pb-28 pt-5 sm:px-6 md:pb-12 md:pt-8">{mounted ? children : <div className="space-y-4"><div className="h-10 w-48 animate-pulse rounded-xl bg-surface-2" /><div className="h-40 animate-pulse rounded-2xl bg-surface-2" /></div>}</main>
+        <main className="mx-auto w-full max-w-5xl px-4 pb-32 pt-5 sm:px-6 md:pb-12 md:pt-8">{mounted ? children : <div className="space-y-4"><div className="h-10 w-48 animate-pulse rounded-xl bg-surface-2" /><div className="h-40 animate-pulse rounded-2xl bg-surface-2" /></div>}</main>
       </div>
 
-      {/* Bottom nav (mobile) */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 backdrop-blur md:hidden safe-bottom">
-        <div className="mx-auto grid max-w-lg grid-cols-5">
+      {/* Bottom nav (mobile): floating bar */}
+      <nav className="fixed inset-x-3 bottom-3 z-40 md:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+        <div className="mx-auto grid max-w-lg grid-cols-5 rounded-[26px] border border-line/70 bg-surface/90 p-1.5 shadow-xl shadow-ink-900/10 backdrop-blur-xl">
           {MAIN_NAV.map((n) => {
             const active = isActive(path, n.href);
             return (
-              <Link key={n.href} href={n.href} className={cx("flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition", active ? "text-ink-600 dark:text-ink-300" : "text-muted")}>
-                <Icon name={n.icon} size={23} />
+              <Link key={n.href} href={n.href} className={cx("flex flex-col items-center gap-0.5 rounded-[20px] py-2 text-[11px] font-semibold transition", active ? "bg-ink-600 text-white shadow-md shadow-ink-600/30" : "text-muted active:bg-surface-2")}>
+                <Icon name={n.icon} size={22} />
                 {t(n.fr, n.en)}
               </Link>
             );
@@ -163,6 +165,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </nav>
       <Toaster />
+      {mounted && <RewardWatcher />}
     </div>
   );
 }

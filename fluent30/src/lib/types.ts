@@ -260,3 +260,18 @@ export interface Enrichment {
   imagePrompt: string;
   notes?: string;
 }
+
+/** Gamification state (single row, id "me"). */
+export interface GameState {
+  id: "me";
+  coins: number;
+  totalEarned: number;
+  owned: string[]; // shop item ids
+  equipped: Partial<Record<AvatarSlot, string>>;
+  claimed: Record<string, string[]>; // date -> claimed quest ids (+ "chest")
+  levelRewarded: number; // highest level whose reward was paid
+  streakRewarded: number[]; // streak milestones already paid
+  updatedAt: number;
+}
+
+export type AvatarSlot = "hat" | "glasses" | "top" | "bottom" | "shoes" | "hand" | "neck" | "face" | "background";

@@ -214,3 +214,27 @@ export const ImageTextSchema = z.object({
 export const SvgSchema = z.object({
   svg: z.string().describe("A complete standalone <svg> element"),
 });
+
+// ---------------- CEFR writing assessment (full level test) ----------------
+
+export const WritingAssessmentSchema = z.object({
+  level: z.enum(["pre-A1", "A1", "A2", "B1", "B2", "C1", "C2"]).describe("CEFR level demonstrated by this text (written production), judged with the CEFR written-assessment criteria"),
+  taskAchievement: z.number().int().describe("0-5: how well the task is fulfilled (content, length, relevance)"),
+  coherence: z.number().int().describe("0-5: organisation, linking, paragraphing"),
+  range: z.number().int().describe("0-5: range of vocabulary and structures"),
+  accuracy: z.number().int().describe("0-5: grammatical and lexical accuracy"),
+  feedbackFr: z.string().describe("2-4 sentences in French explaining the level, encouraging and concrete"),
+  strengthsFr: z.array(z.string()).describe("1-3 strengths, in French"),
+  improvementsFr: z.array(z.string()).describe("2-4 concrete things to work on to reach the next level, in French"),
+  corrections: z.array(z.object({ original: z.string(), corrected: z.string() })).describe("Up to 5 of the most important corrections"),
+});
+
+export async function assessWriting(text: string, taskPrompt: string, taskLevel: string) {
+  return structured({
+    schema: WritingAssessmentSchema,
+    effort: "medium",
+    system:
+      "Task: act as a trained CEFR examiner (Council of Europe CEFR written assessment criteria: overall written production, range, coherence, accuracy, task achievement). Rate ONLY what the text demonstrates. A short or off-task text cannot be rated above the level it shows; a text that fully achieves a lower-level task with no evidence of higher-level language should be rated at that level. Be fair and calibrated, not generous.",
+    user: `Task given (target level ${taskLevel}): ${taskPrompt}\n\nLearner's text:\n"""${text}"""`,
+  });
+}

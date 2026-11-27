@@ -9,7 +9,7 @@ export function cx(...c: (string | false | null | undefined)[]) {
 
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "success" | "outline";
 const variants: Record<Variant, string> = {
-  primary: "bg-ink-600 text-white hover:bg-ink-700 shadow-sm shadow-ink-600/20",
+  primary: "bg-gradient-to-b from-ink-500 to-ink-700 text-white hover:brightness-110 shadow-md shadow-ink-600/30",
   secondary: "bg-surface-2 text-fg hover:bg-ink-100 dark:hover:bg-ink-900/60",
   ghost: "text-fg hover:bg-surface-2",
   danger: "bg-coral-600 text-white hover:bg-coral-500",
@@ -42,7 +42,7 @@ export function LinkButton({ href, variant = "primary", size = "md", className, 
 
 export function Panel({ className, children, as: As = "div", ...rest }: { className?: string; children: ReactNode; as?: "div" | "section" | "article" } & React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <As {...rest} className={cx("rounded-2xl border border-line bg-surface p-4 sm:p-5", className)}>
+    <As {...rest} className={cx("card-shadow rounded-3xl border border-line/70 bg-surface/95 p-4 backdrop-blur sm:p-5", className)}>
       {children}
     </As>
   );
@@ -97,7 +97,7 @@ export function PageHeader({ title, subtitle, back, action }: { title: ReactNode
         </Link>
       )}
       <div className="min-w-0 flex-1">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px]">{title}</h1>
+        <h1 className="text-[26px] font-bold tracking-tight sm:text-[30px]">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
       </div>
       {action}
@@ -215,7 +215,7 @@ export function SpeakButton({ text, accent, rate, className, label, size = 18 }:
 
 export function StatTile({ label, value, sub, icon, href }: { label: string; value: ReactNode; sub?: ReactNode; icon?: string; href?: string }) {
   const inner = (
-    <div className="flex h-full flex-col rounded-2xl border border-line bg-surface p-4 transition hover:border-ink-300">
+    <div className="card-shadow flex h-full flex-col rounded-3xl border border-line/70 bg-surface p-4 transition hover:-translate-y-0.5 hover:border-ink-300">
       <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted">
         {icon && <span className="text-base normal-case">{icon}</span>}
         {label}
@@ -250,7 +250,7 @@ export function Toaster() {
     };
   }, []);
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-24 z-[60] flex flex-col items-center gap-2 px-4 md:bottom-6">
+    <div className="pointer-events-none fixed inset-x-0 bottom-28 z-[60] flex flex-col items-center gap-2 px-4 md:bottom-6">
       {items.map((t) => (
         <div key={t.id} className={cx("animate-pop rounded-xl px-4 py-2.5 text-sm font-medium text-white shadow-lg", t.tone === "ok" ? "bg-ink-900" : t.tone === "err" ? "bg-coral-600" : "bg-ink-600")}>
           {t.text}

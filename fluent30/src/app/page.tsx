@@ -6,17 +6,23 @@ import { useSettings } from "@/hooks/useSettings";
 import { useT } from "@/hooks/useT";
 import { Badge, LinkButton, Panel, ProgressBar, Ring, StatTile, cx } from "@/components/ui";
 import { Icon } from "@/components/icons";
-import { Logo } from "@/components/AppShell";
 import { getDb, todayKey } from "@/lib/db";
 import { GRAMMAR_TOTAL } from "@/lib/catalog";
+import { DEFAULT_GAME, levelFromXp, levelTitle } from "@/lib/game";
+import { Tourist } from "@/components/avatar/Tourist";
+import { Coins } from "@/components/game/Coin";
+import { QuestList } from "@/components/game/QuestList";
 
 export default function Dashboard() {
   const s = useSettings();
   const t = useT();
   const o = useLiveQuery(() => computeOverview(), []);
   const session = useLiveQuery(() => getDb().sessions.get(todayKey()), []);
+  const game = useLiveQuery(async () => (await getDb().game.get("me")) ?? DEFAULT_GAME, []);
 
-  if (!o || !s.loaded) return <DashboardSkeleton />;
+  if (!o || !s.loaded || !game) return <DashboardSkeleton />;
+  const totalXp = o.days.reduce((a, d) => a + (d.xp ?? 0), 0);
+  const lv = levelFromXp(totalXp);
 
   const hour = new Date().getHours();
   const hello = hour < 5 ? t("Bonsoir", "Good evening") : hour < 12 ? t("Bonjour", "Good morning") : hour < 18 ? t("Bon après-midi", "Good afternoon") : t("Bonsoir", "Good evening");
@@ -25,19 +31,29 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-5">
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="md:hidden"><Logo size={34} /></span>
-          <div>
-            <p className="text-sm text-muted">{hello}{s.displayName ? `, ${s.displayName}` : ""} 👋</p>
-            <h1 className="text-2xl font-semibold tracking-tight">{t("Ton anglais aujourd'hui", "Your English today")}</h1>
+      {/* Hero: the tourist, level and coins */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-ink-600 via-ink-700 to-ink-900 p-4 text-white shadow-lg shadow-ink-900/20 sm:p-5">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-coral-500/30 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-20 left-10 h-48 w-48 rounded-full bg-mint-400/20 blur-2xl" />
+        <div className="relative flex items-center gap-4">
+          <Link href="/shop" className="w-28 shrink-0 overflow-hidden rounded-2xl ring-4 ring-white/15 transition hover:scale-[1.02] sm:w-32" aria-label={t("Habiller mon touriste", "Dress my tourist")}>
+            <Tourist equipped={game.equipped} />
+          </Link>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm text-white/75">{hello}{s.displayName ? `, ${s.displayName}` : ""} 👋</p>
+            <p className="mt-0.5 text-xl font-bold leading-tight sm:text-2xl">{t("Niveau", "Level")} {lv.level} · {levelTitle(lv.level)}</p>
+            <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-white/20">
+              <div className="h-full rounded-full bg-gradient-to-r from-sun-400 to-coral-400 transition-all duration-700" style={{ width: `${Math.round((lv.current / lv.needed) * 100)}%` }} />
+            </div>
+            <p className="mt-1 text-xs text-white/70">{lv.current}/{lv.needed} XP · {t("+100 pièces au prochain niveau", "+100 coins next level")}</p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Link href="/shop"><Coins amount={game.coins} /></Link>
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-sm font-bold"><Icon name="flame" size={16} className={o.streak > 0 ? "text-coral-400" : "text-white/60"} />{o.streak} {t("j", "d")}</span>
+              <Link href="/shop" className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-ink-700 transition hover:bg-ink-50">🛍️ {t("Boutique", "Shop")}</Link>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-sm font-semibold" title={t("Jours consécutifs", "Day streak")}>
-          <Icon name="flame" size={18} className={o.streak > 0 ? "text-coral-500" : "text-muted"} />
-          <span className="tabular-nums">{o.streak}</span>
-        </div>
-      </header>
+      </section>
 
       {!s.onboarded && (
         <Panel className="border-ink-200 bg-gradient-to-br from-ink-600 to-ink-800 text-white">
@@ -71,6 +87,8 @@ export default function Dashboard() {
         </div>
         <LinkButton href="/session" className="relative mt-4 w-full sm:w-auto">{sessionTotal && sessionDone < sessionTotal ? t("Continuer la séance", "Continue session") : t("Lancer la séance", "Start session")}</LinkButton>
       </Panel>
+
+      <QuestList />
 
       <div className="grid grid-cols-2 gap-3">
         <Link href="/learn" className="rounded-2xl border border-line bg-surface p-4 transition hover:border-ink-300">

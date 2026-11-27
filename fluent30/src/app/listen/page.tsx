@@ -27,6 +27,12 @@ export default function ListenHome() {
     <div>
       <PageHeader title={t("Écoute & prononciation", "Listening & speaking")} subtitle={t("Dialogues courts, dictées, répétition, shadowing et quiz d'écoute.", "Short dialogues, dictation, repetition, shadowing and listening quizzes.")} />
 
+      <Link href="/pronunciation" className="mb-4 flex items-center gap-3 rounded-2xl border border-ink-200 bg-gradient-to-r from-ink-50 to-transparent p-4 transition hover:border-ink-400 dark:border-ink-800 dark:from-ink-900/50">
+        <span className="text-2xl">👄</span>
+        <span className="flex-1"><span className="block font-semibold">{t("Cours de prononciation", "Pronunciation course")}</span><span className="block text-sm text-muted">{t("TH, H, voyelles longues, accent tonique… et un bilan complet", "TH, H, long vowels, word stress… and a full check-up")}</span></span>
+        <span className="text-muted">›</span>
+      </Link>
+
       <Panel className="mb-5">
         <div className="grid gap-3 text-sm sm:grid-cols-4">
           <div><p className="font-medium">🎧 {t("Écouter", "Listen")}</p><p className="text-muted">{t("Sous-titres interactifs, vitesse réglable, plusieurs accents.", "Interactive subtitles, adjustable speed, several accents.")}</p></div>
