@@ -210,7 +210,7 @@ function Dashboard({ data, health, onTest }: { data: Overview; health: Record<st
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-2 font-medium">
                     {p.label}
-                    <Badge tone={p.configured ? "mint" : p.required ? "coral" : "gray"}>{p.configured ? "configuré" : p.free ? "gratuit, sans clé" : "non configuré"}</Badge>
+                    <Badge tone={p.configured ? "mint" : p.required ? "coral" : "gray"}>{p.configured ? (p.envVars?.some((v) => /KEY|TOKEN/.test(v)) ? "configuré" : "actif (gratuit)") : p.required ? "non configuré" : "non configuré · facultatif"}</Badge>
                     {p.keyHint && <code className="rounded bg-surface-2 px-1.5 text-xs">••••{p.keyHint}</code>}
                     {h && h !== "pending" && <Badge tone={h.ok ? "mint" : "coral"}>{h.ok ? `opérationnel${h.latencyMs ? ` · ${h.latencyMs} ms` : ""}` : "indisponible"}</Badge>}
                   </p>
@@ -219,7 +219,11 @@ function Dashboard({ data, health, onTest }: { data: Overview; health: Record<st
                   {h && h !== "pending" && !h.ok && h.error && <p className="mt-1 text-xs text-coral-600">{h.error}</p>}
                 </div>
                 <div className="flex shrink-0 gap-2">
-                  {p.docsUrl && <a href={p.docsUrl} target="_blank" rel="noreferrer noopener" className="rounded-xl border border-line px-3 py-1.5 text-sm hover:border-ink-300">Obtenir une clé</a>}
+                  {p.docsUrl && (
+                    <a href={p.docsUrl} target="_blank" rel="noreferrer noopener" className="rounded-xl border border-line px-3 py-1.5 text-sm hover:border-ink-300">
+                      {p.envVars?.some((v) => /KEY|TOKEN/.test(v)) ? "Obtenir une clé" : "Documentation"}
+                    </a>
+                  )}
                   <Button size="sm" variant="outline" onClick={() => onTest(p.id)} disabled={h === "pending"}>{h === "pending" ? "Test…" : "Tester"}</Button>
                 </div>
               </div>
