@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { getDb, todayKey } from "@/lib/db";
-import { CHEST_REWARD, DEFAULT_GAME, claimQuest, dailyQuests } from "@/lib/game";
+import { CHEST_REWARD, claimQuest, dailyQuests, getGame } from "@/lib/game";
 import { useSettings } from "@/hooks/useSettings";
 import { useStatus } from "@/hooks/useStatus";
 import { useT } from "@/hooks/useT";
@@ -16,7 +16,7 @@ export function QuestList() {
   const s = useSettings();
   const status = useStatus();
   const day = useLiveQuery(() => getDb().activity.get(todayKey()), []);
-  const game = useLiveQuery(async () => (await getDb().game.get("me")) ?? DEFAULT_GAME, []);
+  const game = useLiveQuery(() => getGame(), []);
   const [pop, setPop] = useState<string | null>(null);
   if (!game || !s.loaded) return <div className="h-48 animate-pulse rounded-2xl bg-surface-2" />;
 

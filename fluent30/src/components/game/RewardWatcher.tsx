@@ -41,7 +41,7 @@ export function RewardWatcher() {
         <p className="text-sm font-semibold uppercase tracking-widest text-ink-600 dark:text-ink-300">{t("Niveau supérieur !", "Level up!")}</p>
         <p className="mt-1 text-5xl font-black tracking-tight">{levelUp.level}</p>
         <p className="mt-1 font-medium">{levelTitle(levelUp.level)}</p>
-        <div className="mx-auto mt-4 w-40 overflow-hidden rounded-2xl"><Tourist equipped={levelUp.game.equipped} /></div>
+        <div className="mx-auto mt-4 w-40 overflow-hidden rounded-2xl"><Tourist equipped={levelUp.game.equipped} appearance={levelUp.game.appearance} /></div>
         <p className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-sun-100 px-4 py-2 text-lg font-bold text-amber-800 dark:bg-sun-500/20 dark:text-sun-100">+{LEVEL_REWARD * levelUp.count} <CoinIcon size={20} /></p>
         <div className="mt-5 flex gap-2">
           <button onClick={() => setLevelUp(null)} className="h-11 flex-1 rounded-xl border border-line font-medium">{t("Continuer", "Continue")}</button>

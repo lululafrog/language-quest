@@ -8,7 +8,7 @@ import { Badge, LinkButton, Panel, ProgressBar, Ring, StatTile, cx } from "@/com
 import { Icon } from "@/components/icons";
 import { getDb, todayKey } from "@/lib/db";
 import { GRAMMAR_TOTAL } from "@/lib/catalog";
-import { DEFAULT_GAME, levelFromXp, levelTitle } from "@/lib/game";
+import { getGame, levelFromXp, levelTitle } from "@/lib/game";
 import { Tourist } from "@/components/avatar/Tourist";
 import { Coins } from "@/components/game/Coin";
 import { QuestList } from "@/components/game/QuestList";
@@ -18,7 +18,7 @@ export default function Dashboard() {
   const t = useT();
   const o = useLiveQuery(() => computeOverview(), []);
   const session = useLiveQuery(() => getDb().sessions.get(todayKey()), []);
-  const game = useLiveQuery(async () => (await getDb().game.get("me")) ?? DEFAULT_GAME, []);
+  const game = useLiveQuery(() => getGame(), []);
 
   if (!o || !s.loaded || !game) return <DashboardSkeleton />;
   const totalXp = o.days.reduce((a, d) => a + (d.xp ?? 0), 0);
@@ -37,7 +37,7 @@ export default function Dashboard() {
         <div className="pointer-events-none absolute -bottom-20 left-10 h-48 w-48 rounded-full bg-mint-400/20 blur-2xl" />
         <div className="relative flex items-center gap-4">
           <Link href="/shop" className="w-28 shrink-0 overflow-hidden rounded-2xl ring-4 ring-white/15 transition hover:scale-[1.02] sm:w-32" aria-label={t("Habiller mon touriste", "Dress my tourist")}>
-            <Tourist equipped={game.equipped} />
+            <Tourist equipped={game.equipped} appearance={game.appearance} />
           </Link>
           <div className="min-w-0 flex-1">
             <p className="text-sm text-white/75">{hello}{s.displayName ? `, ${s.displayName}` : ""} 👋</p>

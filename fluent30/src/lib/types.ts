@@ -269,10 +269,20 @@ export interface GameState {
   totalEarned: number;
   owned: string[]; // shop item ids
   equipped: Partial<Record<AvatarSlot, string>>;
+  appearance?: Appearance;
   claimed: Record<string, string[]>; // date -> claimed quest ids (+ "chest")
   levelRewarded: number; // highest level whose reward was paid
   streakRewarded: number[]; // streak milestones already paid
   updatedAt: number;
 }
 
-export type AvatarSlot = "hat" | "glasses" | "top" | "bottom" | "shoes" | "hand" | "neck" | "face" | "background";
+export type AvatarSlot = "hat" | "glasses" | "face" | "top" | "outer" | "dress" | "bottom" | "shoes" | "bag" | "neck" | "hand" | "background";
+
+/** How the learner's character looks (chosen at sign-up, editable for free). */
+export interface Appearance {
+  skin: string;
+  hair: "short" | "long" | "bun" | "curly" | "ponytail" | "afro" | "buzz" | "bob" | "bald";
+  hairColor: string;
+  eyes: "round" | "happy" | "lashes";
+  beard: boolean;
+}

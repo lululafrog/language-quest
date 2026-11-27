@@ -6,7 +6,10 @@ import { THEMES } from "@/lib/data/types";
 import { useSettings } from "@/hooks/useSettings";
 import { Button, Panel, ProgressBar, cx } from "@/components/ui";
 import { Logo } from "@/components/AppShell";
-import type { Settings } from "@/lib/types";
+import type { Appearance, Settings } from "@/lib/types";
+import { DEFAULT_APPEARANCE, Tourist } from "@/components/avatar/Tourist";
+import { AppearanceEditor } from "@/components/avatar/AppearanceEditor";
+import { saveAppearance } from "@/lib/game";
 
 const GOALS = [
   { id: "travel", label: "Voyager sans stress", emoji: "🧳" },
@@ -27,10 +30,12 @@ export default function Onboarding() {
   const [interests, setInterests] = useState<string[]>([]);
   const [minutes, setMinutes] = useState<Settings["sessionMinutes"]>(15);
   const [daily, setDaily] = useState(10);
+  const [look, setLook] = useState<Appearance>(DEFAULT_APPEARANCE);
 
   const toggle = (list: string[], set: (v: string[]) => void, id: string) => set(list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
 
   const finish = async (placement: boolean) => {
+    await saveAppearance(look);
     await saveSettings({ displayName: name.trim() || s.displayName, goals, interests, sessionMinutes: minutes, dailyNewWords: daily, onboarded: true });
     router.push(placement ? "/tests/placement" : "/learn");
   };
@@ -41,6 +46,14 @@ export default function Onboarding() {
       <h1 className="text-2xl font-semibold">Bienvenue sur Fluent30</h1>
       <p className="mx-auto mt-2 max-w-md text-muted">Ici, pas de cours scolaire : on apprend d&apos;abord l&apos;anglais le plus utile dans les vraies conversations (70 %), puis ce qui compte pour toi (30 %). Mémoire visuelle, répétition espacée, lecture et pratique quotidienne.</p>
       <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ton prénom (facultatif)" className="mx-auto mt-6 block w-full max-w-xs rounded-xl border border-line bg-surface px-4 py-3 text-center outline-none focus:border-ink-400" />
+    </div>,
+    <div key="char">
+      <h2 className="text-xl font-semibold">Crée ton personnage</h2>
+      <p className="mb-4 text-sm text-muted">C&apos;est ton touriste : tu l&apos;habilleras avec les pièces gagnées en pratiquant (casquettes, ponchos, veste Grab…).</p>
+      <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
+        <div className="mx-auto w-40 overflow-hidden rounded-3xl border border-line shadow-lg sm:w-full"><Tourist appearance={look} /></div>
+        <AppearanceEditor value={look} onChange={setLook} />
+      </div>
     </div>,
     <div key="1">
       <h2 className="text-xl font-semibold">Pourquoi apprends-tu l&apos;anglais ?</h2>

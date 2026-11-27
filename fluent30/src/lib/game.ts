@@ -2,15 +2,37 @@
 // Gamification: XP levels, coins, daily quests, streak rewards and the tourist's wardrobe.
 import { getDb, todayKey } from "./db";
 import { computeStreak } from "./track";
-import { SHOP_ITEMS } from "./data/shop";
-import type { DayActivity, GameState } from "./types";
+import { LEGACY_IDS, SHOP_BY_ID, SHOP_ITEMS } from "./data/shop";
+import type { Appearance, AvatarSlot, DayActivity, GameState } from "./types";
 
 export const DEFAULT_GAME: GameState = {
   id: "me", coins: 50, totalEarned: 50, owned: ["bg-home"], equipped: { background: "bg-home" }, claimed: {}, levelRewarded: 1, streakRewarded: [], updatedAt: 0,
 };
 
 export async function getGame(): Promise<GameState> {
-  return { ...DEFAULT_GAME, ...((await getDb().game.get("me")) ?? {}) };
+  return normalizeGame({ ...DEFAULT_GAME, ...((await getDb().game.get("me")) ?? {}) });
+}
+
+/** Maps legacy item ids and puts each equipped item back in its current slot. */
+export function normalizeGame(g: GameState): GameState {
+  const map = (id: string) => LEGACY_IDS[id] ?? id;
+  const owned = [...new Set(g.owned.map(map).filter((id) => SHOP_BY_ID.has(id)))];
+  const equipped: Partial<Record<AvatarSlot, string>> = {};
+  for (const id of Object.values(g.equipped)) {
+    if (!id) continue;
+    const item = SHOP_BY_ID.get(map(id));
+    if (item) equipped[item.slot] = item.id;
+  }
+  if (equipped.dress) {
+    delete equipped.top;
+    delete equipped.bottom;
+  }
+  return { ...g, owned, equipped };
+}
+
+export async function saveAppearance(appearance: Appearance) {
+  const g = await getGame();
+  await saveGame({ ...g, appearance });
 }
 async function saveGame(g: GameState) {
   await getDb().game.put({ ...g, updatedAt: Date.now() });
@@ -137,7 +159,7 @@ export async function buyItem(itemId: string): Promise<{ ok: boolean; reason?: s
   if (!item) return { ok: false, reason: "Objet introuvable", game: g };
   if (g.owned.includes(itemId)) return { ok: true, game: g };
   if (g.coins < item.price) return { ok: false, reason: "Pas assez de pièces", game: g };
-  const next = { ...g, coins: g.coins - item.price, owned: [...g.owned, itemId], equipped: { ...g.equipped, [item.slot]: itemId } };
+  const next = { ...g, coins: g.coins - item.price, owned: [...g.owned, itemId], equipped: withItem(g.equipped, item.slot, itemId) };
   await saveGame(next);
   return { ok: true, game: next };
 }
@@ -148,8 +170,19 @@ export async function toggleEquip(itemId: string) {
   if (!item || !g.owned.includes(itemId)) return g;
   const equipped = { ...g.equipped };
   if (equipped[item.slot] === itemId && item.slot !== "background") delete equipped[item.slot];
-  else equipped[item.slot] = itemId;
+  else Object.assign(equipped, withItem(equipped, item.slot, itemId));
   const next = { ...g, equipped };
   await saveGame(next);
+  return next;
+}
+
+/** Equipping a dress removes top & bottom (and vice versa). */
+function withItem(eq: Partial<Record<AvatarSlot, string>>, slot: AvatarSlot, id: string) {
+  const next = { ...eq, [slot]: id };
+  if (slot === "dress") {
+    delete next.top;
+    delete next.bottom;
+  }
+  if (slot === "top" || slot === "bottom") delete next.dress;
   return next;
 }
