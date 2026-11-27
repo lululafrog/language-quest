@@ -305,6 +305,8 @@ export interface GameState {
   claimed: Record<string, string[]>; // date -> claimed quest ids (+ "chest")
   levelRewarded: number; // highest level whose reward was paid
   streakRewarded: number[]; // streak milestones already paid
+  /** up to 5 saved favourite outfits */
+  outfits?: { id: string; name: string; equipped: Partial<Record<AvatarSlot, string>> }[];
   updatedAt: number;
 }
 
@@ -316,7 +318,11 @@ export interface Appearance {
   skin: string;
   hair: "short" | "long" | "bun" | "curly" | "ponytail" | "afro" | "buzz" | "bob" | "bald" | "pixie" | "braids" | "wavy" | "spiky" | "mohawk" | "sidepart";
   hairColor: string;
-  face?: "oval" | "round" | "square" | "heart";
+  face?: "oval" | "round" | "square" | "heart" | "long" | "diamond";
+  /** body morphology (clothes are drawn to fit) */
+  body?: "slim" | "average" | "strong";
+  /** default facial expression */
+  expression?: "neutral" | "smile" | "laugh" | "surprised" | "focused";
   eyes: "round" | "happy" | "lashes";
   eyeColor?: string;
   brows?: "thin" | "normal" | "thick";

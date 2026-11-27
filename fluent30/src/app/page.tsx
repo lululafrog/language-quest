@@ -6,30 +6,25 @@ import { computeOverview, formatDuration } from "@/lib/progress";
 import { useSettings } from "@/hooks/useSettings";
 import { useStatus } from "@/hooks/useStatus";
 import { useT } from "@/hooks/useT";
-import { LinkButton, ListGroup, ListRow, Panel, ProgressBar, SectionHeader, Segmented, cx } from "@/components/ui";
+import { LinkButton, ListGroup, ListRow, Panel, SectionHeader, Segmented, cx } from "@/components/ui";
 import { Icon, type IconName } from "@/components/icons";
-import { getDb, saveSettings, todayKey } from "@/lib/db";
+import { saveSettings, todayKey } from "@/lib/db";
 import { getGame } from "@/lib/game";
-import * as sessionLib from "@/lib/session";
+import { buildDailyPlan, getTodayPlan, markStep, refreshPlanProgress, type PlanMinutes } from "@/lib/session";
 import { lastStartedLesson, nextPathLesson } from "@/lib/curriculum/progress";
 import { Tourist } from "@/components/avatar/Tourist";
 import { CoinIcon } from "@/components/game/Coin";
-import type { Settings } from "@/lib/types";
-
-type PlanStep = { id: string; kind: string; minutes: number; title: string; subtitle?: string; href: string; done: boolean };
-type PlanOpts = { aiAvailable: boolean; dailyNewWords: number; immersion: boolean };
-// buildDailyPlan (curriculum-aware) is optional: fall back to the classic session builder.
-const planLib = sessionLib as unknown as {
-  buildDailyPlan?: (minutes: number, opts: PlanOpts) => Promise<{ steps: PlanStep[] }>;
-  buildSession: (minutes: number, opts: PlanOpts) => Promise<{ steps: PlanStep[] }>;
-  markStep: (id: string, done: boolean) => Promise<void>;
-};
 
 const KIND_ICON: Record<string, IconName> = {
-  review: "review", new: "sparkle", grammar: "grammar", game: "game", reading: "book", conversation: "chat",
-  listening: "headphones", verbs: "verbs", lesson: "course", course: "course", sheet: "sheet", pronunciation: "mic", theme: "globe",
+  review: "review", "new-words": "sparkle", lesson: "course", "lesson-review": "course", practice: "game", reading: "book",
+  listening: "headphones", conversation: "chat",
 };
-const DURATIONS: Settings["sessionMinutes"][] = [5, 10, 15, 20, 30];
+const KIND_LABEL: Record<string, string> = {
+  review: "Révision", "new-words": "Nouveaux mots", lesson: "Nouveau cours", "lesson-review": "Révision de cours", practice: "Pratique ciblée",
+  reading: "Lecture", listening: "Écoute", conversation: "Conversation",
+};
+const DURATIONS: PlanMinutes[] = [5, 10, 15, 20, 30];
+const DAY = 86_400_000;
 
 export default function Home() {
   const s = useSettings();
@@ -37,73 +32,62 @@ export default function Home() {
   const status = useStatus();
   const o = useLiveQuery(() => computeOverview(), []);
   const game = useLiveQuery(() => getGame(), []);
-  const stored = useLiveQuery(async () => (await getDb().sessions.get(todayKey())) ?? null, []);
+  const plan = useLiveQuery(async () => (await getTodayPlan()) ?? null, []);
   const lesson = useLiveQuery(async () => (await lastStartedLesson()) ?? (await nextPathLesson(s.pathLevel ?? "A1")) ?? null, [s.pathLevel]);
-  const [plan, setPlan] = useState<PlanStep[] | null>(null);
   const [building, setBuilding] = useState(false);
   const [requested, setRequested] = useState(false);
 
-  const opts: PlanOpts | null = status && s.loaded ? { aiAvailable: status.ai, dailyNewWords: s.dailyNewWords, immersion: s.immersion } : null;
-
-  const build = async (minutes: number) => {
-    if (!opts) return;
+  const build = async (minutes: PlanMinutes, force = false) => {
     setBuilding(true);
     try {
-      const fn = planLib.buildDailyPlan ?? planLib.buildSession;
-      const res = await fn(minutes, opts);
-      setPlan(res.steps);
+      await buildDailyPlan(minutes, { aiAvailable: status?.ai, dailyNewWords: s.dailyNewWords, immersion: s.immersion, force });
     } finally {
       setBuilding(false);
     }
   };
 
-  // Build today's plan once: always with buildDailyPlan (its "done" flags are live), otherwise only if none stored.
+  // Today's plan: build it once if missing, otherwise just refresh the objectively-done steps.
   useEffect(() => {
-    if (requested || !opts || stored === undefined) return;
-    if (!planLib.buildDailyPlan && stored && stored.minutes === s.sessionMinutes) return;
+    if (requested || !s.loaded || plan === undefined) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-off plan generation
     setRequested(true);
-    void build(s.sessionMinutes);
+    if (plan) void refreshPlanProgress();
+    else void build(s.sessionMinutes as PlanMinutes);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requested, opts, stored, s.sessionMinutes]);
-
-  // Auto-complete steps whose goal is objectively met (classic session only).
-  useEffect(() => {
-    if (!stored || !o || planLib.buildDailyPlan) return;
-    for (const step of stored.steps) {
-      if (step.done) continue;
-      if (step.kind === "review" && o.dueNow === 0 && o.days.find((d) => d.date === todayKey())?.reviews) void planLib.markStep(step.id, true);
-      if (step.kind === "new" && o.newToday >= s.dailyNewWords) void planLib.markStep(step.id, true);
-    }
-  }, [stored, o, s.dailyNewWords]);
+  }, [requested, s.loaded, plan]);
 
   if (!o || !s.loaded || !game) return <HomeSkeleton />;
 
-  // Stored session is live (done toggles); a returned plan wins when it is the curriculum-aware one.
-  const steps: PlanStep[] = (planLib.buildDailyPlan ? plan : stored?.steps ?? plan) ?? [];
+  const steps = plan?.steps ?? [];
   const done = steps.filter((x) => x.done).length;
-  const next = steps.find((x) => !x.done);
-  const started = done > 0;
+  const main = steps.find((x) => !x.done);
+  const others = steps.filter((x) => x !== main);
 
   const hour = new Date().getHours();
   const hello = hour < 5 || hour >= 18 ? t("Bonsoir", "Good evening") : hour < 12 ? t("Bonjour", "Good morning") : t("Bon après-midi", "Good afternoon");
-  const todayMin = Math.round(o.todaySeconds / 60);
 
-  const changeLength = async (m: Settings["sessionMinutes"]) => {
+  // Welcome back after ≥ 3 days away (never a guilt message).
+  const today = todayKey();
+  const lastActive = o.days.filter((d) => d.date !== today && (d.seconds > 0 || d.reviews > 0)).map((d) => d.date).sort().pop();
+  const awayDays = lastActive ? Math.floor((new Date(today).getTime() - new Date(lastActive).getTime()) / DAY) : 0;
+  const todayActive = (o.days.find((d) => d.date === today)?.seconds ?? 0) > 0;
+  const welcomeBack = awayDays >= 3 && !todayActive;
+
+  const changeLength = async (m: PlanMinutes) => {
     await saveSettings({ sessionMinutes: m });
-    await build(m);
+    await build(m, true);
   };
 
   return (
     <div className="mx-auto max-w-2xl">
       {/* Greeting */}
       <header className="mb-6 flex items-center gap-3">
-        <Link href="/profile" className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-ink-50 ring-1 ring-line dark:bg-ink-900/60" aria-label={t("Mon profil", "My profile")}>
+        <Link href="/profile" className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-sun-100 ring-1 ring-line dark:bg-ink-900/60" aria-label={t("Mon univers", "My world")}>
           <Tourist equipped={game.equipped} appearance={game.appearance} portrait animate={false} />
         </Link>
         <div className="min-w-0 flex-1">
           <p className="text-sm text-muted">{hello}{s.displayName ? `, ${s.displayName}` : ""}</p>
-          <h1 className="t-title truncate">{started && next ? t("On continue ?", "Shall we go on?") : next ? t("Prêt pour aujourd'hui ?", "Ready for today?") : steps.length ? t("Belle journée d'anglais", "Great English day") : t("Ton anglais, chaque jour", "Your English, every day")}</h1>
+          <h1 className="t-title truncate">{main ? (done ? t("On continue ?", "Shall we go on?") : t("Où va-t-on aujourd'hui ?", "Where to today?")) : steps.length ? t("Belle journée d'anglais", "Great English day") : t("Ton anglais, ton aventure", "Your English, your adventure")}</h1>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           <span className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-1 text-sm font-semibold tabular-nums" title={t("Série de jours", "Day streak")}>
@@ -119,68 +103,109 @@ export default function Home() {
 
       {!s.onboarded && (
         <Panel tone="highlight" className="mb-5">
-          <p className="font-semibold">{t("Bienvenue sur Fluent30", "Welcome to Fluent30")}</p>
-          <p className="mt-1 text-sm text-muted">{t("2 minutes pour régler ton niveau, ton temps par jour et tes centres d'intérêt.", "2 minutes to set your level, daily time and interests.")}</p>
-          <LinkButton href="/onboarding" className="mt-4">{t("Personnaliser mon parcours", "Personalise my path")}</LinkButton>
+          <p className="font-semibold">{t("Bienvenue dans ton aventure", "Welcome to your adventure")}</p>
+          <p className="mt-1 text-sm text-muted">{t("2 minutes pour régler ton niveau, ton temps par jour et ton personnage.", "2 minutes to set your level, daily time and character.")}</p>
+          <LinkButton href="/onboarding" className="mt-4">{t("Préparer mon voyage", "Prepare my trip")}</LinkButton>
         </Panel>
       )}
 
-      {/* Daily plan — the one hero of the screen */}
-      <section className="rounded-3xl bg-ink-700 p-5 text-white shadow-lg shadow-ink-900/15 dark:bg-ink-800">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-white/60">{t("Ton programme du jour", "Today's plan")}</p>
-            <p className="mt-1 text-lg font-semibold" style={{ fontFamily: "var(--font-display)" }}>
-              {steps.length && !next ? t("Programme terminé. Bravo !", "Plan complete. Well done!") : t(`${s.sessionMinutes} minutes, ${steps.length || "—"} étapes`, `${s.sessionMinutes} minutes, ${steps.length || "—"} steps`)}
-            </p>
+      {welcomeBack && (
+        <Panel tone="subtle" className="mb-5 flex items-start gap-3">
+          <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-mint-100 text-mint-600 dark:bg-mint-600/20 dark:text-mint-300"><Icon name="heart" size={18} /></span>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">{t("Content de te revoir !", "Good to see you again!")}</p>
+            <p className="mt-0.5 text-sm text-muted">{t("Rien n'est perdu : tes mots et ta progression t'attendent. On reprend doucement avec 5 minutes ?", "Nothing is lost: your words and progress are waiting. Restart gently with 5 minutes?")}</p>
+            {s.sessionMinutes !== 5 && (
+              <button onClick={() => changeLength(5)} className="mt-2 text-sm font-semibold text-ink-600 hover:underline dark:text-ink-300">{t("Reprendre en douceur (5 min)", "Gentle restart (5 min)")}</button>
+            )}
           </div>
-          {steps.length > 0 && <span className="rounded-full bg-white/10 px-2.5 py-1 text-sm font-semibold tabular-nums">{done}/{steps.length}</span>}
-        </div>
+        </Panel>
+      )}
 
-        <Segmented<Settings["sessionMinutes"]>
-          className="mt-4 flex w-full bg-white/10 [&>button]:flex-1 [&>button[aria-checked=false]]:text-white/75"
-          value={s.sessionMinutes}
-          onChange={changeLength}
-          options={DURATIONS.map((m) => ({ value: m, label: `${m} min` }))}
-        />
-
+      {/* The main activity — the one hero of the screen */}
+      <section className="relative overflow-hidden rounded-3xl bg-ink-700 p-5 text-white shadow-lg shadow-ink-900/15 dark:bg-ink-800">
+        <svg className="pointer-events-none absolute -right-6 -top-6 h-36 w-36 text-white/[0.07]" viewBox="0 0 100 100" aria-hidden>
+          <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray="5 6" />
+          <path d="M50 14 58 50 50 86 42 50Z" fill="currentColor" />
+        </svg>
+        <p className="text-xs font-semibold uppercase tracking-wider text-white/60">
+          {main ? t("Activité principale", "Main activity") : t("Ton programme du jour", "Today's plan")}
+          {steps.length > 0 && <span className="ml-2 tabular-nums text-white/45">{done}/{steps.length}</span>}
+        </p>
         {building && !steps.length ? (
-          <div className="mt-4 h-32 animate-pulse rounded-2xl bg-white/10" />
+          <div className="mt-3 h-24 animate-pulse rounded-2xl bg-white/10" />
+        ) : main ? (
+          <>
+            <div className="mt-3 flex items-start gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/10"><Icon name={KIND_ICON[main.kind] ?? "play"} size={22} /></span>
+              <div className="min-w-0">
+                <p className="text-[13px] text-white/65">{KIND_LABEL[main.kind] ?? ""} · {main.minutes} min</p>
+                <p className="text-xl font-semibold leading-snug" style={{ fontFamily: "var(--font-display)" }}>{main.title}</p>
+                {main.subtitle && <p className="mt-0.5 text-sm text-white/65">{main.subtitle}</p>}
+              </div>
+            </div>
+            <Link href={main.href} className="mt-5 flex h-12 items-center justify-center gap-2 rounded-2xl bg-white font-semibold text-ink-800 transition hover:bg-sun-50">
+              {done ? t("Continuer", "Continue") : t("Commencer", "Start")}
+              <Icon name="arrow" size={18} />
+            </Link>
+          </>
+        ) : steps.length ? (
+          <>
+            <p className="mt-2 text-xl font-semibold" style={{ fontFamily: "var(--font-display)" }}>{t("Programme terminé. Bravo !", "Plan complete. Well done!")}</p>
+            <button onClick={() => build(s.sessionMinutes as PlanMinutes, true)} className="mt-4 h-11 w-full rounded-2xl border border-white/25 text-sm font-medium text-white/90 hover:bg-white/10">
+              {t("Un programme bonus ?", "A bonus plan?")}
+            </button>
+          </>
         ) : (
-          <ol className={cx("mt-4 space-y-1", building && "opacity-60")}>
-            {steps.map((step) => (
-              <li key={step.id} className="flex items-center gap-3 rounded-xl px-1 py-1.5">
+          <p className="mt-2 text-white/70">{t("Préparation de ton programme…", "Preparing your plan…")}</p>
+        )}
+      </section>
+
+      {/* Optional activities of the plan */}
+      {others.length > 0 && (
+        <div className="mt-3 rounded-3xl border border-line/70 bg-surface p-2 card-shadow">
+          <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider text-muted">{t("Aussi au programme", "Also on the plan")}</p>
+          <ol className={cx(building && "opacity-60")}>
+            {others.map((step) => (
+              <li key={step.id} className="flex items-center gap-3 rounded-2xl px-2 py-1.5">
                 <button
-                  onClick={() => planLib.markStep(step.id, !step.done)}
-                  disabled={!stored}
+                  onClick={() => markStep(step.id, !step.done)}
                   aria-label={step.done ? t("Marquer comme non fait", "Mark as not done") : t("Marquer comme fait", "Mark as done")}
-                  className={cx("flex h-7 w-7 shrink-0 items-center justify-center rounded-full border", step.done ? "border-mint-400 bg-mint-400 text-ink-900" : "border-white/30 text-white/70")}
+                  className={cx("flex h-7 w-7 shrink-0 items-center justify-center rounded-full border", step.done ? "border-mint-500 bg-mint-500 text-white" : "border-line text-muted")}
                 >
                   {step.done ? <Icon name="check" size={15} strokeWidth={2.5} /> : <Icon name={KIND_ICON[step.kind] ?? "play"} size={15} />}
                 </button>
                 <Link href={step.href} className="flex min-w-0 flex-1 items-center gap-2">
                   <span className="min-w-0 flex-1">
-                    <span className={cx("block truncate text-[15px]", step.done && "text-white/50 line-through")}>{step.title}</span>
-                    {step.subtitle && <span className="block truncate text-xs text-white/55">{step.subtitle}</span>}
+                    <span className={cx("block truncate text-[15px]", step.done && "text-muted line-through")}>{step.title}</span>
+                    {step.subtitle && <span className="block truncate text-xs text-muted">{step.subtitle}</span>}
                   </span>
-                  <span className="shrink-0 text-xs tabular-nums text-white/55">{step.minutes} min</span>
+                  <span className="shrink-0 text-xs tabular-nums text-muted">{step.minutes} min</span>
                 </Link>
               </li>
             ))}
           </ol>
-        )}
+        </div>
+      )}
+      <div className="mt-3 flex items-center gap-2">
+        <span className="shrink-0 text-xs text-muted">{t("Temps aujourd'hui", "Time today")}</span>
+        <Segmented<PlanMinutes>
+          className="flex flex-1 [&>button]:flex-1"
+          value={(s.sessionMinutes === 60 ? 30 : s.sessionMinutes) as PlanMinutes}
+          onChange={changeLength}
+          options={DURATIONS.map((m) => ({ value: m, label: `${m}′` }))}
+        />
+      </div>
 
-        {next ? (
-          <Link href={next.href} className="mt-4 flex h-12 items-center justify-center gap-2 rounded-2xl bg-white font-semibold text-ink-800 transition hover:bg-ink-50">
-            {started ? t("Continuer", "Continue") : t("Commencer", "Start")}
-            <Icon name="arrow" size={18} />
-          </Link>
-        ) : steps.length ? (
-          <button onClick={() => build(s.sessionMinutes)} className="mt-4 h-11 w-full rounded-2xl border border-white/25 text-sm font-medium text-white/90 hover:bg-white/10">
-            {t("Générer un programme bonus", "Generate a bonus plan")}
-          </button>
-        ) : null}
-      </section>
+      {/* Real life import */}
+      <Link href="/practice/real-life" className="mt-5 flex items-center gap-3 rounded-3xl border border-dashed border-sun-500/50 bg-sun-50 p-4 transition hover:border-sun-500 dark:bg-sun-500/10">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-sun-100 text-sun-700 dark:bg-sun-500/20 dark:text-sun-300"><Icon name="camera" size={22} /></span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-semibold">{t("Importer de la vraie vie", "Import from real life")}</span>
+          <span className="block text-sm text-muted">{t("Une capture, un message, un menu, une phrase entendue…", "A screenshot, a message, a menu, a phrase you heard…")}</span>
+        </span>
+        <Icon name="plus" size={20} className="text-sun-700 dark:text-sun-300" />
+      </Link>
 
       {/* Resume */}
       <SectionHeader title={t("Reprendre", "Pick up")} />
@@ -203,21 +228,6 @@ export default function Home() {
           <ListRow href="/library" tone="sun" icon={<Icon name="book" size={20} />} title={t("Choisir un livre", "Choose a book")} subtitle={t("Des histoires adaptées à ton niveau", "Stories matched to your level")} />
         )}
       </ListGroup>
-
-      {/* Daily goal */}
-      <SectionHeader title={t("Objectif du jour", "Today's goal")} />
-      <div className="grid grid-cols-2 gap-3">
-        <Panel className="p-4">
-          <p className="text-xs text-muted">{t("Nouveaux mots", "New words")}</p>
-          <p className="mt-1 text-xl font-semibold tabular-nums">{o.newToday}<span className="text-sm font-normal text-muted"> / {s.dailyNewWords}</span></p>
-          <ProgressBar value={o.newToday} max={s.dailyNewWords} tone="mint" className="mt-2" />
-        </Panel>
-        <Panel className="p-4">
-          <p className="text-xs text-muted">{t("Temps d'anglais", "English time")}</p>
-          <p className="mt-1 text-xl font-semibold tabular-nums">{todayMin}<span className="text-sm font-normal text-muted"> / {s.sessionMinutes} min</span></p>
-          <ProgressBar value={todayMin} max={s.sessionMinutes} tone="ink" className="mt-2" />
-        </Panel>
-      </div>
 
       {/* Week */}
       <SectionHeader title={t("Ta semaine", "Your week")} subtitle={t(`${formatDuration(o.weekSeconds, s.immersion)} cette semaine`, `${formatDuration(o.weekSeconds, true)} this week`)} action={<Link href="/stats" className="text-sm font-medium text-ink-600 dark:text-ink-300">{t("Détails", "Details")}</Link>} />

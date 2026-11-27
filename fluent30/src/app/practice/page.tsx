@@ -1,21 +1,17 @@
 "use client";
-import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useT } from "@/hooks/useT";
 import { useStatus } from "@/hooks/useStatus";
 import { computeOverview } from "@/lib/progress";
-import { FilterChips, LinkButton, ListGroup, ListRow, Panel, SectionHeader } from "@/components/ui";
+import { LinkButton, ListGroup, ListRow, Panel, SectionHeader } from "@/components/ui";
 import { Icon } from "@/components/icons";
-
-type Cat = "vocab" | "games" | "listen" | "speak" | "talk";
 
 export default function PracticePage() {
   const t = useT();
   const status = useStatus();
   const o = useLiveQuery(() => computeOverview(), []);
-  const [cat, setCat] = useState<Cat>("vocab");
   const due = o?.dueNow ?? 0;
-  const aiNote = status && !status.ai ? t("Nécessite une clé API (non configurée)", "Requires an API key (not configured)") : undefined;
+  const aiNote = status && !status.ai ? t("Analyse IA : clé API non configurée sur le serveur", "AI analysis: API key not configured") : undefined;
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -39,64 +35,41 @@ export default function PracticePage() {
         )}
       </Panel>
 
-      <FilterChips<Cat>
-        value={cat}
-        onChange={setCat}
-        options={[
-          { value: "vocab", label: t("Vocabulaire", "Vocabulary") },
-          { value: "games", label: t("Jeux", "Games") },
-          { value: "listen", label: t("Écoute", "Listening") },
-          { value: "speak", label: t("Prononciation", "Pronunciation") },
-          { value: "talk", label: t("Conversation", "Conversation") },
-        ]}
-      />
+      <SectionHeader title={t("Flashcards", "Flashcards")} />
+      <ListGroup>
+        <ListRow href="/review" icon={<Icon name="review" size={20} />} title={t("Réviser", "Review")} subtitle={due ? t(`${due} mots prêts`, `${due} words ready`) : t("Rien en attente", "Nothing due")} />
+        <ListRow href="/learn" icon={<Icon name="sparkle" size={20} />} title={t("Nouveaux mots", "New words")} subtitle={t("70 % fréquents, 30 % tes centres d'intérêt", "70% frequent, 30% your interests")} />
+        <ListRow href="/cards" icon={<Icon name="flashcards" size={20} />} title={t("Mes cartes", "My cards")} subtitle={o ? t(`${o.totalCards} cartes`, `${o.totalCards} cards`) : undefined} />
+        <ListRow href="/practice/mindmap" tone="mint" icon={<Icon name="layers" size={20} />} title={t("Carte mentale", "Mind map")} subtitle={t("Ton vocabulaire par univers, points forts et manques", "Your vocabulary by topic, strengths and gaps")} />
+      </ListGroup>
 
-      {cat === "vocab" && (
-        <>
-          <SectionHeader title={t("Vocabulaire", "Vocabulary")} />
-          <ListGroup>
-            <ListRow href="/review" icon={<Icon name="review" size={20} />} title={t("Réviser", "Review")} subtitle={due ? t(`${due} mots prêts`, `${due} words ready`) : t("Rien en attente", "Nothing due")} />
-            <ListRow href="/learn" icon={<Icon name="sparkle" size={20} />} title={t("Nouveaux mots", "New words")} subtitle={t("70 % fréquents, 30 % tes centres d'intérêt", "70% frequent, 30% your interests")} />
-            <ListRow href="/cards" icon={<Icon name="flashcards" size={20} />} title={t("Mes flashcards", "My flashcards")} subtitle={o ? t(`${o.totalCards} cartes`, `${o.totalCards} cards`) : undefined} />
-            <ListRow href="/cards/add" icon={<Icon name="plus" size={20} />} title={t("Ajouter un mot", "Add a word")} subtitle={t("Mot, phrase ou capture d'écran", "Word, sentence or screenshot")} />
-            <ListRow href="/themes" icon={<Icon name="layers" size={20} />} title={t("Thèmes", "Themes")} subtitle={t("Indispensables, quotidien, passions", "Essentials, everyday life, passions")} />
-            <ListRow href="/around" icon={<Icon name="eye" size={20} />} title={t("Autour de moi", "Around me")} subtitle={t("Mets un mot anglais sur ce que tu vois", "Name what you see in English")} />
-          </ListGroup>
-        </>
-      )}
-      {cat === "games" && (
-        <>
-          <SectionHeader title={t("Jeux", "Games")} />
-          <ListGroup>
-            <ListRow href="/games" icon={<Icon name="game" size={20} />} title={t("Mini-jeux", "Mini-games")} subtitle={t("20 jeux sur tes mots les plus fragiles", "20 games on your weakest words")} />
-          </ListGroup>
-        </>
-      )}
-      {cat === "listen" && (
-        <>
-          <SectionHeader title={t("Écoute", "Listening")} />
-          <ListGroup>
-            <ListRow href="/listen" icon={<Icon name="headphones" size={20} />} title={t("Écoute", "Listening")} subtitle={t("Dialogues, dictées, accents", "Dialogues, dictation, accents")} />
-          </ListGroup>
-        </>
-      )}
-      {cat === "speak" && (
-        <>
-          <SectionHeader title={t("Prononciation", "Pronunciation")} />
-          <ListGroup>
-            <ListRow href="/pronunciation" icon={<Icon name="mic" size={20} />} title={t("Cours de prononciation", "Pronunciation course")} subtitle={t("Les pièges des francophones", "French speakers' traps")} />
-          </ListGroup>
-        </>
-      )}
-      {cat === "talk" && (
-        <>
-          <SectionHeader title={t("Conversation", "Conversation")} />
-          <ListGroup>
-            <ListRow href="/chat" icon={<Icon name="chat" size={20} />} title={t("Parler avec l'IA", "Talk with AI")} subtitle={aiNote ?? t("Jeux de rôle : restaurant, voyage, entretien…", "Role-plays: restaurant, travel, interview…")} />
-            <ListRow href="/translate" icon={<Icon name="translate" size={20} />} title={t("Assistant de traduction", "Translation assistant")} subtitle={t("Comprendre un message et y répondre", "Understand a message and reply")} />
-          </ListGroup>
-        </>
-      )}
+      <SectionHeader title={t("Ta vraie vie", "Your real life")} subtitle={t("Tes contenus restent privés", "Your content stays private")} />
+      <ListGroup>
+        <ListRow href="/practice/real-life" tone="sun" icon={<Icon name="camera" size={20} />} title="My Real Life English" subtitle={aiNote ?? t("Capture, message, menu, phrase entendue → mini-leçon", "Screenshot, message, menu, phrase heard → mini-lesson")} />
+        <ListRow href="/practice/memories" tone="sun" icon={<Icon name="heart" size={20} />} title="Memory Cards" subtitle={aiNote ?? t("Tes photos deviennent des flashcards", "Your photos become flashcards")} />
+        <ListRow href="/practice/journal" tone="sun" icon={<Icon name="pen" size={20} />} title="My English Journey" subtitle={t("Ton journal : version corrigée et version naturelle", "Your journal: corrected and natural versions")} />
+        <ListRow href="/around" tone="sun" icon={<Icon name="eye" size={20} />} title={t("Autour de moi", "Around me")} subtitle={t("Mets un mot anglais sur ce que tu vois", "Name what you see in English")} />
+      </ListGroup>
+
+      <SectionHeader title={t("Jouer et parler", "Play and talk")} />
+      <ListGroup>
+        <ListRow href="/games" tone="coral" icon={<Icon name="game" size={20} />} title={t("Jeux", "Games")} subtitle={t("Sur tes mots les plus fragiles, avec explications", "On your weakest words, with explanations")} />
+        <ListRow href="/chat" tone="coral" icon={<Icon name="chat" size={20} />} title={t("Conversations IA", "AI conversations")} subtitle={aiNote ?? t("Auberge, restaurant, rendez-vous, entretien…", "Hostel, restaurant, date, interview…")} />
+      </ListGroup>
+
+      <details className="group mt-6">
+        <summary className="flex cursor-pointer list-none items-center justify-between rounded-2xl px-1 py-2 text-[15px] font-semibold text-fg/80 hover:text-fg">
+          {t("Plus d'outils", "More tools")}
+          <Icon name="chevron" size={18} className="text-muted transition group-open:rotate-90" />
+        </summary>
+        <ListGroup className="mt-2">
+          <ListRow href="/listen" icon={<Icon name="headphones" size={20} />} title={t("Écoute", "Listening")} subtitle={t("Dialogues, dictées, accents", "Dialogues, dictation, accents")} />
+          <ListRow href="/pronunciation" icon={<Icon name="mic" size={20} />} title={t("Prononciation", "Pronunciation")} subtitle={t("Les pièges des francophones", "French speakers' traps")} />
+          <ListRow href="/translate" icon={<Icon name="translate" size={20} />} title={t("Traducteur", "Translator")} subtitle={t("Comprendre un message et y répondre", "Understand a message and reply")} />
+          <ListRow href="/cards/add" icon={<Icon name="plus" size={20} />} title={t("Ajouter un mot", "Add a word")} subtitle={t("Mot, phrase ou capture d'écran", "Word, sentence or screenshot")} />
+          <ListRow href="/themes" icon={<Icon name="globe" size={20} />} title={t("Thèmes de vocabulaire", "Vocabulary themes")} subtitle={t("Indispensables, quotidien, passions", "Essentials, everyday life, passions")} />
+        </ListGroup>
+      </details>
     </div>
   );
 }

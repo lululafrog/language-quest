@@ -8,11 +8,39 @@ self.addEventListener("install", (e) => {
 });
 
 self.addEventListener("activate", (e) => {
-  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== VERSION && k !== SHARE_CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
 });
+
+// Share target (manifest.share_target, POST multipart to /share): keep the shared file/text in a
+// private cache for the Real Life English page, which reads and deletes it immediately.
+const SHARE_CACHE = "fluent30-share";
+async function handleShare(req) {
+  try {
+    const form = await req.formData();
+    const file = form.get("image");
+    const text = [form.get("title"), form.get("text"), form.get("url")].filter((v) => typeof v === "string" && v.trim()).join("\n");
+    const c = await caches.open(SHARE_CACHE);
+    if (file && typeof file !== "string" && file.size) {
+      await c.put("/__shared/file", new Response(file, { headers: { "Content-Type": file.type || "image/jpeg" } }));
+      if (text) await c.put("/__shared/text", new Response(text));
+      return Response.redirect("/practice/real-life?sharedFile=1", 303);
+    }
+    if (text) {
+      await c.put("/__shared/text", new Response(text));
+      return Response.redirect("/practice/real-life?shared=1", 303);
+    }
+  } catch (err) {
+    /* fall through */
+  }
+  return Response.redirect("/practice/real-life", 303);
+}
 
 self.addEventListener("fetch", (e) => {
   const req = e.request;
+  if (req.method === "POST" && new URL(req.url).pathname === "/share") {
+    e.respondWith(handleShare(req));
+    return;
+  }
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;

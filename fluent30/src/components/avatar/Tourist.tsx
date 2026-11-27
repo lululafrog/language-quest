@@ -1,4 +1,7 @@
-// The learner's tourist, drawn in SVG: chosen appearance + items bought in the shop.
+// The learner's traveller, drawn in SVG: chosen appearance + items from the wardrobe.
+// Art direction: warm editorial illustration ("cozy travel journal") — soft warm outline, flat colours
+// with one light shading pass, natural palette. Body morphology scales the body (clothes included),
+// so garments always fit; the head keeps its own proportions.
 import { useId, type ReactNode } from "react";
 import { SHOP_BY_ID, type Spec } from "@/lib/data/shop";
 import { O, W, Limb, armL, armR, shade, type Ctx } from "./style";
@@ -12,100 +15,196 @@ const FACES: Record<NonNullable<Appearance["face"]>, string> = {
   round: "M61 64 Q61 24 100 24 Q139 24 139 64 Q139 104 100 106 Q61 104 61 64Z",
   square: "M63 60 Q63 24 100 24 Q137 24 137 60 L136 86 Q134 102 118 106 L82 106 Q66 102 64 86Z",
   heart: "M61 58 Q61 24 100 24 Q139 24 139 58 Q139 80 123 96 Q110 108 100 110 Q90 108 77 96 Q61 80 61 58Z",
+  long: "M64 60 Q64 22 100 22 Q136 22 136 60 Q136 92 124 104 Q112 112 100 112 Q88 112 76 104 Q64 92 64 60Z",
+  diamond: "M66 58 Q68 24 100 23 Q132 24 134 58 Q140 72 128 94 Q114 110 100 111 Q86 110 72 94 Q60 72 66 58Z",
 };
 
+export type Expression = NonNullable<Appearance["expression"]>;
+export type Pose = "idle" | "celebrate" | "reading" | "walk";
+const BODY_K: Record<NonNullable<Appearance["body"]>, number> = { slim: 0.9, average: 1, strong: 1.14 };
+
 export const DEFAULT_APPEARANCE: Appearance = {
-  gender: "male", skin: "#F9CFA8", hair: "short", hairColor: "#6B4226", face: "oval", eyes: "round", eyeColor: "#5D4037",
-  brows: "normal", nose: "small", lips: "normal", facialHair: "none", freckles: false, makeup: "none", beard: false,
+  gender: "male", skin: "#F1C7A1", hair: "short", hairColor: "#6B4226", face: "oval", eyes: "round", eyeColor: "#5D4037",
+  brows: "normal", nose: "small", lips: "normal", facialHair: "none", freckles: false, makeup: "none", beard: false, body: "average", expression: "smile",
 };
 
 type Equipped = Partial<Record<AvatarSlot, string>>;
 
+/** viewBox used to show one item on its own (wardrobe thumbnails). */
+const CROP: Record<AvatarSlot, string> = {
+  hat: "40 -2 120 84", glasses: "62 40 76 46", face: "60 36 80 70", top: "28 74 144 116", outer: "18 72 164 140", dress: "18 72 164 160",
+  bottom: "44 140 112 98", shoes: "58 190 84 42", bag: "18 62 164 150", neck: "40 78 120 100", hand: "40 16 160 216", background: "0 0 200 240",
+};
+const MANNEQUIN = "#E8DFD4";
 
-export function Tourist({ equipped = {}, appearance, className, animate = true, title, portrait, celebrate = false }: { equipped?: Equipped; appearance?: Appearance; className?: string; animate?: boolean; title?: string; portrait?: boolean; celebrate?: boolean }) {
+const ANIM_CSS = `
+.tv-breathe{animation:tv-breathe 4.2s ease-in-out infinite;transform-box:view-box;transform-origin:100px 172px}
+.tv-blink{animation:tv-blink 5.2s infinite;transform-box:fill-box;transform-origin:center}
+.tv-head{animation:tv-head 6.5s ease-in-out infinite;transform-box:view-box;transform-origin:100px 100px}
+.tv-walk{animation:tv-walk .9s ease-in-out infinite;transform-box:view-box;transform-origin:100px 226px}
+.tv-joy{animation:tv-joy 1.1s ease-in-out infinite;transform-box:view-box;transform-origin:100px 226px}
+@keyframes tv-breathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.018)}}
+@keyframes tv-blink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(.08)}}
+@keyframes tv-head{0%,100%{transform:rotate(0)}30%{transform:rotate(1.6deg)}70%{transform:rotate(-1.2deg)}}
+@keyframes tv-walk{0%,100%{transform:translateY(0) rotate(-1.2deg)}50%{transform:translateY(-4px) rotate(1.2deg)}}
+@keyframes tv-joy{0%,100%{transform:translateY(0)}40%{transform:translateY(-12px)}60%{transform:translateY(-12px)}}
+@media (prefers-reduced-motion: reduce){.tv-breathe,.tv-blink,.tv-head,.tv-walk,.tv-joy{animation:none}}
+.reduce-motion .tv-breathe,.reduce-motion .tv-blink,.reduce-motion .tv-head,.reduce-motion .tv-walk,.reduce-motion .tv-joy{animation:none}
+`;
+
+export function Tourist({
+  equipped = {}, appearance, className, animate = true, title, portrait, celebrate = false, expression, pose, mannequin,
+}: {
+  equipped?: Equipped;
+  appearance?: Appearance;
+  className?: string;
+  animate?: boolean;
+  title?: string;
+  portrait?: boolean;
+  celebrate?: boolean;
+  /** overrides the appearance's default expression */
+  expression?: Expression;
+  pose?: Pose;
+  /** wardrobe thumbnail: draws only this slot's item on a neutral mannequin, cropped */
+  mannequin?: AvatarSlot;
+}) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
-  const a = { ...DEFAULT_APPEARANCE, ...(appearance ?? {}) };
+  const mq = mannequin;
+  const a: Appearance = mq ? { ...DEFAULT_APPEARANCE, skin: MANNEQUIN, hair: "bald", gender: "male" } : { ...DEFAULT_APPEARANCE, ...(appearance ?? {}) };
+  const po: Pose = celebrate ? "celebrate" : pose ?? "idle";
+  const up = po === "celebrate";
+  const reading = po === "reading";
+  const expr: Expression = expression ?? (up ? "laugh" : a.expression ?? "smile");
   const spec = (slot: AvatarSlot): Spec | undefined => {
+    if (mq && slot !== mq) return undefined;
     const id = equipped[slot];
     return id ? SHOP_BY_ID.get(id)?.spec : undefined;
   };
   const fem = a.gender === "female";
-  const ctx: Ctx = { uid, a, skinShade: shade(a.skin, -0.16), fem, sx: fem ? 4 : 0, torso: fem ? TORSO_FEM : TORSO, facePath: FACES[a.face ?? "oval"], up: celebrate };
+  const k = BODY_K[a.body ?? "average"] ?? 1;
+  const ctx: Ctx = { uid, a, skinShade: shade(a.skin, -0.16), fem, sx: fem ? 4 : 0, torso: fem ? TORSO_FEM : TORSO, facePath: FACES[a.face ?? "oval"] ?? FACES.oval, up: reading ? "read" : up };
   const hat = spec("hat"), glasses = spec("glasses"), face = spec("face"), top = spec("top"), outer = spec("outer"), dress = spec("dress");
   const bottom = spec("bottom"), shoes = spec("shoes"), bag = spec("bag"), neck = spec("neck"), hand = spec("hand");
-  const bg = spec("background") ?? { k: "home" };
-  const topSpec: Spec = top ?? { k: "tee", c: "#FFFFFF" };
-  const longSleeves = outer && ["jacket", "puffer", "trench", "tuxedo"].includes(outer.k);
-  const sleeveColor = longSleeves ? outer!.c ?? "#1A1740" : dress ? undefined : topSpec.k === "tank" ? undefined : topSpec.c;
+  const bg = mq ? (mq === "background" ? spec("background") : undefined) : spec("background") ?? { k: "home" };
+  const topSpec: Spec | undefined = top ?? (mq ? undefined : { k: "tee", c: "#FFFFFF" });
+  const longTop = !!topSpec && LONG_TOPS.includes(topSpec.k);
+  const fullDress = !!dress && FULL_SUITS.includes(dress.k);
+  const longSleeves = (outer && ["jacket", "puffer", "trench", "tuxedo", "hoodieZip", "souvenir", "raincoat", "fleece"].includes(outer.k)) || longTop || fullDress;
+  const sleeveColor = dress ? (dress.k === "swimsuit" ? undefined : undefined) : topSpec && topSpec.k !== "tank" ? topSpec.c : undefined;
+  const handDx = 46 * (k - 1);
+  const bodyT = `translate(100 0) scale(${k} 1) translate(-100 0)`;
+  const a2 = animate && !mq;
+  const handX = (side: -1 | 1) => (up ? 100 + side * 48 : reading ? 100 + side * 16 : 100 + side * 46) - side * (reading ? 0 : ctx.sx);
+  const handY = up ? 54 : reading ? 140 : 166;
+  const hideHandItem = up || reading;
 
+  if (mq === "background") {
+    return (
+      <svg viewBox="0 0 200 240" className={className} role="img" aria-label={title ?? "Décor"}>
+        <defs><clipPath id={`${uid}clip`}><rect width="200" height="240" rx="28" /></clipPath></defs>
+        <g clipPath={`url(#${uid}clip)`}>{bg && renderBackground(bg, uid)}</g>
+      </svg>
+    );
+  }
+
+  const bodyClass = !a2 ? undefined : up ? "tv-joy" : po === "walk" ? "tv-walk" : "tourist-bob";
   return (
-    <svg viewBox={portrait ? "52 8 96 96" : "0 0 200 240"} className={className} role="img" aria-label={title ?? "Ton touriste"}>
+    <svg viewBox={mq ? CROP[mq] : portrait ? "52 8 96 96" : "0 0 200 240"} className={className} role="img" aria-label={title ?? "Ton voyageur"}>
       <defs>
         <clipPath id={`${uid}clip`}><rect width="200" height="240" rx="28" /></clipPath>
         <radialGradient id={`${uid}skin`} cx="0.4" cy="0.35" r="0.75">
           <stop offset="0" stopColor={shade(a.skin, 0.12)} />
           <stop offset="1" stopColor={a.skin} />
         </radialGradient>
-        <linearGradient id={`${uid}gloss`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#fff" stopOpacity="0.35" />
-          <stop offset="1" stopColor="#fff" stopOpacity="0" />
+        <linearGradient id={`${uid}hair`} x1="0" y1="0" x2="0.3" y2="1">
+          <stop offset="0" stopColor={shade(a.hairColor, 0.14)} />
+          <stop offset="1" stopColor={shade(a.hairColor, -0.12)} />
         </linearGradient>
       </defs>
-      <g clipPath={`url(#${uid}clip)`}>
-        {renderBackground(bg, uid)}
-        <ellipse cx="100" cy="226" rx="50" ry="7" fill="#000" opacity="0.13" />
-        <g className={celebrate && animate ? "tourist-jump" : animate ? "tourist-bob" : undefined}>
+      {a2 && <style>{ANIM_CSS}</style>}
+      <g clipPath={mq ? undefined : `url(#${uid}clip)`}>
+        {bg && renderBackground(bg, uid)}
+        {!mq && <ellipse cx="100" cy="226" rx={50 * k} ry="7" fill="#3A2A20" opacity="0.13" />}
+        <g className={bodyClass}>
           <g transform="translate(0 -10)">
-          {bag?.k === "backpack" && backpackBack(bag)}
-          {hand?.k === "suitcase" && handItem(hand)}
-          {hand?.k === "umbrella" && !celebrate && handItem(hand)}
-          <g transform={HEAD_T}>{hairBack(a)}</g>
+            <g transform={bodyT}>{bag?.k === "backpack" && backpackBack(bag)}</g>
+            {!hideHandItem && hand && HAND_BEHIND.includes(hand.k) && <g transform={`translate(${handDx} 0)`}>{handItem(hand)}</g>}
+            {!mq && <g transform={HEAD_T}><g className={a2 ? "tv-head" : undefined}>{hairBack(a, `url(#${uid}hair)`)}</g></g>}
           </g>
-          {/* longer legs: stretched from the ground up */}
-          <g transform="translate(0 214) scale(1 1.22) translate(0 -214)">
-          {/* legs */}
-          <Limb d={LEG_L} w={15} color={a.skin} />
-          <Limb d={LEG_R} w={15} color={a.skin} />
-          {!dress && renderBottom(bottom ?? { k: "shorts", c: "#7AA6C2" }, ctx)}
+          <g transform={bodyT}>
+            {/* longer legs: stretched from the ground up */}
+            <g transform="translate(0 214) scale(1 1.22) translate(0 -214)">
+              <Limb d={LEG_L} w={15} color={a.skin} />
+              <Limb d={LEG_R} w={15} color={a.skin} />
+              {fullDress && dress && renderSuitLegs(dress)}
+              {!dress && (bottom || !mq) && renderBottom(bottom ?? { k: "shorts", c: "#8FA9B8" }, ctx)}
+            </g>
+            {(shoes || !mq) && renderShoes(shoes ?? { k: "sneakers", c: "#FBF7F0", c2: "#C9B79C" })}
+            <g transform="translate(0 -10)">
+              <g className={a2 ? "tv-breathe" : undefined}>
+                {dress?.k === "dressLong" && renderDress(dress, ctx)}
+                {dress && LONG_LITERARY_DRESSES.includes(dress.k) && literaryDress(dress, ctx)}
+                {/* arms */}
+                <Limb d={armL(ctx.sx, 163, ctx.up)} w={ctx.fem ? 12 : 13} color={a.skin} />
+                <Limb d={armR(ctx.sx, 163, ctx.up)} w={ctx.fem ? 12 : 13} color={a.skin} />
+                {sleeveColor && !longSleeves && (
+                  <>
+                    <Limb d={sleeveL(ctx.sx)} w={ctx.fem ? 15 : 18} color={sleeveColor} />
+                    <Limb d={sleeveR(ctx.sx)} w={ctx.fem ? 15 : 18} color={sleeveColor} />
+                  </>
+                )}
+                {longTop && topSpec && !dress && (
+                  <>
+                    <Limb d={armL(ctx.sx, 157, ctx.up)} w={16} color={topSpec.c ?? "#FFFFFF"} />
+                    <Limb d={armR(ctx.sx, 157, ctx.up)} w={16} color={topSpec.c ?? "#FFFFFF"} />
+                  </>
+                )}
+                {fullDress && dress && (
+                  <>
+                    <Limb d={armL(ctx.sx, 157, ctx.up)} w={16} color={dress.c ?? "#263238"} />
+                    <Limb d={armR(ctx.sx, 157, ctx.up)} w={16} color={dress.c ?? "#263238"} />
+                  </>
+                )}
+                {dress
+                  ? dress.k !== "dressLong" && !LONG_LITERARY_DRESSES.includes(dress.k) ? literaryDress(dress, ctx) ?? renderDress(dress, ctx) : null
+                  : topSpec ? renderTop(topSpec, ctx) : mq && <path d={ctx.torso} fill={a.skin} stroke={O} strokeWidth={W} strokeLinejoin="round" />}
+                {outer && (literaryOuter(outer, ctx) ?? renderOuter(outer, ctx))}
+                {bag && bag.k !== "backpack" && renderBag(bag)}
+                {bag?.k === "backpack" && <path d="M80 104 L82 150 M120 104 L118 150" stroke={shade(bag.c ?? "#C9785A", -0.35)} strokeWidth={6} strokeLinecap="round" />}
+              </g>
+            </g>
           </g>
-          {renderShoes(shoes ?? { k: "sneakers", c: "#FFFFFF", c2: "#CFCCFF" })}
           <g transform="translate(0 -10)">
-          {dress?.k === "dressLong" && renderDress(dress, ctx)}
-          {dress && LONG_LITERARY_DRESSES.includes(dress.k) && literaryDress(dress, ctx)}
-          {/* arms */}
-          <Limb d={armL(ctx.sx, 163, celebrate)} w={ctx.fem ? 12 : 13} color={a.skin} />
-          <Limb d={armR(ctx.sx, 163, celebrate)} w={ctx.fem ? 12 : 13} color={a.skin} />
-          <path d="M64 124 Q59 136 57 150" stroke="#fff" strokeWidth="2.5" opacity="0.28" fill="none" strokeLinecap="round" />
-          {sleeveColor && !longSleeves && (
-            <>
-              <Limb d={sleeveL(ctx.sx)} w={ctx.fem ? 15 : 18} color={sleeveColor} />
-              <Limb d={sleeveR(ctx.sx)} w={ctx.fem ? 15 : 18} color={sleeveColor} />
-            </>
-          )}
-          {dress ? (dress.k !== "dressLong" && !LONG_LITERARY_DRESSES.includes(dress.k) ? literaryDress(dress, ctx) ?? renderDress(dress, ctx) : null) : renderTop(topSpec, ctx)}
-          {outer && (literaryOuter(outer, ctx) ?? renderOuter(outer, ctx))}
-          <Hand cx={(celebrate ? 52 : 54) + ctx.sx} cy={celebrate ? 54 : 166} skin={a.skin} />
-          <Hand cx={(celebrate ? 148 : 146) - ctx.sx} cy={celebrate ? 54 : 166} flip skin={a.skin} />
-          {bag && bag.k !== "backpack" && renderBag(bag)}
-          {bag?.k === "backpack" && <path d="M80 104 L82 150 M120 104 L118 150" stroke={shade(bag.c ?? "#FF7043", -0.35)} strokeWidth={6} strokeLinecap="round" />}
-          {hand?.k === "duck" && handItem(hand)}
-          {neck && (literaryNeck(neck) ?? renderNeck(neck))}
-          {/* neck + head */}
-          <path d="M91 84 L109 84 L110 104 Q100 110 90 104Z" fill={a.skin} stroke={O} strokeWidth={W} />
-          <path d="M91 92 Q100 100 109 92 L109 98 Q100 104 91 98Z" fill={ctx.skinShade} opacity="0.7" />
-          <g transform={HEAD_T}>
-            <ellipse cx="61" cy="70" rx="8" ry="11" fill={a.skin} stroke={O} strokeWidth={W} />
-            <ellipse cx="139" cy="70" rx="8" ry="11" fill={a.skin} stroke={O} strokeWidth={W} />
-            <path d="M60 65 Q57 70 61 76 M140 65 Q143 70 139 76" stroke={ctx.skinShade} strokeWidth="2" fill="none" strokeLinecap="round" />
-            <path d={ctx.facePath} fill={`url(#${uid}skin)`} stroke={O} strokeWidth={W} />
-            <path d="M126 44 Q138 62 132 84 Q126 98 112 104 Q130 86 126 44Z" fill="#000" opacity="0.06" />
-            {renderFace(a, face, ctx)}
-            {face && literaryFace(face)}
-            {hairFront(a)}
-            {glasses && renderGlasses(glasses)}
-            {hat && (literaryHat(hat) ?? renderHat(hat, ctx))}
-          </g>
-          {hand && !celebrate && !["suitcase", "duck", "umbrella"].includes(hand.k) && (literaryHand(hand) ?? handItem(hand))}
+            {reading && <OpenBook />}
+            <g transform={bodyT}>
+              <Hand cx={handX(-1)} cy={handY} skin={a.skin} />
+              <Hand cx={handX(1)} cy={handY} flip skin={a.skin} />
+              {hand?.k === "duck" && handItem(hand)}
+              {neck && (literaryNeck(neck) ?? renderNeck(neck))}
+            </g>
+            {/* neck + head */}
+            {!mq || mq === "hat" || mq === "glasses" || mq === "face" || mq === "neck" ? (
+              <>
+                <path d="M91 84 L109 84 L110 104 Q100 110 90 104Z" fill={a.skin} stroke={O} strokeWidth={W} />
+                <path d="M91 92 Q100 100 109 92 L109 98 Q100 104 91 98Z" fill={ctx.skinShade} opacity="0.7" />
+                {neck && NECK_FRONT.includes(neck.k) && <g transform={bodyT}>{renderNeck(neck)}</g>}
+                <g transform={HEAD_T}>
+                  <g className={a2 ? "tv-head" : undefined}>
+                    <ellipse cx="61" cy="70" rx="8" ry="11" fill={a.skin} stroke={O} strokeWidth={W} />
+                    <ellipse cx="139" cy="70" rx="8" ry="11" fill={a.skin} stroke={O} strokeWidth={W} />
+                    <path d="M60 65 Q57 70 61 76 M140 65 Q143 70 139 76" stroke={ctx.skinShade} strokeWidth="2" fill="none" strokeLinecap="round" />
+                    <path d={ctx.facePath} fill={`url(#${uid}skin)`} stroke={O} strokeWidth={W} />
+                    <path d="M126 44 Q138 62 132 84 Q126 98 112 104 Q130 86 126 44Z" fill="#3A2A20" opacity="0.06" />
+                    {!mq && renderFace(a, face, ctx, expr, a2)}
+                    {face && (literaryFace(face) ?? renderFaceItem(face))}
+                    {!mq && hairFront(a, `url(#${uid}hair)`)}
+                    {glasses && renderGlasses(glasses)}
+                    {hat && (literaryHat(hat) ?? renderHat(hat, ctx))}
+                  </g>
+                </g>
+              </>
+            ) : null}
+            {hand && !hideHandItem && !HAND_BEHIND.includes(hand.k) && hand.k !== "duck" && <g transform={`translate(${handDx} 0)`}>{literaryHand(hand) ?? handItem(hand)}</g>}
           </g>
         </g>
       </g>
@@ -113,6 +212,25 @@ export function Tourist({ equipped = {}, appearance, className, animate = true, 
   );
 }
 
+/** Hand items drawn behind the body. */
+const HAND_BEHIND = ["suitcase", "suitcaseHard", "umbrella", "surfboard"];
+/** Neck items drawn over the neck (necklaces worn on the skin). */
+const NECK_FRONT: string[] = [];
+/** Long-sleeved tops (sweaters, hoodies…). */
+const LONG_TOPS = ["sweater", "hoodie", "turtleneck", "stripesLong", "rashguard"];
+/** One-piece suits drawn on legs and arms (wetsuit). */
+const FULL_SUITS = ["wetsuit"];
+
+function OpenBook() {
+  return (
+    <g>
+      <path d="M78 128 Q90 124 100 130 Q110 124 122 128 L122 150 Q110 146 100 152 Q90 146 78 150Z" fill="#FBF7F0" stroke={O} strokeWidth={W} strokeLinejoin="round" />
+      <path d="M100 130 L100 152" stroke={O} strokeWidth="1.4" />
+      <path d="M83 134 Q90 132 96 135 M83 139 Q90 137 96 140 M104 135 Q110 132 117 134 M104 140 Q110 137 117 139" stroke="#B8A58A" strokeWidth="1.1" fill="none" />
+      <path d="M76 150 Q90 147 100 154 Q110 147 124 150 L124 153 Q110 150 100 157 Q90 150 76 153Z" fill="#8C5A3C" stroke={O} strokeWidth="1.4" strokeLinejoin="round" />
+    </g>
+  );
+}
 
 // ---------------- patterns ----------------
 function patternDefs(id: string, p: Spec["p"], c: string, c2?: string): ReactNode {

@@ -29,7 +29,13 @@ export default function ReviewPage() {
   const [forgotLink, setForgotLink] = useState<{ term: string; link: CourseLink } | null>(null);
 
   const load = useCallback(async (f: Filter) => {
-    const q = await getDueQueue(200, f === "all" ? undefined : [f]);
+    let q = await getDueQueue(200, f === "all" ? undefined : [f]);
+    // Optional focus from other screens: /review?cards=id1,id2 (memory album, mind map) or /review?theme=<id>
+    const params = new URLSearchParams(window.location.search);
+    const ids = params.get("cards")?.split(",").filter(Boolean);
+    const theme = params.get("theme");
+    if (ids?.length) q = q.filter((it) => ids.includes(it.card.id));
+    else if (theme) q = q.filter((it) => it.card.themes.includes(theme));
     setQueue(q);
     setPos(0);
     setFlipped(false);
