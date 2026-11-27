@@ -69,12 +69,12 @@ export function Shelf({ title, subtitle, action, children }: { title: ReactNode;
 }
 
 /** Card of a built-in book (links to its detail page). */
-export function LibCard({ book, mine, reason, wide }: { book: LibraryBook; mine?: Book; reason?: string; wide?: boolean }) {
+export function LibCard({ book, mine, reason, wide, fluid }: { book: LibraryBook; mine?: Book; reason?: string; wide?: boolean; fluid?: boolean }) {
   const t = useT();
   const cat = LIBRARY_CATEGORIES.find((c) => c.id === book.cat);
   const progress = mine && !mine.finishedAt ? mine.progress : 0;
   return (
-    <Link href={`/library/book/${book.id}`} className={cx("group shrink-0 snap-start", wide ? "w-40 sm:w-44" : "w-32 sm:w-36")}>
+    <Link href={`/library/book/${book.id}`} className={cx("group shrink-0 snap-start", fluid ? "w-full" : wide ? "w-40 sm:w-44" : "w-32 sm:w-36")}>
       <div className="relative overflow-hidden rounded-xl shadow-md shadow-ink-900/15 ring-1 ring-black/5 transition duration-300 group-hover:-translate-y-1 group-hover:shadow-xl">
         <BookCover book={book} className="block aspect-[2/3] w-full" />
         <LevelBadge level={book.level} className="absolute left-1.5 top-1.5" />

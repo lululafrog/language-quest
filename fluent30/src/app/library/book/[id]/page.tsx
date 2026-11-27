@@ -121,7 +121,7 @@ export default function BookDetailPage() {
               {cov.unknownTop.length > 0 && <p className="mt-2 text-xs text-muted">{t("Mots fréquents à découvrir :", "Frequent new words:")} <span className="font-medium text-fg">{cov.unknownTop.slice(0, 8).join(", ")}</span></p>}
             </>
           ) : cov === null ? (
-            <p className="text-sm text-muted">{t(`L'estimation apparaîtra quand tu auras appris au moins ${MIN_KNOWN_FOR_COVERAGE} mots (ou fait le test de niveau).`, `The estimate appears once you know ${MIN_KNOWN_FOR_COVERAGE}+ words.`)} <Link href="/learn" className="text-ink-600 underline dark:text-ink-300">{t("Apprendre des mots", "Learn words")}</Link></p>
+            <p className="text-sm text-muted">{t(`Estimation pas encore disponible : elle apparaît quand tu connais au moins ${MIN_KNOWN_FOR_COVERAGE} mots (apprends-en ou fais le test de niveau).`, `Not available yet: learn ${MIN_KNOWN_FOR_COVERAGE}+ words first.`)} <Link href="/learn" className="text-ink-600 underline dark:text-ink-300">{t("Apprendre des mots", "Learn words")}</Link></p>
           ) : (
             <div className="h-16 animate-pulse rounded-xl bg-surface-2" />
           )}

@@ -84,6 +84,7 @@ export async function deleteBook(id: string) {
     await db.bookContent.delete(id);
     await db.books.delete(id);
   });
+  await db.images.delete(`cover:${id}`);
 }
 
 // ---------------- TXT ----------------
@@ -216,8 +217,9 @@ export async function importEpub(file: File): Promise<Book> {
   if (!opfStr) throw new ImportError("EPUB invalide : fichier OPF manquant.");
   const opf = parseXml(opfStr);
 
-  const title = byLocalName(opf, "title")[0]?.textContent?.trim() || file.name.replace(/\.epub$/i, "");
-  const author = byLocalName(opf, "creator")[0]?.textContent?.trim() || undefined;
+  const title = cleanText(byLocalName(opf, "title")[0]?.textContent ?? "") || file.name.replace(/\.epub$/i, "");
+  const author = cleanText(byLocalName(opf, "creator")[0]?.textContent ?? "") || undefined;
+  const subject = cleanText(byLocalName(opf, "subject")[0]?.textContent ?? "") || undefined;
   const manifest = new Map<string, { href: string; type: string; props: string }>();
   for (const it of byLocalName(opf, "item")) {
     manifest.set(it.getAttribute("id") ?? "", { href: resolvePath(opfPath, it.getAttribute("href") ?? ""), type: it.getAttribute("media-type") ?? "", props: it.getAttribute("properties") ?? "" });
@@ -271,7 +273,19 @@ export async function importEpub(file: File): Promise<Book> {
     else chapters.push({ title: t.slice(0, 120), paragraphs });
   }
   if (!chapters.length) throw new ImportError("Aucun texte trouvé dans cet EPUB (livre composé uniquement d'images ?).");
-  return saveBook({ id: bookId("import"), title, author, source: "import", format: "epub" }, chapters);
+  const book = await saveBook({ id: bookId("import"), title, author, source: "import", format: "epub", genre: subject }, chapters);
+  // Cover image (EPUB 3 "cover-image" property, or EPUB 2 <meta name="cover">), kept on this device only.
+  try {
+    const coverMetaId = byLocalName(opf, "meta").find((m) => m.getAttribute("name") === "cover")?.getAttribute("content");
+    const coverItem = [...manifest.values()].find((m) => m.props.split(/\s+/).includes("cover-image")) ?? (coverMetaId ? manifest.get(coverMetaId) : undefined) ?? [...manifest.values()].find((m) => /^image\//.test(m.type) && /cover/i.test(m.href));
+    if (coverItem && /^image\//.test(coverItem.type)) {
+      const b64 = await zip.file(coverItem.href)?.async("base64");
+      if (b64 && b64.length < 3_000_000) await getDb().images.put({ key: `cover:${book.id}`, mime: coverItem.type, data: `data:${coverItem.type};base64,${b64}`, provider: "upload", createdAt: Date.now(), updatedAt: Date.now() });
+    }
+  } catch {
+    /* a missing cover is not an error */
+  }
+  return book;
 }
 
 // ---------------- PDF ----------------
@@ -406,13 +420,13 @@ export async function downloadGutenberg(id: number, hint?: { title?: string; aut
     const text = await fetchBundledBook(id);
     if (text) {
       const cat = LIBRARY_CATEGORIES.find((c) => c.id === local.cat);
-      return saveBook({ id: `gutenberg:${id}`, title: local.title, author: local.author, source: "gutenberg", format: "txt", gutenbergId: id, genre: cat?.fr, level: local.level }, parsePlainText(text, local.title));
+      return saveBook({ id: `gutenberg:${id}`, title: local.title, author: local.author, source: "gutenberg", format: "txt", gutenbergId: id, libraryId: id, genre: cat?.fr, level: local.level }, parsePlainText(text, local.title));
     }
   }
   // 2. Project Gutenberg through the server (mirror first).
   const r = await getApi<{ id: number; title: string; author?: string; text: string; subjects: string[] }>(`/api/gutenberg/book?id=${id}`);
   const chapters = parsePlainText(r.text, r.title);
-  return saveBook({ id: `gutenberg:${id}`, title: r.title || hint?.title || `Gutenberg #${id}`, author: r.author || hint?.author, source: "gutenberg", format: "txt", gutenbergId: id, genre: hint?.genre, level: hint?.level }, chapters);
+  return saveBook({ id: `gutenberg:${id}`, title: r.title || hint?.title || `Gutenberg #${id}`, author: r.author || hint?.author, source: "gutenberg", format: "txt", gutenbergId: id, libraryId: local ? id : undefined, genre: hint?.genre ?? (local ? LIBRARY_CATEGORIES.find((c) => c.id === local.cat)?.fr : undefined), level: hint?.level ?? local?.level }, chapters);
 }
 
 /** Loads public/books/<id>.txt.gz and decompresses it in the browser. */

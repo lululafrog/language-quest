@@ -126,7 +126,7 @@ export function Bookshop({ books }: { books: Book[] }) {
         <div>
           <p className="mb-3 text-sm text-muted">{t(`${results.length} livre${results.length > 1 ? "s" : ""}`, `${results.length} book${results.length > 1 ? "s" : ""}`)}</p>
           <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-4 lg:grid-cols-5">
-            {results.map((b) => <div key={b.id} className="[&>a]:w-full"><LibCard book={b} mine={byLib.get(b.id)} /></div>)}
+            {results.map((b) => <LibCard key={b.id} book={b} mine={byLib.get(b.id)} fluid />)}
           </div>
           {!results.length && <p className="py-8 text-center text-sm text-muted">{t("Aucun livre ne correspond.", "No match.")}</p>}
         </div>

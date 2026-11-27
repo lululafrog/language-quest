@@ -12,14 +12,14 @@ import { useOnline } from "@/hooks/useOnline";
 import { Badge, Button, EmptyState, ErrorNote, PageHeader, Panel, ProgressBar, Segmented, Spinner, cx, toast } from "@/components/ui";
 import type { Book } from "@/lib/types";
 import { CLASSICS, GUTENBERG_TOPICS } from "./classics";
-import { TravelLibrary } from "@/components/reader/TravelLibrary";
+import { Bookshop } from "@/components/library/Bookshop";
 
-type Tab = "mine" | "travel" | "graded" | "gutenberg" | "import";
+type Tab = "shop" | "mine" | "graded" | "gutenberg" | "import";
 const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 
 export default function LibraryPage() {
   const t = useT();
-  const [tab, setTab] = useState<Tab>("travel");
+  const [tab, setTab] = useState<Tab>("shop");
   const books = useLiveQuery(() => getDb().books.toArray(), []);
   const recent = useMemo(() => (books ?? []).filter((b) => b.lastOpenedAt).sort((a, b) => (b.lastOpenedAt ?? 0) - (a.lastOpenedAt ?? 0))[0], [books]);
 
@@ -27,7 +27,7 @@ export default function LibraryPage() {
     <div>
       <PageHeader title={t("Bibliothèque", "Library")} subtitle={t("Lisez en anglais : chaque mot est cliquable et peut rejoindre vos flashcards.", "Read in English: tap any word to translate it and save it.")} />
 
-      {recent && (
+      {recent && tab !== "shop" && (
         <Link href={`/library/read/${encodeURIComponent(recent.id)}`} className="mb-5 block">
           <Panel className="flex items-center gap-4 bg-gradient-to-br from-ink-600 to-ink-800 text-white border-transparent">
             <BookCover book={recent} />
@@ -49,7 +49,7 @@ export default function LibraryPage() {
           value={tab}
           onChange={setTab}
           options={[
-            { value: "travel", label: t("🎒 100 classiques", "🎒 100 classics") },
+            { value: "shop", label: t("📚 Librairie", "📚 Bookshop") },
             { value: "mine", label: t("Mes livres", "My books") },
             { value: "graded", label: t("Histoires graduées", "Graded stories") },
             { value: "gutenberg", label: t("Catalogue Gutenberg", "Gutenberg") },
@@ -58,7 +58,7 @@ export default function LibraryPage() {
         />
       </div>
 
-      {tab === "travel" && <TravelLibrary books={books ?? []} />}
+      {tab === "shop" && <Bookshop books={books ?? []} />}
       {tab === "mine" && <MyBooks books={books} onGo={setTab} />}
       {tab === "graded" && <Graded books={books ?? []} />}
       {tab === "gutenberg" && <Gutenberg books={books ?? []} />}
@@ -118,7 +118,7 @@ function MyBooks({ books, onGo }: { books: Book[] | undefined; onGo: (t: Tab) =>
         <p>{t("Commencez par une histoire adaptée à votre niveau, un classique gratuit ou importez vos fichiers.", "Start with a graded story, a free classic, or import your own files.")}</p>
         <div className="mt-4 flex flex-wrap justify-center gap-2">
           <Button size="sm" onClick={() => onGo("graded")}>{t("Histoires graduées", "Graded stories")}</Button>
-          <Button size="sm" variant="secondary" onClick={() => onGo("gutenberg")}>{t("Classiques gratuits", "Free classics")}</Button>
+          <Button size="sm" variant="secondary" onClick={() => onGo("shop")}>{t("Classiques gratuits", "Free classics")}</Button>
           <Button size="sm" variant="secondary" onClick={() => onGo("import")}>{t("Importer", "Import")}</Button>
         </div>
       </EmptyState>
