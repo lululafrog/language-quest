@@ -18,11 +18,42 @@ const P = {
   session: "M12 8v4l3 2M12 22a10 10 0 110-20 10 10 0 010 20z",
   test: "M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11",
   flame: "M12 22c4 0 7-3 7-7 0-4-3-6-4-9-1 2-2 3-4 3 0-2 0-4-2-6-1 4-4 6-4 11 0 4 3 8 7 8z",
+  course: "M4 19.5V5a2 2 0 012-2h13v15H6a2 2 0 00-2 2.5zM4 19.5A2.5 2.5 0 006.5 22H19v-4M9 7h6M9 11h4",
+  practice: "M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 14.4l-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z",
+  profile: "M12 12a4.5 4.5 0 100-9 4.5 4.5 0 000 9zM3.5 21a8.5 8.5 0 0117 0",
+  passport: "M6 2h11a2 2 0 012 2v16a2 2 0 01-2 2H6a1 1 0 01-1-1V3a1 1 0 011-1zM12 14a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM8.5 10.5h7M9 18h6",
+  trophy: "M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0zM7 6H4v1a3 3 0 003 3M17 6h3v1a3 3 0 01-3 3",
+  flashcards: "M7 4h11a2 2 0 012 2v9M4 8h11a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2v-8a2 2 0 012-2z",
+  game: "M6 9h4M8 7v4M15 10h.01M18 8h.01M7 5h10a5 5 0 015 5v2a5 5 0 01-9 3h-2a5 5 0 01-9-3v-2a5 5 0 015-5z",
+  headphones: "M3 18v-6a9 9 0 0118 0v6M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z",
+  mic: "M12 2a3 3 0 013 3v7a3 3 0 01-6 0V5a3 3 0 013-3zM19 10v2a7 7 0 01-14 0v-2M12 19v3M8 22h8",
+  search: "M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.35-4.35",
+  sheet: "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M8 13h8M8 17h5",
+  path: "M6 21a3 3 0 100-6 3 3 0 000 6zM18 9a3 3 0 100-6 3 3 0 000 6zM9 18h6a3 3 0 000-6H9a3 3 0 010-6h6",
+  clock: "M12 22a10 10 0 110-20 10 10 0 010 20zM12 6v6l4 2",
+  target: "M12 22a10 10 0 110-20 10 10 0 010 20zM12 18a6 6 0 110-12 6 6 0 010 12zM12 14a2 2 0 110-4 2 2 0 010 4z",
+  globe: "M12 22a10 10 0 110-20 10 10 0 010 20zM2 12h20M12 2a15 15 0 014 10 15 15 0 01-4 10 15 15 0 01-4-10 15 15 0 014-10z",
+  shirt: "M8 3l-5 3 2 5 3-1v11h8V10l3 1 2-5-5-3a4 4 0 01-8 0z",
+  chart: "M3 3v18h18M7 15l4-4 3 3 5-6",
+  check: "M20 6L9 17l-5-5",
+  lock: "M5 11h14v10H5zM8 11V7a4 4 0 018 0v4",
+  chevron: "M9 18l6-6-6-6",
+  arrow: "M5 12h14M13 6l6 6-6 6",
+  star: "M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z",
+  heart: "M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 00-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 000-7.8z",
+  eye: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 100-6 3 3 0 000 6z",
+  pen: "M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z",
+  layers: "M12 2l10 5-10 5L2 7zM2 17l10 5 10-5M2 12l10 5 10-5",
+  coin: "M12 22a10 10 0 110-20 10 10 0 010 20zM12 7v10M9.5 9.5h4a2 2 0 010 4h-3",
+  calendar: "M4 5h16v16H4zM4 10h16M9 3v4M15 3v4",
+  bolt: "M13 2L3 14h9l-1 8 10-12h-9z",
+  camera: "M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2zM12 17a4 4 0 100-8 4 4 0 000 8z",
+  map: "M1 6v16l7-4 8 4 7-4V2l-7 4-8-4zM8 2v16M16 6v16",
 };
 export type IconName = keyof typeof P;
-export function Icon({ name, size = 22, className }: { name: IconName; size?: number; className?: string }) {
+export function Icon({ name, size = 22, className, strokeWidth = 1.8 }: { name: IconName; size?: number; className?: string; strokeWidth?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
       <path d={P[name]} />
     </svg>
   );

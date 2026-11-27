@@ -133,3 +133,19 @@ messages d'erreur clairs, mais un essai avec de vraies clés est recommandé ava
 Nécessitent `ANTHROPIC_API_KEY` (sinon un message l'indique, rien n'est simulé) : romans personnalisés, versions A1–C1
 des livres, discussion avec les personnages, traduction bilingue complète d'un chapitre, quiz de compréhension générés.
 Sans clé, la traduction mot/paragraphe utilise MyMemory (gratuit, quota quotidien limité).
+
+## Refonte : parcours A1 → C1 et navigation en 5 onglets
+
+- **Navigation** : Accueil · Cours · Livres · Pratique · Profil (voir `AUDIT.md` pour la carte complète des écrans).
+- **Cours** (`src/lib/curriculum/`) : 48 micro-leçons A1 → C1 + 15 modules « Vie réelle », 739 exercices, contenu original.
+  Chaque leçon suit la même structure (objectif, explication courte, règle, tableau, exemples audio, pièges des
+  francophones, astuce, exercices progressifs avec « Pourquoi ? », situation réelle, résumé) et est replanifiée
+  avec FSRS (`db.lessons`, migration Dexie v4 sans perte de données). Lecteur : `src/app/cours/[id]`.
+- **Fiches de révision** : 37 fiches + recherche globale (cours, fiches, grammaire, verbes, expressions, tes cartes).
+- **Programme du jour** 5/10/15/20/30 min adaptatif (`buildDailyPlan` dans `src/lib/session.ts`), notions faibles
+  (`src/lib/connect.ts`) reliées aux jeux, révisions et cours.
+- **Passeport** : 20 destinations, tampons gagnés sur de vrais progrès, jamais retirés (`/profile/passport`).
+- **Onboarding** en 7 étapes (niveau, objectifs, temps, mots/jour, intérêts, avatar), modifiable à tout moment ;
+  le test CECRL complet peut placer le parcours au bon niveau.
+- Limites : la note de prononciation dépend de la reconnaissance vocale du navigateur (indicative) ; la conversation
+  IA liée à chaque situation nécessite `ANTHROPIC_API_KEY`.

@@ -54,7 +54,7 @@ export default function StatsPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title={t("Statistiques", "Statistics")} back="/more" action={<LinkButton href="/tests" size="sm" variant="outline">{t("Tests", "Tests")}</LinkButton>} />
+      <PageHeader title={t("Statistiques", "Statistics")} back="/profile" action={<LinkButton href="/tests" size="sm" variant="outline">{t("Tests", "Tests")}</LinkButton>} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile icon="🔎" label={t("Découverts", "Discovered")} value={o.discovered} />

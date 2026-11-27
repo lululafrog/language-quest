@@ -9,7 +9,7 @@ export function cx(...c: (string | false | null | undefined)[]) {
 
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "success" | "outline";
 const variants: Record<Variant, string> = {
-  primary: "bg-gradient-to-b from-ink-500 to-ink-700 text-white hover:brightness-110 shadow-md shadow-ink-600/30",
+  primary: "bg-ink-600 text-white hover:bg-ink-700 shadow-sm shadow-ink-600/25",
   secondary: "bg-surface-2 text-fg hover:bg-ink-100 dark:hover:bg-ink-900/60",
   ghost: "text-fg hover:bg-surface-2",
   danger: "bg-coral-600 text-white hover:bg-coral-500",
@@ -40,9 +40,15 @@ export function LinkButton({ href, variant = "primary", size = "md", className, 
   );
 }
 
-export function Panel({ className, children, as: As = "div", ...rest }: { className?: string; children: ReactNode; as?: "div" | "section" | "article" } & React.HTMLAttributes<HTMLDivElement>) {
+/** The one card style of the app. tone: default (white card), subtle (tinted, no shadow), highlight (primary-tinted). */
+export function Panel({ className, children, as: As = "div", tone = "default", ...rest }: { className?: string; children: ReactNode; as?: "div" | "section" | "article"; tone?: "default" | "subtle" | "highlight" } & React.HTMLAttributes<HTMLDivElement>) {
+  const tones = {
+    default: "card-shadow border border-line/70 bg-surface",
+    subtle: "border border-line/50 bg-surface-2/60",
+    highlight: "border border-ink-200 bg-ink-50 dark:border-ink-800 dark:bg-ink-950/60",
+  };
   return (
-    <As {...rest} className={cx("card-shadow rounded-3xl border border-line/70 bg-surface/95 p-4 backdrop-blur sm:p-5", className)}>
+    <As {...rest} className={cx("rounded-3xl p-4 sm:p-5", tones[tone], className)}>
       {children}
     </As>
   );
@@ -256,6 +262,87 @@ export function Toaster() {
           {t.text}
         </div>
       ))}
+    </div>
+  );
+}
+
+// ---------------- Design system: hubs & sections ----------------
+
+/** Section title used inside screens (uppercase-free, quiet, consistent spacing). */
+export function SectionHeader({ title, subtitle, action, className }: { title: ReactNode; subtitle?: ReactNode; action?: ReactNode; className?: string }) {
+  return (
+    <div className={cx("mb-3 mt-7 flex items-end justify-between gap-3 first:mt-0", className)}>
+      <div className="min-w-0">
+        <h2 className="text-[17px] font-semibold tracking-tight">{title}</h2>
+        {subtitle && <p className="mt-0.5 text-sm text-muted">{subtitle}</p>}
+      </div>
+      {action}
+    </div>
+  );
+}
+
+/** Rounded square holding a stroke icon (homogeneous icon treatment). */
+export function IconTile({ children, tone = "ink", size = "md" }: { children: ReactNode; tone?: "ink" | "coral" | "mint" | "sun" | "gray"; size?: "sm" | "md" | "lg" }) {
+  const tones = {
+    ink: "bg-ink-50 text-ink-600 dark:bg-ink-900/60 dark:text-ink-300",
+    coral: "bg-coral-100 text-coral-600 dark:bg-coral-600/20 dark:text-coral-400",
+    mint: "bg-mint-100 text-mint-600 dark:bg-mint-600/20 dark:text-mint-400",
+    sun: "bg-sun-100 text-amber-700 dark:bg-sun-500/20 dark:text-sun-400",
+    gray: "bg-surface-2 text-muted",
+  };
+  const sizes = { sm: "h-8 w-8 rounded-lg", md: "h-10 w-10 rounded-xl", lg: "h-12 w-12 rounded-2xl" };
+  return <span className={cx("flex shrink-0 items-center justify-center", tones[tone], sizes[size])}>{children}</span>;
+}
+
+/** Hub row: icon + title + subtitle + trailing (chevron by default). */
+export function ListRow({ href, onClick, icon, title, subtitle, trailing, tone = "ink", className }: { href?: string; onClick?: () => void; icon?: ReactNode; title: ReactNode; subtitle?: ReactNode; trailing?: ReactNode; tone?: "ink" | "coral" | "mint" | "sun" | "gray"; className?: string }) {
+  const inner = (
+    <>
+      {icon && <IconTile tone={tone}>{icon}</IconTile>}
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[15px] font-medium">{title}</span>
+        {subtitle && <span className="mt-0.5 block truncate text-[13px] text-muted">{subtitle}</span>}
+      </span>
+      {trailing ?? (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-muted" aria-hidden><path d="M9 18l6-6-6-6" /></svg>
+      )}
+    </>
+  );
+  const cls = cx("flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-surface-2/70 active:bg-surface-2", className);
+  if (href) return <Link href={href} className={cls}>{inner}</Link>;
+  return <button type="button" onClick={onClick} className={cls}>{inner}</button>;
+}
+
+/** Groups ListRows in one card with separators. */
+export function ListGroup({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={cx("card-shadow divide-y divide-line/70 overflow-hidden rounded-3xl border border-line/70 bg-surface", className)}>{children}</div>;
+}
+
+/** Filter chips (single choice) — used for sub-categories instead of showing everything at once. */
+export function FilterChips<T extends string>({ value, onChange, options, className }: { value: T; onChange: (v: T) => void; options: { value: T; label: ReactNode }[]; className?: string }) {
+  return (
+    <div className={cx("no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1", className)} role="tablist">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          role="tab"
+          aria-selected={value === o.value}
+          onClick={() => onChange(o.value)}
+          className={cx("shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition", value === o.value ? "border-ink-600 bg-ink-600 text-white" : "border-line bg-surface text-fg hover:border-ink-300")}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Small quiet metric (number + caption). */
+export function Metric({ value, label, className }: { value: ReactNode; label: ReactNode; className?: string }) {
+  return (
+    <div className={cx("min-w-0", className)}>
+      <div className="text-xl font-semibold tabular-nums tracking-tight">{value}</div>
+      <div className="truncate text-xs text-muted">{label}</div>
     </div>
   );
 }

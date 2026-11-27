@@ -6,6 +6,7 @@ import { reportAnswer, type MissedItem } from "@/lib/games/engine";
 import { speak } from "@/lib/speech";
 import { shuffle } from "@/lib/text";
 import { GameHeader, type FinishPayload } from "./common";
+import { WhyBox } from "./WhyBox";
 
 export interface BuildSentence {
   key: string;
@@ -104,6 +105,12 @@ export function BuilderGame({ gameId, sentences, onFinish }: { gameId: string; s
             <div className="flex items-center gap-1 text-lg font-medium">
               {s.en} <SpeakButton text={s.en} />
             </div>
+            {state === "wrong" && (
+              <WhyBox
+                className="rounded-xl bg-surface-2 p-3 text-sm"
+                item={{ explanation: t("En anglais, l'ordre est presque toujours : sujet + verbe + complément, puis lieu et temps à la fin. Les adjectifs se placent avant le nom.", "English order: subject + verb + object, then place and time. Adjectives go before the noun."), mistake: { id: "grammar:word-order" } }}
+              />
+            )}
             <Button className="w-full" onClick={next} autoFocus>{i + 1 >= sentences.length ? t("Voir le résultat", "See results") : t("Suivant", "Next")}</Button>
           </div>
         )}

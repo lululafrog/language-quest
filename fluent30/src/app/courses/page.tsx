@@ -24,7 +24,7 @@ export default function CoursesPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <PageHeader title={t("Les cours", "Lessons")} subtitle={t(`Les règles pour bien parler anglais, en fiches courtes. ${done}/${COURSES.length} maîtrisées.`, `The rules of spoken English. ${done}/${COURSES.length} mastered.`)} back="/basics" />
+      <PageHeader title={t("Les cours", "Lessons")} subtitle={t(`Les règles pour bien parler anglais, en fiches courtes. ${done}/${COURSES.length} maîtrisées.`, `The rules of spoken English. ${done}/${COURSES.length} mastered.`)} back="/cours" />
       <Segmented<Filter> className="mb-4" value={filter} onChange={setFilter} options={[{ value: "all", label: t("Tous", "All") }, { value: "grammaire", label: t("Grammaire", "Grammar") }, { value: "vocabulaire", label: t("Vocabulaire", "Vocabulary") }, { value: "prononciation", label: t("Prononciation", "Pronunciation") }]} />
       <div className="grid gap-3 sm:grid-cols-2">
         {list.map((c) => {

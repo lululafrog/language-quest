@@ -61,7 +61,7 @@ export default function ShopPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <PageHeader title={t("Boutique du touriste", "Tourist shop")} subtitle={t(`${SHOP_ITEMS.length} objets à gagner en pratiquant`, `${SHOP_ITEMS.length} items to earn by practising`)} back="/" action={<Coins amount={game.coins} className="text-base" />} />
+      <PageHeader title={t("Boutique du touriste", "Tourist shop")} subtitle={t(`${SHOP_ITEMS.length} objets à gagner en pratiquant`, `${SHOP_ITEMS.length} items to earn by practising`)} back="/profile" action={<Coins amount={game.coins} className="text-base" />} />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-[280px_minmax(0,1fr)]">
         <div className="sticky top-2 z-10 md:top-6 md:self-start">
           <div className="mx-auto w-40 overflow-hidden rounded-3xl border border-line bg-surface shadow-lg sm:w-52 md:w-full">

@@ -10,47 +10,66 @@ import { startAutoSync } from "@/lib/sync";
 import { Icon, type IconName } from "./icons";
 import { Toaster, cx } from "./ui";
 import { RewardWatcher } from "./game/RewardWatcher";
+import { StampWatcher } from "./passport/StampWatcher";
 import { CeremonyWatcher } from "./game/CeremonyWatcher";
 
 type NavItem = { href: string; fr: string; en: string; icon: IconName };
+type NavSection = NavItem & { match: string[]; children: NavItem[] };
 
-export const MAIN_NAV: NavItem[] = [
-  { href: "/", fr: "Accueil", en: "Home", icon: "home" },
-  { href: "/review", fr: "Réviser", en: "Review", icon: "review" },
-  { href: "/library", fr: "Lire", en: "Read", icon: "book" },
-  { href: "/practice", fr: "Pratiquer", en: "Practice", icon: "play" },
-  { href: "/more", fr: "Plus", en: "More", icon: "more" },
+/** The five sections of the app. Every screen belongs to exactly one of them. */
+export const SECTIONS: NavSection[] = [
+  { href: "/", fr: "Accueil", en: "Home", icon: "home", match: [], children: [] },
+  {
+    href: "/cours", fr: "Cours", en: "Course", icon: "course",
+    match: ["/cours", "/grammar", "/courses", "/basics", "/verbs", "/tests"],
+    children: [
+      { href: "/cours", fr: "Parcours A1 → C1", en: "A1 → C1 path", icon: "path" },
+      { href: "/cours/fiches", fr: "Fiches de révision", en: "Revision sheets", icon: "sheet" },
+      { href: "/grammar", fr: "Grammaire", en: "Grammar", icon: "grammar" },
+      { href: "/verbs", fr: "Verbes", en: "Verbs", icon: "verbs" },
+      { href: "/tests", fr: "Évaluations", en: "Assessments", icon: "test" },
+    ],
+  },
+  {
+    href: "/library", fr: "Livres", en: "Books", icon: "book",
+    match: ["/library", "/novels"],
+    children: [],
+  },
+  {
+    href: "/practice", fr: "Pratique", en: "Practice", icon: "practice",
+    match: ["/practice", "/review", "/learn", "/cards", "/themes", "/around", "/games", "/listen", "/pronunciation", "/chat", "/translate", "/session"],
+    children: [
+      { href: "/review", fr: "Réviser", en: "Review", icon: "review" },
+      { href: "/learn", fr: "Nouveaux mots", en: "New words", icon: "sparkle" },
+      { href: "/cards", fr: "Mes flashcards", en: "My flashcards", icon: "flashcards" },
+      { href: "/games", fr: "Jeux", en: "Games", icon: "game" },
+      { href: "/listen", fr: "Écoute", en: "Listening", icon: "headphones" },
+      { href: "/chat", fr: "Conversation", en: "Conversation", icon: "chat" },
+    ],
+  },
+  {
+    href: "/profile", fr: "Profil", en: "Profile", icon: "profile",
+    match: ["/profile", "/more", "/shop", "/collection", "/achievements", "/stats", "/settings"],
+    children: [
+      { href: "/shop", fr: "Dressing", en: "Wardrobe", icon: "shirt" },
+      { href: "/achievements", fr: "Récompenses", en: "Rewards", icon: "trophy" },
+      { href: "/stats", fr: "Statistiques", en: "Statistics", icon: "chart" },
+      { href: "/settings", fr: "Paramètres", en: "Settings", icon: "settings" },
+    ],
+  },
 ];
 
-export const ALL_NAV: NavItem[] = [
-  { href: "/", fr: "Accueil", en: "Home", icon: "home" },
-  { href: "/session", fr: "Séance du jour", en: "Today's session", icon: "session" },
-  { href: "/learn", fr: "Nouveaux mots", en: "New words", icon: "sparkle" },
-  { href: "/review", fr: "Réviser", en: "Review", icon: "review" },
-  { href: "/themes", fr: "Thèmes", en: "Themes", icon: "cards" },
-  { href: "/around", fr: "Autour de moi", en: "Around me", icon: "sparkle" },
-  { href: "/cards", fr: "Mes flashcards", en: "My flashcards", icon: "cards" },
-  { href: "/library", fr: "Bibliothèque", en: "Library", icon: "book" },
-  { href: "/games", fr: "Mini-jeux", en: "Games", icon: "play" },
-  { href: "/verbs", fr: "Verbes essentiels", en: "Core verbs", icon: "verbs" },
-  { href: "/grammar", fr: "Grammaire", en: "Grammar", icon: "grammar" },
-  { href: "/chat", fr: "Conversation IA", en: "AI conversation", icon: "chat" },
-  { href: "/listen", fr: "Écoute & prononciation", en: "Listening & speaking", icon: "ear" },
-  { href: "/translate", fr: "Traduction", en: "Translator", icon: "translate" },
-  { href: "/shop", fr: "Boutique", en: "Shop", icon: "sparkle" },
-  { href: "/collection", fr: "Ma collection", en: "My collection", icon: "book" },
-  { href: "/achievements", fr: "Trophées", en: "Trophies", icon: "test" },
-  { href: "/stats", fr: "Statistiques", en: "Statistics", icon: "stats" },
-  { href: "/tests", fr: "Tests", en: "Tests", icon: "test" },
-  { href: "/settings", fr: "Réglages", en: "Settings", icon: "settings" },
-];
+// /pronunciation belongs to Cours "Ressources" and Pratique; we show it under Pratique.
+function sectionOf(path: string): string {
+  if (path === "/") return "/";
+  if (path.startsWith("/pronunciation")) return "/practice";
+  const hit = SECTIONS.find((s) => s.match.some((m) => path === m || path.startsWith(m + "/")));
+  return hit ? hit.href : "";
+}
 
-function isActive(path: string, href: string) {
-  if (href === "/") return path === "/";
-  if (href === "/practice") return ["/practice", "/games", "/grammar", "/verbs", "/chat", "/listen", "/pronunciation"].some((p) => path.startsWith(p));
-  if (href === "/more") return ["/more", "/cards", "/translate", "/stats", "/settings", "/tests", "/shop", "/collection", "/achievements"].some((p) => path.startsWith(p));
-  if (href === "/review") return path.startsWith("/review") || path.startsWith("/learn") || path.startsWith("/session");
-  return path.startsWith(href);
+function childActive(path: string, href: string) {
+  if (href === "/cours") return path === "/cours" || (path.startsWith("/cours/") && !path.startsWith("/cours/fiches"));
+  return path === href || path.startsWith(href + "/");
 }
 
 const noopSubscribe = () => () => {};
@@ -76,6 +95,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
   }, [settings.theme, settings.loaded]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("reduce-motion", !!settings.reduceMotion);
+  }, [settings.reduceMotion]);
 
   useEffect(() => {
     document.documentElement.lang = settings.immersion ? "en" : "fr";
@@ -118,6 +141,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, []);
 
   const t = (fr: string, en: string) => (settings.immersion ? en : fr);
+  const current = sectionOf(path);
 
   if (immersive) {
     return (
@@ -137,14 +161,25 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Logo />
           <span className="text-lg font-semibold tracking-tight">Fluent30</span>
         </Link>
-        <nav className="flex-1 space-y-0.5 overflow-y-auto no-scrollbar">
-          {ALL_NAV.map((n) => {
-            const active = n.href === "/" ? path === "/" : path.startsWith(n.href);
+        <nav className="flex-1 space-y-1 overflow-y-auto no-scrollbar">
+          {SECTIONS.map((sec) => {
+            const active = current === sec.href;
             return (
-              <Link key={n.href} href={n.href} className={cx("flex items-center gap-3 rounded-xl px-3 py-2 text-[14.5px] transition", active ? "bg-ink-50 font-medium text-ink-700 dark:bg-ink-900/60 dark:text-ink-200" : "text-muted hover:bg-surface-2 hover:text-fg")}>
-                <Icon name={n.icon} size={19} />
-                {t(n.fr, n.en)}
-              </Link>
+              <div key={sec.href}>
+                <Link href={sec.href} aria-current={active ? "page" : undefined} className={cx("flex items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] transition", active ? "bg-ink-50 font-semibold text-ink-700 dark:bg-ink-900/60 dark:text-ink-200" : "font-medium text-fg/80 hover:bg-surface-2 hover:text-fg")}>
+                  <Icon name={sec.icon} size={20} />
+                  {t(sec.fr, sec.en)}
+                </Link>
+                {active && sec.children.length > 0 && (
+                  <div className="mb-2 ml-[22px] mt-1 space-y-0.5 border-l border-line pl-3">
+                    {sec.children.map((c) => (
+                      <Link key={c.href} href={c.href} className={cx("block rounded-lg px-2.5 py-1.5 text-[13.5px] transition", childActive(path, c.href) ? "font-medium text-ink-700 dark:text-ink-200" : "text-muted hover:text-fg")}>
+                        {t(c.fr, c.en)}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>
@@ -158,11 +193,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Bottom nav (mobile): floating bar */}
       <nav className="fixed inset-x-3 bottom-3 z-40 md:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-        <div className="mx-auto grid max-w-lg grid-cols-5 rounded-[26px] border border-line/70 bg-surface/90 p-1.5 shadow-xl shadow-ink-900/10 backdrop-blur-xl">
-          {MAIN_NAV.map((n) => {
-            const active = isActive(path, n.href);
+        <div className="mx-auto grid max-w-lg grid-cols-5 rounded-[26px] border border-line/70 bg-surface/95 p-1.5 shadow-lg shadow-ink-900/10 backdrop-blur-xl">
+          {SECTIONS.map((n) => {
+            const active = current === n.href;
             return (
-              <Link key={n.href} href={n.href} className={cx("flex flex-col items-center gap-0.5 rounded-[20px] py-2 text-[11px] font-semibold transition", active ? "bg-ink-600 text-white shadow-md shadow-ink-600/30" : "text-muted active:bg-surface-2")}>
+              <Link key={n.href} href={n.href} aria-current={active ? "page" : undefined} className={cx("flex flex-col items-center gap-0.5 rounded-[20px] py-2 text-[11px] font-semibold transition", active ? "bg-ink-600 text-white" : "text-muted active:bg-surface-2")}>
                 <Icon name={n.icon} size={22} />
                 {t(n.fr, n.en)}
               </Link>
@@ -172,6 +207,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
       <Toaster />
       {mounted && <RewardWatcher />}
+      {mounted && <StampWatcher />}
       {mounted && <CeremonyWatcher />}
     </div>
   );

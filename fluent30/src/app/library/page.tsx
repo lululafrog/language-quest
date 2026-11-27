@@ -49,7 +49,7 @@ export default function LibraryPage() {
           value={tab}
           onChange={setTab}
           options={[
-            { value: "shop", label: t("📚 Librairie", "📚 Bookshop") },
+            { value: "shop", label: t("Librairie", "Bookshop") },
             { value: "mine", label: t("Mes livres", "My books") },
             { value: "graded", label: t("Histoires graduées", "Graded stories") },
             { value: "gutenberg", label: t("Catalogue Gutenberg", "Gutenberg") },

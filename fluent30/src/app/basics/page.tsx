@@ -19,7 +19,7 @@ export default function BasicsHub() {
 
   return (
     <div>
-      <PageHeader title={t("Les bases", "The basics")} subtitle={t("Les 20 % de l'anglais qui servent 80 % du temps : nombres, heure, jours, émotions… en images, avec l'audio.", "The essential 20%: numbers, time, days, emotions… with pictures and audio.")} back="/" />
+      <PageHeader title={t("Les bases", "The basics")} subtitle={t("Les 20 % de l'anglais qui servent 80 % du temps : nombres, heure, jours, émotions… en images, avec l'audio.", "The essential 20%: numbers, time, days, emotions… with pictures and audio.")} back="/cours" />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {BASIC_LESSONS.map((l) => {
           const best = results?.get(`basics:${l.id}`) ?? (l.id === "time" ? results?.get("basics:clock") : undefined);

@@ -7,6 +7,7 @@ import type { Question } from "@/lib/games/builders";
 import { speak } from "@/lib/speech";
 import { checkAnswer, normalize } from "@/lib/text";
 import { ChoiceButton, GameHeader, Notice, compareSentence, type FinishPayload } from "./common";
+import { WhyBox } from "./WhyBox";
 
 type Verdict = "exact" | "close" | "wrong";
 
@@ -217,7 +218,7 @@ export function QuestionGame({ gameId, questions, notice, timeLimit, onFinish }:
             </p>
             {verdict !== "exact" && <p className="mt-1 text-base font-medium">{q.display}</p>}
             {verdict === "exact" && q.display !== q.accepted[0] && <p className="mt-1 text-muted">{q.display}</p>}
-            {q.explanation && <p className="mt-1 text-muted">{q.explanation}</p>}
+            {verdict === "exact" ? q.explanation && <p className="mt-1 text-muted">{q.explanation}</p> : <WhyBox item={q} />}
           </div>
         )}
         {verdict && !timeLimit && (

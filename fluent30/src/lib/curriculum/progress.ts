@@ -83,3 +83,18 @@ export async function levelProgress(): Promise<Record<CefrLevel, { done: number;
 export function lessonCount() {
   return ALL_LESSONS.length;
 }
+
+/** Remember that a lesson was opened (for "Reprendre le cours"). Never downgrades a finished lesson. */
+export async function markLessonStarted(id: string): Promise<void> {
+  const db = getDb();
+  const cur = await db.lessons.get(id);
+  if (cur) {
+    await db.lessons.put({ ...cur, lastAt: Date.now(), updatedAt: Date.now() });
+    return;
+  }
+  const c = createEmptyCard(new Date());
+  await db.lessons.put({
+    id, status: "started", bestScore: 0, lastScore: 0, attempts: 0, lastAt: Date.now(), weakTags: [],
+    due: c.due.getTime(), stability: c.stability, difficulty: c.difficulty, reps: 0, lapses: 0, state: c.state, updatedAt: Date.now(),
+  });
+}

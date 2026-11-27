@@ -19,7 +19,7 @@ export default function AchievementsPage() {
   const count = ACHIEVEMENTS.filter((a) => data.unlocked.has(a.id)).length;
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <PageHeader title="Trophées & objectifs" subtitle={`${count}/${ACHIEVEMENTS.length} trophées débloqués`} back="/more" />
+      <PageHeader title="Trophées & objectifs" subtitle={`${count}/${ACHIEVEMENTS.length} trophées débloqués`} back="/profile" />
       <GoalsCard />
       <Panel className="bg-gradient-to-b from-[#3B2A1A] to-[#2A1D12] !text-white">
         <h2 className="mb-3 font-semibold text-sun-400">Vitrine à trophées</h2>

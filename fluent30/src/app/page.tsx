@@ -1,220 +1,250 @@
 "use client";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { computeOverview, formatDuration } from "@/lib/progress";
 import { useSettings } from "@/hooks/useSettings";
+import { useStatus } from "@/hooks/useStatus";
 import { useT } from "@/hooks/useT";
-import { Badge, LinkButton, Panel, ProgressBar, Ring, StatTile, cx } from "@/components/ui";
-import { Icon } from "@/components/icons";
-import { getDb, todayKey } from "@/lib/db";
-import { GRAMMAR_TOTAL } from "@/lib/catalog";
-import { getGame, levelFromXp, levelTitle } from "@/lib/game";
+import { LinkButton, ListGroup, ListRow, Panel, ProgressBar, SectionHeader, Segmented, cx } from "@/components/ui";
+import { Icon, type IconName } from "@/components/icons";
+import { getDb, saveSettings, todayKey } from "@/lib/db";
+import { getGame } from "@/lib/game";
+import * as sessionLib from "@/lib/session";
+import { lastStartedLesson, nextPathLesson } from "@/lib/curriculum/progress";
 import { Tourist } from "@/components/avatar/Tourist";
-import { Coins } from "@/components/game/Coin";
-import { QuestList } from "@/components/game/QuestList";
-import { GoalsCard } from "@/components/game/GoalsCard";
+import { CoinIcon } from "@/components/game/Coin";
+import type { Settings } from "@/lib/types";
 
-export default function Dashboard() {
+type PlanStep = { id: string; kind: string; minutes: number; title: string; subtitle?: string; href: string; done: boolean };
+type PlanOpts = { aiAvailable: boolean; dailyNewWords: number; immersion: boolean };
+// buildDailyPlan (curriculum-aware) is optional: fall back to the classic session builder.
+const planLib = sessionLib as unknown as {
+  buildDailyPlan?: (minutes: number, opts: PlanOpts) => Promise<{ steps: PlanStep[] }>;
+  buildSession: (minutes: number, opts: PlanOpts) => Promise<{ steps: PlanStep[] }>;
+  markStep: (id: string, done: boolean) => Promise<void>;
+};
+
+const KIND_ICON: Record<string, IconName> = {
+  review: "review", new: "sparkle", grammar: "grammar", game: "game", reading: "book", conversation: "chat",
+  listening: "headphones", verbs: "verbs", lesson: "course", course: "course", sheet: "sheet", pronunciation: "mic", theme: "globe",
+};
+const DURATIONS: Settings["sessionMinutes"][] = [5, 10, 15, 20, 30];
+
+export default function Home() {
   const s = useSettings();
   const t = useT();
+  const status = useStatus();
   const o = useLiveQuery(() => computeOverview(), []);
-  const session = useLiveQuery(() => getDb().sessions.get(todayKey()), []);
   const game = useLiveQuery(() => getGame(), []);
+  const stored = useLiveQuery(async () => (await getDb().sessions.get(todayKey())) ?? null, []);
+  const lesson = useLiveQuery(async () => (await lastStartedLesson()) ?? (await nextPathLesson(s.pathLevel ?? "A1")) ?? null, [s.pathLevel]);
+  const [plan, setPlan] = useState<PlanStep[] | null>(null);
+  const [building, setBuilding] = useState(false);
+  const [requested, setRequested] = useState(false);
 
-  if (!o || !s.loaded || !game) return <DashboardSkeleton />;
-  const totalXp = o.days.reduce((a, d) => a + (d.xp ?? 0), 0);
-  const lv = levelFromXp(totalXp);
+  const opts: PlanOpts | null = status && s.loaded ? { aiAvailable: status.ai, dailyNewWords: s.dailyNewWords, immersion: s.immersion } : null;
+
+  const build = async (minutes: number) => {
+    if (!opts) return;
+    setBuilding(true);
+    try {
+      const fn = planLib.buildDailyPlan ?? planLib.buildSession;
+      const res = await fn(minutes, opts);
+      setPlan(res.steps);
+    } finally {
+      setBuilding(false);
+    }
+  };
+
+  // Build today's plan once: always with buildDailyPlan (its "done" flags are live), otherwise only if none stored.
+  useEffect(() => {
+    if (requested || !opts || stored === undefined) return;
+    if (!planLib.buildDailyPlan && stored && stored.minutes === s.sessionMinutes) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-off plan generation
+    setRequested(true);
+    void build(s.sessionMinutes);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requested, opts, stored, s.sessionMinutes]);
+
+  // Auto-complete steps whose goal is objectively met (classic session only).
+  useEffect(() => {
+    if (!stored || !o || planLib.buildDailyPlan) return;
+    for (const step of stored.steps) {
+      if (step.done) continue;
+      if (step.kind === "review" && o.dueNow === 0 && o.days.find((d) => d.date === todayKey())?.reviews) void planLib.markStep(step.id, true);
+      if (step.kind === "new" && o.newToday >= s.dailyNewWords) void planLib.markStep(step.id, true);
+    }
+  }, [stored, o, s.dailyNewWords]);
+
+  if (!o || !s.loaded || !game) return <HomeSkeleton />;
+
+  // Stored session is live (done toggles); a returned plan wins when it is the curriculum-aware one.
+  const steps: PlanStep[] = (planLib.buildDailyPlan ? plan : stored?.steps ?? plan) ?? [];
+  const done = steps.filter((x) => x.done).length;
+  const next = steps.find((x) => !x.done);
+  const started = done > 0;
 
   const hour = new Date().getHours();
-  const hello = hour < 5 ? t("Bonsoir", "Good evening") : hour < 12 ? t("Bonjour", "Good morning") : hour < 18 ? t("Bon après-midi", "Good afternoon") : t("Bonsoir", "Good evening");
-  const sessionDone = session ? session.steps.filter((x) => x.done).length : 0;
-  const sessionTotal = session?.steps.length ?? 0;
+  const hello = hour < 5 || hour >= 18 ? t("Bonsoir", "Good evening") : hour < 12 ? t("Bonjour", "Good morning") : t("Bon après-midi", "Good afternoon");
+  const todayMin = Math.round(o.todaySeconds / 60);
+
+  const changeLength = async (m: Settings["sessionMinutes"]) => {
+    await saveSettings({ sessionMinutes: m });
+    await build(m);
+  };
 
   return (
-    <div className="space-y-5">
-      {/* Hero: the tourist, level and coins */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-ink-600 via-ink-700 to-ink-900 p-4 text-white shadow-lg shadow-ink-900/20 sm:p-5">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-coral-500/30 blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-20 left-10 h-48 w-48 rounded-full bg-mint-400/20 blur-2xl" />
-        <div className="relative flex items-center gap-4">
-          <Link href="/shop" className="w-28 shrink-0 overflow-hidden rounded-2xl ring-4 ring-white/15 transition hover:scale-[1.02] sm:w-32" aria-label={t("Habiller mon touriste", "Dress my tourist")}>
-            <Tourist equipped={game.equipped} appearance={game.appearance} />
-          </Link>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm text-white/75">{hello}{s.displayName ? `, ${s.displayName}` : ""} 👋</p>
-            <p className="mt-0.5 text-xl font-bold leading-tight sm:text-2xl">{t("Niveau", "Level")} {lv.level} · {levelTitle(lv.level)}</p>
-            <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-white/20">
-              <div className="h-full rounded-full bg-gradient-to-r from-sun-400 to-coral-400 transition-all duration-700" style={{ width: `${Math.round((lv.current / lv.needed) * 100)}%` }} />
-            </div>
-            <p className="mt-1 text-xs text-white/70">{lv.current}/{lv.needed} XP · {t("+100 pièces au prochain niveau", "+100 coins next level")}</p>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Link href="/shop"><Coins amount={game.coins} /></Link>
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-sm font-bold"><Icon name="flame" size={16} className={o.streak > 0 ? "text-coral-400" : "text-white/60"} />{o.streak} {t("j", "d")}</span>
-              <Link href="/shop" className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-ink-700 transition hover:bg-ink-50">🛍️ {t("Boutique", "Shop")}</Link>
-            </div>
-          </div>
+    <div className="mx-auto max-w-2xl">
+      {/* Greeting */}
+      <header className="mb-6 flex items-center gap-3">
+        <Link href="/profile" className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-ink-50 ring-1 ring-line dark:bg-ink-900/60" aria-label={t("Mon profil", "My profile")}>
+          <Tourist equipped={game.equipped} appearance={game.appearance} portrait animate={false} />
+        </Link>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm text-muted">{hello}{s.displayName ? `, ${s.displayName}` : ""}</p>
+          <h1 className="t-title truncate">{started && next ? t("On continue ?", "Shall we go on?") : next ? t("Prêt pour aujourd'hui ?", "Ready for today?") : steps.length ? t("Belle journée d'anglais", "Great English day") : t("Ton anglais, chaque jour", "Your English, every day")}</h1>
         </div>
-      </section>
-
-      <Link href="/basics" className="card-shadow flex items-center gap-3 rounded-3xl bg-gradient-to-r from-[#6366f1] to-[#a855f7] p-4 text-white transition active:scale-[0.99]">
-        <span className="text-3xl">🧱</span>
-        <span className="min-w-0 flex-1"><span className="block font-bold leading-tight" style={{ fontFamily: "var(--font-display)" }}>{t("Les bases", "The basics")}</span><span className="block text-xs text-white/85">{t("Nombres, heure, jours, émotions, règles essentielles", "Numbers, time, days, emotions, key rules")}</span></span>
-        <span className="text-white/80">›</span>
-      </Link>
-
-      {/* Quick add: my own words */}
-      <div className="grid grid-cols-2 gap-3">
-        <Link href="/around" className="card-shadow flex items-center gap-3 rounded-3xl bg-gradient-to-br from-mint-400 to-mint-600 p-4 text-white transition active:scale-[0.98]">
-          <span className="text-3xl">👀</span>
-          <span className="min-w-0"><span className="block font-bold leading-tight" style={{ fontFamily: "var(--font-display)" }}>{t("Autour de moi", "Around me")}</span><span className="block text-xs text-white/85">{t("Nomme ce que tu vois", "Name what you see")}</span></span>
-        </Link>
-        <Link href="/cards/add" className="card-shadow flex items-center gap-3 rounded-3xl border border-line/70 bg-surface p-4 transition active:scale-[0.98]">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-ink-600 text-2xl font-bold text-white">+</span>
-          <span className="min-w-0"><span className="block font-bold leading-tight" style={{ fontFamily: "var(--font-display)" }}>{t("Ajouter un mot", "Add a word")}</span><span className="block text-xs text-muted">{t("Mot, phrase, capture", "Word, sentence, screenshot")}</span></span>
-        </Link>
-      </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <span className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-1 text-sm font-semibold tabular-nums" title={t("Série de jours", "Day streak")}>
+            <Icon name="flame" size={16} className={o.streak > 0 ? "text-coral-500" : "text-muted"} />
+            {o.streak}
+          </span>
+          <Link href="/shop" className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-1 text-sm font-semibold tabular-nums" title={t("Pièces", "Coins")}>
+            <CoinIcon size={16} />
+            {game.coins}
+          </Link>
+        </div>
+      </header>
 
       {!s.onboarded && (
-        <Panel className="border-ink-200 bg-gradient-to-br from-ink-600 to-ink-800 text-white">
-          <p className="text-lg font-semibold">{t("Bienvenue sur Fluent30 !", "Welcome to Fluent30!")}</p>
-          <p className="mt-1 text-sm text-white/80">{t("2 minutes pour personnaliser ton parcours : objectifs, centres d'intérêt et test de niveau facultatif (pour ne pas réapprendre ce que tu sais déjà).", "2 minutes to personalise your path: goals, interests and an optional placement test.")}</p>
-          <LinkButton href="/onboarding" variant="secondary" className="mt-4 bg-white text-ink-800 hover:bg-ink-50">{t("Commencer", "Get started")}</LinkButton>
+        <Panel tone="highlight" className="mb-5">
+          <p className="font-semibold">{t("Bienvenue sur Fluent30", "Welcome to Fluent30")}</p>
+          <p className="mt-1 text-sm text-muted">{t("2 minutes pour régler ton niveau, ton temps par jour et tes centres d'intérêt.", "2 minutes to set your level, daily time and interests.")}</p>
+          <LinkButton href="/onboarding" className="mt-4">{t("Personnaliser mon parcours", "Personalise my path")}</LinkButton>
         </Panel>
       )}
 
-      {/* Daily session */}
-      <Panel className="relative overflow-hidden">
-        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-ink-100 opacity-60 dark:bg-ink-900/40" />
-        <div className="relative flex items-center gap-4">
-          <Ring value={sessionDone} max={Math.max(1, sessionTotal)} size={76} tone="#6a55f2">
-            <div>
-              <div className="text-lg font-semibold leading-none">{s.sessionMinutes}</div>
-              <div className="text-[10px] uppercase text-muted">min</div>
-            </div>
-          </Ring>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium uppercase tracking-wide text-ink-600 dark:text-ink-300">{t("Séance du jour", "Today's session")}</p>
-            <p className="mt-0.5 font-semibold">
-              {sessionTotal && sessionDone === sessionTotal
-                ? t("Séance terminée, bravo ! 🎉", "Session complete, well done! 🎉")
-                : sessionTotal
-                  ? t(`${sessionDone}/${sessionTotal} activités faites`, `${sessionDone}/${sessionTotal} activities done`)
-                  : t("Un programme adapté à tes besoins", "A plan tailored to you")}
-            </p>
-            <p className="text-sm text-muted">{t("Révisions, nouveaux mots, grammaire, jeux, lecture, conversation.", "Reviews, new words, grammar, games, reading, conversation.")}</p>
-          </div>
-        </div>
-        <LinkButton href="/session" className="relative mt-4 w-full sm:w-auto">{sessionTotal && sessionDone < sessionTotal ? t("Continuer la séance", "Continue session") : t("Lancer la séance", "Start session")}</LinkButton>
-      </Panel>
-
-      <QuestList />
-
-      <GoalsCard compact />
-
-      <div className="grid grid-cols-2 gap-3">
-        <Link href="/learn" className="rounded-2xl border border-line bg-surface p-4 transition hover:border-ink-300">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wide text-muted">{t("Nouveaux mots", "New words")}</span>
-            <Icon name="sparkle" size={18} className="text-sun-500" />
-          </div>
-          <div className="mt-2 text-2xl font-semibold tabular-nums">{o.newToday}<span className="text-base font-normal text-muted">/{s.dailyNewWords}</span></div>
-          <ProgressBar value={o.newToday} max={s.dailyNewWords} tone="sun" className="mt-2" />
-          <p className="mt-1.5 text-xs text-muted">{o.newToday >= s.dailyNewWords ? t("Objectif atteint — tu peux continuer !", "Goal reached — keep going!") : t("Objectif quotidien", "Daily goal")}</p>
-        </Link>
-        <Link href="/review" className="rounded-2xl border border-line bg-surface p-4 transition hover:border-ink-300">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wide text-muted">{t("À réviser", "To review")}</span>
-            <Icon name="review" size={18} className="text-ink-500" />
-          </div>
-          <div className="mt-2 text-2xl font-semibold tabular-nums">{o.dueNow}</div>
-          <p className="mt-3 text-xs text-muted">{o.dueToday > o.dueNow ? t(`${o.dueToday} au total aujourd'hui`, `${o.dueToday} in total today`) : o.dueNow ? t("Prêtes maintenant", "Ready now") : t("Rien en attente 👌", "All caught up 👌")}</p>
-        </Link>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatTile icon="🧠" label={t("Mémorisés", "Memorised")} value={o.memorized} sub={t(`${o.learning} en cours`, `${o.learning} learning`)} href="/stats" />
-        <StatTile icon="⚡" label={t("Verbes maîtrisés", "Verbs mastered")} value={o.verbsMastered} sub={t(`${o.verbsStudied} étudiés`, `${o.verbsStudied} studied`)} href="/verbs" />
-        <StatTile icon="✍️" label={t("Grammaire", "Grammar")} value={`${o.grammarDone}/${GRAMMAR_TOTAL || "—"}`} sub={t("leçons validées", "lessons passed")} href="/grammar" />
-        <StatTile icon="⏱️" label={t("Temps", "Time")} value={formatDuration(o.todaySeconds, s.immersion)} sub={t(`${formatDuration(o.weekSeconds)} cette semaine`, `${formatDuration(o.weekSeconds, true)} this week`)} href="/stats" />
-      </div>
-
-      <WeekBars days={o.days} goalMinutes={s.sessionMinutes} t={t} />
-
-      <div className="grid gap-3 md:grid-cols-2">
-        <Panel>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-semibold">{t("Erreurs récurrentes", "Recurring mistakes")}</h2>
-            <Link href="/stats#mistakes" className="text-sm text-ink-600 dark:text-ink-300">{t("Tout voir", "See all")}</Link>
-          </div>
-          {o.topMistakes.length ? (
-            <ul className="space-y-2">
-              {o.topMistakes.map((m) => (
-                <li key={m.id} className="flex items-center justify-between gap-3 text-sm">
-                  <span className="min-w-0 truncate"><Badge tone={m.type === "grammar" ? "ink" : m.type === "vocab" ? "coral" : "sun"} className="mr-2">{m.type === "grammar" ? t("grammaire", "grammar") : m.type === "vocab" ? t("vocabulaire", "vocabulary") : m.type}</Badge>{m.label}{m.detail ? <span className="text-muted"> — {m.detail}</span> : null}</span>
-                  <span className="shrink-0 tabular-nums text-muted">×{m.count}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted">{t("Aucune erreur récurrente pour l'instant. Elles apparaîtront ici pour être retravaillées en priorité.", "No recurring mistakes yet.")}</p>
-          )}
-        </Panel>
-        <Panel>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-semibold">{t("Lecture en cours", "Currently reading")}</h2>
-            <Link href="/library" className="text-sm text-ink-600 dark:text-ink-300">{t("Bibliothèque", "Library")}</Link>
-          </div>
-          {o.currentBook ? (
-            <Link href={`/library/read/${o.currentBook.id}`} className="flex items-center gap-3 rounded-xl p-2 -m-2 hover:bg-surface-2">
-              <div className="flex h-16 w-12 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-ink-500 to-coral-500 text-lg text-white">📖</div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium">{o.currentBook.title}</p>
-                <ProgressBar value={o.currentBook.progress} className="mt-2" tone="mint" />
-                <p className="mt-1 text-xs text-muted">{Math.round(o.currentBook.progress * 100)} % · {t("Reprendre la lecture", "Resume reading")}</p>
-              </div>
-            </Link>
-          ) : (
-            <p className="text-sm text-muted">{t("Aucun livre en cours. Choisis une histoire adaptée à ton niveau ou importe un EPUB.", "No book in progress yet.")}</p>
-          )}
-        </Panel>
-      </div>
-
-      {!s.placementDone && s.onboarded && (
-        <Panel className="flex items-center justify-between gap-4">
+      {/* Daily plan — the one hero of the screen */}
+      <section className="rounded-3xl bg-ink-700 p-5 text-white shadow-lg shadow-ink-900/15 dark:bg-ink-800">
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="font-medium">{t("Test de niveau (facultatif)", "Placement test (optional)")}</p>
-            <p className="text-sm text-muted">{t("Repère les mots que tu connais déjà pour ne pas les réapprendre.", "Skip the words you already know.")}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-white/60">{t("Ton programme du jour", "Today's plan")}</p>
+            <p className="mt-1 text-lg font-semibold" style={{ fontFamily: "var(--font-display)" }}>
+              {steps.length && !next ? t("Programme terminé. Bravo !", "Plan complete. Well done!") : t(`${s.sessionMinutes} minutes, ${steps.length || "—"} étapes`, `${s.sessionMinutes} minutes, ${steps.length || "—"} steps`)}
+            </p>
           </div>
-          <LinkButton href="/tests/placement" variant="outline">{t("Faire le test", "Take it")}</LinkButton>
+          {steps.length > 0 && <span className="rounded-full bg-white/10 px-2.5 py-1 text-sm font-semibold tabular-nums">{done}/{steps.length}</span>}
+        </div>
+
+        <Segmented<Settings["sessionMinutes"]>
+          className="mt-4 flex w-full bg-white/10 [&>button]:flex-1 [&>button[aria-checked=false]]:text-white/75"
+          value={s.sessionMinutes}
+          onChange={changeLength}
+          options={DURATIONS.map((m) => ({ value: m, label: `${m} min` }))}
+        />
+
+        {building && !steps.length ? (
+          <div className="mt-4 h-32 animate-pulse rounded-2xl bg-white/10" />
+        ) : (
+          <ol className={cx("mt-4 space-y-1", building && "opacity-60")}>
+            {steps.map((step) => (
+              <li key={step.id} className="flex items-center gap-3 rounded-xl px-1 py-1.5">
+                <button
+                  onClick={() => planLib.markStep(step.id, !step.done)}
+                  disabled={!stored}
+                  aria-label={step.done ? t("Marquer comme non fait", "Mark as not done") : t("Marquer comme fait", "Mark as done")}
+                  className={cx("flex h-7 w-7 shrink-0 items-center justify-center rounded-full border", step.done ? "border-mint-400 bg-mint-400 text-ink-900" : "border-white/30 text-white/70")}
+                >
+                  {step.done ? <Icon name="check" size={15} strokeWidth={2.5} /> : <Icon name={KIND_ICON[step.kind] ?? "play"} size={15} />}
+                </button>
+                <Link href={step.href} className="flex min-w-0 flex-1 items-center gap-2">
+                  <span className="min-w-0 flex-1">
+                    <span className={cx("block truncate text-[15px]", step.done && "text-white/50 line-through")}>{step.title}</span>
+                    {step.subtitle && <span className="block truncate text-xs text-white/55">{step.subtitle}</span>}
+                  </span>
+                  <span className="shrink-0 text-xs tabular-nums text-white/55">{step.minutes} min</span>
+                </Link>
+              </li>
+            ))}
+          </ol>
+        )}
+
+        {next ? (
+          <Link href={next.href} className="mt-4 flex h-12 items-center justify-center gap-2 rounded-2xl bg-white font-semibold text-ink-800 transition hover:bg-ink-50">
+            {started ? t("Continuer", "Continue") : t("Commencer", "Start")}
+            <Icon name="arrow" size={18} />
+          </Link>
+        ) : steps.length ? (
+          <button onClick={() => build(s.sessionMinutes)} className="mt-4 h-11 w-full rounded-2xl border border-white/25 text-sm font-medium text-white/90 hover:bg-white/10">
+            {t("Générer un programme bonus", "Generate a bonus plan")}
+          </button>
+        ) : null}
+      </section>
+
+      {/* Resume */}
+      <SectionHeader title={t("Reprendre", "Pick up")} />
+      <ListGroup>
+        {lesson ? (
+          <ListRow href={`/cours/${lesson.id}`} icon={<Icon name="course" size={20} />} title={lesson.title} subtitle={t(`Cours ${lesson.level} · ${lesson.minutes} min`, `Course ${lesson.level} · ${lesson.minutes} min`)} />
+        ) : (
+          <ListRow href="/cours" icon={<Icon name="course" size={20} />} title={t("Le parcours A1 → C1", "The A1 → C1 path")} subtitle={t("Choisis ta prochaine leçon", "Pick your next lesson")} />
+        )}
+        <ListRow
+          href="/review"
+          tone={o.dueNow ? "coral" : "mint"}
+          icon={<Icon name="review" size={20} />}
+          title={o.dueNow ? t(`${o.dueNow} mots à réviser`, `${o.dueNow} words to review`) : t("Aucun mot à réviser", "No words to review")}
+          subtitle={o.dueToday > o.dueNow ? t(`${o.dueToday} au total aujourd'hui`, `${o.dueToday} in total today`) : o.dueNow ? t("Prêts maintenant", "Ready now") : t("Tu es à jour", "You're up to date")}
+        />
+        {o.currentBook ? (
+          <ListRow href={`/library/read/${o.currentBook.id}`} tone="sun" icon={<Icon name="book" size={20} />} title={o.currentBook.title} subtitle={t(`Reprendre ta lecture · ${Math.round(o.currentBook.progress * 100)} %`, `Resume reading · ${Math.round(o.currentBook.progress * 100)}%`)} />
+        ) : (
+          <ListRow href="/library" tone="sun" icon={<Icon name="book" size={20} />} title={t("Choisir un livre", "Choose a book")} subtitle={t("Des histoires adaptées à ton niveau", "Stories matched to your level")} />
+        )}
+      </ListGroup>
+
+      {/* Daily goal */}
+      <SectionHeader title={t("Objectif du jour", "Today's goal")} />
+      <div className="grid grid-cols-2 gap-3">
+        <Panel className="p-4">
+          <p className="text-xs text-muted">{t("Nouveaux mots", "New words")}</p>
+          <p className="mt-1 text-xl font-semibold tabular-nums">{o.newToday}<span className="text-sm font-normal text-muted"> / {s.dailyNewWords}</span></p>
+          <ProgressBar value={o.newToday} max={s.dailyNewWords} tone="mint" className="mt-2" />
         </Panel>
-      )}
+        <Panel className="p-4">
+          <p className="text-xs text-muted">{t("Temps d'anglais", "English time")}</p>
+          <p className="mt-1 text-xl font-semibold tabular-nums">{todayMin}<span className="text-sm font-normal text-muted"> / {s.sessionMinutes} min</span></p>
+          <ProgressBar value={todayMin} max={s.sessionMinutes} tone="ink" className="mt-2" />
+        </Panel>
+      </div>
+
+      {/* Week */}
+      <SectionHeader title={t("Ta semaine", "Your week")} subtitle={t(`${formatDuration(o.weekSeconds, s.immersion)} cette semaine`, `${formatDuration(o.weekSeconds, true)} this week`)} action={<Link href="/stats" className="text-sm font-medium text-ink-600 dark:text-ink-300">{t("Détails", "Details")}</Link>} />
+      <WeekBars days={o.days} goalMinutes={s.sessionMinutes} />
     </div>
   );
 }
 
-function WeekBars({ days, goalMinutes, t }: { days: { date: string; seconds: number }[]; goalMinutes: number; t: (fr: string, en: string) => string }) {
+function WeekBars({ days, goalMinutes }: { days: { date: string; seconds: number }[]; goalMinutes: number }) {
   const map = new Map(days.map((d) => [d.date, d.seconds]));
   const items = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
     const key = todayKey(d);
-    return { key, label: d.toLocaleDateString(undefined, { weekday: "narrow" }), min: Math.round((map.get(key) ?? 0) / 60) };
+    return { key, label: d.toLocaleDateString(undefined, { weekday: "narrow" }), min: Math.round((map.get(key) ?? 0) / 60), today: i === 6 };
   });
   const max = Math.max(goalMinutes, ...items.map((i) => i.min), 1);
   return (
     <Panel>
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="font-semibold">{t("7 derniers jours", "Last 7 days")}</h2>
-        <span className="text-xs text-muted">{t(`objectif ${goalMinutes} min/jour`, `goal ${goalMinutes} min/day`)}</span>
-      </div>
-      <div className="relative flex h-28 items-end gap-2">
-        <div className="pointer-events-none absolute inset-x-0 border-t border-dashed border-ink-300/70" style={{ bottom: `${(goalMinutes / max) * 100}%` }} />
+      <div className="relative flex h-28 items-end gap-2.5">
+        <div className="pointer-events-none absolute inset-x-0 border-t border-dashed border-line" style={{ bottom: `calc(${goalMinutes / max} * 6rem + 1.25rem)` }} />
         {items.map((i) => (
           <div key={i.key} className="flex flex-1 flex-col items-center gap-1">
             <div className="flex h-24 w-full items-end">
-              <div className={cx("w-full rounded-t-lg transition-all", i.min >= goalMinutes ? "bg-mint-500" : i.min > 0 ? "bg-ink-400" : "bg-surface-2")} style={{ height: `${Math.max(4, (i.min / max) * 100)}%` }} title={`${i.min} min`} />
+              <div className={cx("w-full rounded-lg transition-all", i.min >= goalMinutes ? "bg-mint-500" : i.min > 0 ? "bg-ink-400" : "bg-surface-2")} style={{ height: `${Math.max(6, (i.min / max) * 100)}%` }} title={`${i.min} min`} />
             </div>
-            <span className="text-[11px] text-muted">{i.label}</span>
+            <span className={cx("text-[11px]", i.today ? "font-semibold text-fg" : "text-muted")}>{i.label}</span>
           </div>
         ))}
       </div>
@@ -222,12 +252,12 @@ function WeekBars({ days, goalMinutes, t }: { days: { date: string; seconds: num
   );
 }
 
-function DashboardSkeleton() {
+function HomeSkeleton() {
   return (
-    <div className="space-y-4">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="h-28 animate-pulse rounded-2xl bg-surface-2" />
-      ))}
+    <div className="mx-auto max-w-2xl space-y-4">
+      <div className="h-12 w-56 animate-pulse rounded-2xl bg-surface-2" />
+      <div className="h-72 animate-pulse rounded-3xl bg-surface-2" />
+      <div className="h-40 animate-pulse rounded-3xl bg-surface-2" />
     </div>
   );
 }

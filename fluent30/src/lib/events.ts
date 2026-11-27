@@ -5,6 +5,7 @@ export type AppEvents = {
   "book:finished": { bookId: string };
   "word:saved": { cardId: string; source: string };
   "quiz:done": { bookId: string; chapter: number; score: number; total: number };
+  "lesson:done": { lessonId: string; score: number };
 };
 
 type Handler<K extends keyof AppEvents> = (payload: AppEvents[K]) => void;

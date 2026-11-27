@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { getDb, uid } from "@/lib/db";
+import { getDb, saveSettings, uid } from "@/lib/db";
 import { GLOBAL_SCALE, GV_ITEMS, LEVELS, LISTENING, READING } from "@/lib/data/cefr-test";
 import { adaptiveResult, levelName, levelToScore, overallLevel, SKILL_LABELS, startAdaptive, stepAdaptive, type Adaptive, type SkillKey, type SkillResult } from "@/lib/cefr";
 import { sample } from "@/lib/text";
@@ -160,6 +160,26 @@ function phaseSkill(p: Phase): SkillKey {
   return p === "gv" ? "gv" : (p as SkillKey);
 }
 
+function PlacePath({ overall }: { overall: number }) {
+  const [done, setDone] = useState(false);
+  // The course path covers A1 → C1: Pré-A1 starts at A1, C2 reviews from C1.
+  const path = (["A1", "A2", "B1", "B2", "C1"] as const)[Math.max(0, Math.min(4, overall))];
+  return (
+    <Panel className="flex flex-wrap items-center justify-between gap-3">
+      <p className="text-sm">
+        Ton parcours de cours peut démarrer au niveau <strong>{path}</strong>.
+      </p>
+      {done ? (
+        <LinkButton href="/cours" size="sm">Voir mon parcours</LinkButton>
+      ) : (
+        <Button size="sm" onClick={async () => { await saveSettings({ pathLevel: path }); setDone(true); }}>
+          Commencer au niveau {path}
+        </Button>
+      )}
+    </Panel>
+  );
+}
+
 function Results({ st, onRestart }: { st: TestState; onRestart: () => void }) {
   const t = useT();
   const overall = useMemo(() => overallLevel(st.results), [st.results]);
@@ -193,6 +213,7 @@ function Results({ st, onRestart }: { st: TestState; onRestart: () => void }) {
         {g && <p className="mt-1 font-medium">{g.title}</p>}
         {overall === null && <p className="mt-2 text-sm text-muted">{t("Complétez au moins deux parties pour obtenir un niveau global.", "Complete at least two parts for an overall level.")}</p>}
       </Panel>
+      {overall !== null && <PlacePath overall={overall} />}
 
       <Panel>
         <p className="mb-3 font-semibold">{t("Profil par compétence", "Profile by skill")}</p>
@@ -230,7 +251,7 @@ function Results({ st, onRestart }: { st: TestState; onRestart: () => void }) {
         {t("Estimation indicative, pas une certification officielle (Cambridge, TOEIC, IELTS…). Règles : un niveau est validé avec au moins 4/5 en grammaire et 2/3 en compréhension ; le niveau global est la médiane des compétences, jamais plus d'un niveau au-dessus de votre compréhension la plus faible.", "Indicative estimate, not an official certification.")}
       </p>
       <div className="flex flex-wrap gap-2">
-        <LinkButton href="/session">{t("Ma séance du jour", "Today's session")}</LinkButton>
+        <LinkButton href="/">{t("Mon programme du jour", "Today's plan")}</LinkButton>
         <LinkButton href="/stats" variant="outline">{t("Statistiques", "Statistics")}</LinkButton>
         <Button variant="ghost" onClick={onRestart}>{t("Refaire le test", "Retake")}</Button>
       </div>

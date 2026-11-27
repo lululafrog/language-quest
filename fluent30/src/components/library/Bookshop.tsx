@@ -107,7 +107,7 @@ export function Bookshop({ books }: { books: Book[] }) {
         </div>
         <div className="no-scrollbar -mx-4 flex gap-1.5 overflow-x-auto px-4">
           {LIBRARY_CATEGORIES.map((c) => (
-            <button key={c.id} onClick={() => setCat(cat === c.id ? "" : c.id)} className={cx("shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium", cat === c.id ? "border-ink-500 bg-ink-600 text-white" : "border-line bg-surface")}>{c.emoji} {s.immersion ? c.en : c.fr}</button>
+            <button key={c.id} onClick={() => setCat(cat === c.id ? "" : c.id)} className={cx("shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium", cat === c.id ? "border-ink-500 bg-ink-600 text-white" : "border-line bg-surface")}>{s.immersion ? c.en : c.fr}</button>
           ))}
         </div>
         <div className="no-scrollbar -mx-4 flex gap-1.5 overflow-x-auto px-4">
@@ -132,7 +132,7 @@ export function Bookshop({ books }: { books: Book[] }) {
         </div>
       ) : (
         <>
-          <Shelf title={t("✨ Recommandés pour toi", "✨ Recommended for you")} subtitle={t("Selon ton niveau, tes goûts et le vocabulaire que tu connais", "Based on your level, tastes and vocabulary")}>
+          <Shelf title={t("Recommandés pour toi", "Recommended for you")} subtitle={t("Selon ton niveau, tes goûts et le vocabulaire que tu connais", "Based on your level, tastes and vocabulary")}>
             {recs === null
               ? Array.from({ length: 5 }, (_, i) => <div key={i} className="aspect-[2/3] w-32 shrink-0 animate-pulse rounded-xl bg-surface-2 sm:w-36" />)
               : recs.map((r) => <LibCard key={r.book.id} book={r.book} mine={byLib.get(r.book.id)} reason={r.reason} />)}
@@ -165,7 +165,7 @@ export function Bookshop({ books }: { books: Book[] }) {
             const list = LIBRARY.filter((b) => b.cat === c.id || b.alsoIn?.includes(c.id));
             if (!list.length) return null;
             return (
-              <Shelf key={c.id} title={`${c.emoji} ${s.immersion ? c.en : c.fr}`} subtitle={t(`${list.length} livres`, `${list.length} books`)} action={<button onClick={() => setCat(c.id)} className="shrink-0 text-sm font-semibold text-ink-600 dark:text-ink-300">{t("Tout voir", "See all")}</button>}>
+              <Shelf key={c.id} title={s.immersion ? c.en : c.fr} subtitle={t(`${list.length} livres`, `${list.length} books`)} action={<button onClick={() => setCat(c.id)} className="shrink-0 text-sm font-semibold text-ink-600 dark:text-ink-300">{t("Tout voir", "See all")}</button>}>
                 {list.map((b) => <LibCard key={b.id} book={b} mine={byLib.get(b.id)} />)}
               </Shelf>
             );

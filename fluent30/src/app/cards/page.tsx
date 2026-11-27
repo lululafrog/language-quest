@@ -48,7 +48,7 @@ export default function CardsPage() {
       <PageHeader
         title={t("Mes flashcards", "My flashcards")}
         subtitle={data ? t(`${data.cards.length} cartes · classées automatiquement par thème`, `${data.cards.length} cards · auto-sorted by theme`) : ""}
-        back="/more"
+        back="/practice"
         action={<LinkButton href="/cards/add" size="sm">+ {t("Ajouter", "Add")}</LinkButton>}
       />
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("Rechercher un mot, une traduction…", "Search a word or translation…")} className="mb-3 w-full rounded-xl border border-line bg-surface px-4 py-3 outline-none focus:border-ink-400" />

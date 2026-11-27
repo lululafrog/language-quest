@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { getDb } from "@/lib/db";
-import { LIBRARY_CATEGORIES, type LibraryBook } from "@/lib/data/library";
+import type { LibraryBook } from "@/lib/data/library";
 import { bookCoverage, coverageComfort, type Coverage } from "@/lib/coverage";
 import { useT } from "@/hooks/useT";
 import { cx } from "@/components/ui";
@@ -71,7 +71,6 @@ export function Shelf({ title, subtitle, action, children }: { title: ReactNode;
 /** Card of a built-in book (links to its detail page). */
 export function LibCard({ book, mine, reason, wide, fluid }: { book: LibraryBook; mine?: Book; reason?: string; wide?: boolean; fluid?: boolean }) {
   const t = useT();
-  const cat = LIBRARY_CATEGORIES.find((c) => c.id === book.cat);
   const progress = mine && !mine.finishedAt ? mine.progress : 0;
   return (
     <Link href={`/library/book/${book.id}`} className={cx("group shrink-0 snap-start", fluid ? "w-full" : wide ? "w-40 sm:w-44" : "w-32 sm:w-36")}>
@@ -89,7 +88,7 @@ export function LibCard({ book, mine, reason, wide, fluid }: { book: LibraryBook
       <p className="line-clamp-1 text-[11px] text-muted">{book.titleFr}</p>
       <p className="line-clamp-1 text-[11px] text-muted">{book.author}</p>
       <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted">
-        <span>{cat?.emoji} ⏱ {readingTimeLabel(book.words)}</span>
+        <span>{readingTimeLabel(book.words)}</span>
         <CoverageChip libraryId={book.id} />
       </div>
       {progress > 0 && <p className="text-[11px] font-semibold text-ink-600 dark:text-ink-300">{Math.round(progress * 100)} % {t("lu", "read")}</p>}
@@ -123,7 +122,7 @@ export function MyBookCard({ book }: { book: Book }) {
       <p className="mt-2 line-clamp-2 text-[13px] font-semibold leading-snug">{book.title}</p>
       {book.author && <p className="line-clamp-1 text-[11px] text-muted">{book.author}</p>}
       <p className="text-[11px] text-muted">
-        {book.source === "custom" ? t("✨ Histoire perso", "✨ Personal story") : book.source === "graded" ? t("Graduée", "Graded") : book.source === "import" ? t("Importé", "Imported") : "Gutenberg"}
+        {book.source === "custom" ? t("Histoire perso", "Personal story") : book.source === "graded" ? t("Graduée", "Graded") : book.source === "import" ? t("Importé", "Imported") : "Gutenberg"}
         {book.words ? ` · ⏱ ${readingTimeLabel(book.words)}` : ""}
       </p>
       {!book.finishedAt && progress > 0 && <p className="text-[11px] font-semibold text-ink-600 dark:text-ink-300">{Math.round(progress * 100)} % {t("lu", "read")}</p>}

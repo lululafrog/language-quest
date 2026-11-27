@@ -47,7 +47,7 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <PageHeader title={t("Réglages", "Settings")} back="/more" />
+      <PageHeader title={t("Réglages", "Settings")} back="/profile" />
 
       <AccountPanel />
 

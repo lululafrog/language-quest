@@ -10,6 +10,7 @@ import { Badge, Button, EmptyState, LinkButton, PageHeader, Panel, ProgressBar, 
 import { WordImage } from "@/components/WordImage";
 import type { Grade, Skill } from "@/lib/types";
 import { themeLabel } from "@/lib/data/types";
+import { courseForWord, type CourseLink } from "@/lib/connect";
 
 type Filter = "all" | Skill;
 
@@ -25,6 +26,7 @@ export default function ReviewPage() {
   const [stats, setStats] = useState({ done: 0, good: 0, again: 0 });
   const shownAt = useRef(0);
   const [busy, setBusy] = useState(false);
+  const [forgotLink, setForgotLink] = useState<{ term: string; link: CourseLink } | null>(null);
 
   const load = useCallback(async (f: Filter) => {
     const q = await getDueQueue(200, f === "all" ? undefined : [f]);
@@ -62,6 +64,9 @@ export default function ReviewPage() {
       setStats((x) => ({ done: x.done + 1, good: x.good + (g >= 3 ? 1 : 0), again: x.again + (g === 1 ? 1 : 0) }));
       // Forgotten cards come back at the end of this session (short-term learning step).
       if (g === 1 && queue) setQueue([...queue, { card: item.card, state: nextState }]);
+      // Forgotten word linked to a lesson → offer a quick way back to the course.
+      const link = g === 1 ? courseForWord(item.card.themes, item.card.kind) : null;
+      setForgotLink(link ? { term: item.card.term, link } : null);
       setFlipped(false);
       setTyped("");
       setVerdict(null);
@@ -242,6 +247,14 @@ export default function ReviewPage() {
         </div>
       ) : (
         skill !== "production" && <Button className="mt-4 w-full" size="lg" onClick={flip}>{t("Voir la réponse", "Show answer")}</Button>
+      )}
+      {forgotLink && (
+        <p className="mt-3 text-center text-xs text-muted">
+          {t(`« ${forgotLink.term} » oublié ? `, `Forgot “${forgotLink.term}”? `)}
+          <Link href={forgotLink.link.href} className="font-medium text-ink-600 underline dark:text-ink-300">
+            {t("Revoir le cours", "Review the lesson")} · {forgotLink.link.title}
+          </Link>
+        </p>
       )}
       <p className="mt-3 hidden text-center text-xs text-muted sm:block">{t("Raccourcis : Espace pour retourner, 1-4 pour répondre", "Shortcuts: Space to flip, 1-4 to answer")}</p>
     </div>

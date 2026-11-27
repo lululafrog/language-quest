@@ -33,7 +33,7 @@ export default function TestsPage() {
   ];
   return (
     <div className="mx-auto max-w-2xl">
-      <PageHeader title={t("Tests de progression", "Progress tests")} subtitle={t("Pour mesurer tes progrès réels, pas seulement ton activité.", "Measure real progress, not just activity.")} back="/more" />
+      <PageHeader title={t("Tests de progression", "Progress tests")} subtitle={t("Pour mesurer tes progrès réels, pas seulement ton activité.", "Measure real progress, not just activity.")} back="/cours" />
       <div className="space-y-3">
         {cards.map((c) => {
           const l = last(c.type);

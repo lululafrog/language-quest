@@ -39,7 +39,7 @@ export default function GrammarPage() {
 
   return (
     <div>
-      <PageHeader title={t("Grammaire", "Grammar")} subtitle={t("Un parcours court et visuel, centré sur la conversation.", "A short, visual path focused on conversation.")} />
+      <PageHeader title={t("Grammaire", "Grammar")} subtitle={t("Un parcours court et visuel, centré sur la conversation.", "A short, visual path focused on conversation.")} back="/cours" />
 
       <Panel className="flex items-center gap-4">
         <Ring value={done} max={GRAMMAR_LESSONS.length} size={76}>
