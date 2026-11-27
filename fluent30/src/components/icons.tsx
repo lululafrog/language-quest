@@ -52,6 +52,11 @@ const P = {
   trash: "M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6",
   image: "M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zM8.5 10a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM21 15l-5-5L5 21",
   inbox: "M12 3v12M7 10l5 5 5-5M4 15v4a2 2 0 002 2h12a2 2 0 002-2v-4",
+  train: "M7 3h10a3 3 0 013 3v9a3 3 0 01-3 3H7a3 3 0 01-3-3V6a3 3 0 013-3zM4 11h16M8 15h.01M16 15h.01M8 18l-2 3M16 18l2 3",
+  coffee: "M4 8h13v6a5 5 0 01-5 5H9a5 5 0 01-5-5zM17 10h1.5a2.5 2.5 0 010 5H17M7 3v2M11 3v2M5 21h11",
+  compass: "M12 3a9 9 0 100 18 9 9 0 100-18zM15.5 8.5l-2 5-5 2 2-5z",
+  postcard: "M3 5h18v14H3zM14 8v8M16 8h3v3h-3zM6 10h5M6 13h5M6 16h3",
+  share: "M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7M16 6l-4-4-4 4M12 2v13",
 };
 export type IconName = keyof typeof P;
 export function Icon({ name, size = 22, className, strokeWidth = 1.8 }: { name: IconName; size?: number; className?: string; strokeWidth?: number }) {

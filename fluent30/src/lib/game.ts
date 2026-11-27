@@ -2,7 +2,8 @@
 // Gamification: XP levels, coins, daily quests, streak rewards and the tourist's wardrobe.
 import { getDb, todayKey } from "./db";
 import { computeStreak } from "./track";
-import { WORLD } from "./data/world";
+import { DESTINATIONS_CONTENT } from "./atlas/destinations";
+import { legacyMissionDest } from "./atlas/legacy";
 import { LEGACY_IDS, SHOP_BY_ID, SHOP_ITEMS, type EarnRule, type ShopItem } from "./data/shop";
 import type { Appearance, AvatarSlot, DayActivity, GameState } from "./types";
 
@@ -274,7 +275,11 @@ export async function progressStats(): Promise<ProgressStats> {
 }
 
 /** Current value of an earn rule. */
-const MISSION_DEST = new Map(WORLD.flatMap((d) => d.missions.map((m) => [m.id, d.id] as const)));
+/** mission id → Atlas destination id (Atlas missions, final stories and the old world-map ids). */
+const MISSION_DEST = new Map<string, string>([
+  ...legacyMissionDest(),
+  ...DESTINATIONS_CONTENT.flatMap((d) => [...d.missions.map((m) => [m.id, d.id] as const), [d.final.id, d.id] as const]),
+]);
 
 export function earnValue(rule: EarnRule, st: ProgressStats): number {
   switch (rule.kind) {

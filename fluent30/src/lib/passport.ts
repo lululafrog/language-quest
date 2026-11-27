@@ -8,11 +8,25 @@ import { DURABLE_DAYS, State } from "./srs";
 import { ALL_LESSONS, PATH, type CefrLevel } from "./curriculum";
 import { DESTINATIONS, type Destination, type StampMetric } from "./data/destinations";
 import { WORLD } from "./data/world";
+import { LEGACY_DEST } from "./atlas/legacy";
 
-/** World-map destinations whose missions are all completed. */
+/** Atlas destinations validated (all missions + final story). Stored as achievements "atlas:validated:<id>". */
+export async function validatedAtlas(): Promise<Set<string>> {
+  const rows = await getDb().achievements.where("id").startsWith("atlas:validated:").toArray();
+  return new Set(rows.map((r) => r.id.slice("atlas:validated:".length)));
+}
+
+/** World-map city stamps: every old mission of the city done, or its Atlas country validated. */
 export async function completedWorldDestinations(): Promise<Set<string>> {
   const done = new Set((await getDb().missions.where("status").equals("done").toArray()).map((m) => m.id));
-  return new Set(WORLD.filter((d) => d.missions.every((m) => done.has(m.id))).map((d) => d.id));
+  const atlas = await validatedAtlas();
+  return new Set(WORLD.filter((d) => d.missions.every((m) => done.has(m.id)) || atlas.has(LEGACY_DEST[d.id] ?? "")).map((d) => d.id));
+}
+
+/** Is this stamp earned by its own rule (metric, world map or Atlas validation)? */
+function stampMet(d: Destination, stats: PassportStats, world: Set<string>, atlas: Set<string>): boolean {
+  if (d.atlas) return atlas.has(d.atlas);
+  return stats[d.rule.metric] >= d.rule.n || (!!d.world && world.has(d.id));
 }
 
 export const STAMP_PREFIX = "stamp:";
@@ -66,12 +80,12 @@ export async function passportStats(): Promise<PassportStats> {
 
 export async function passportState(): Promise<{ stats: PassportStats; stamps: StampState[]; souvenirs: Destination[] }> {
   const db = getDb();
-  const [stats, records, world] = await Promise.all([passportStats(), db.achievements.where("id").startsWith(STAMP_PREFIX).toArray(), completedWorldDestinations()]);
+  const [stats, records, world, atlas] = await Promise.all([passportStats(), db.achievements.where("id").startsWith(STAMP_PREFIX).toArray(), completedWorldDestinations(), validatedAtlas()]);
   const at = new Map(records.map((r) => [r.id.slice(STAMP_PREFIX.length), r.unlockedAt]));
   const stamps = DESTINATIONS.map((dest) => ({
     dest,
     unlockedAt: at.get(dest.id),
-    value: dest.world && world.has(dest.id) ? dest.rule.n : Math.min(stats[dest.rule.metric], dest.rule.n),
+    value: dest.atlas ? (atlas.has(dest.atlas) ? dest.rule.n : 0) : dest.world && world.has(dest.id) ? dest.rule.n : Math.min(stats[dest.rule.metric], dest.rule.n),
     target: dest.rule.n,
   }));
   return { stats, stamps, souvenirs: stamps.filter((s) => s.unlockedAt).map((s) => s.dest) };
@@ -82,8 +96,8 @@ export async function claimStamps(): Promise<Destination[]> {
   const db = getDb();
   const stats = await passportStats();
   const have = new Set((await db.achievements.where("id").startsWith(STAMP_PREFIX).toArray()).map((r) => r.id));
-  const world = await completedWorldDestinations();
-  const fresh = DESTINATIONS.filter((d) => !have.has(STAMP_PREFIX + d.id) && (stats[d.rule.metric] >= d.rule.n || (d.world && world.has(d.id))));
+  const [world, atlas] = await Promise.all([completedWorldDestinations(), validatedAtlas()]);
+  const fresh = DESTINATIONS.filter((d) => !have.has(STAMP_PREFIX + d.id) && stampMet(d, stats, world, atlas));
   if (!fresh.length) return [];
   const now = Date.now();
   await db.achievements.bulkPut(fresh.map((d) => ({ id: STAMP_PREFIX + d.id, unlockedAt: now, updatedAt: now })));
