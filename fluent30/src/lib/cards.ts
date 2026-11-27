@@ -49,8 +49,8 @@ export function cardFromSeed(w: SeedWord, source: Card["source"] = "seed"): Card
   const kind = guessKind(w.en, w.pos);
   return {
     id: uid("c"), term: w.en, lemma: lemmaOf(w.en), kind, fr: w.fr, pos: w.pos, ipa: w.ipa, example: w.ex, exampleFr: w.exFr,
-    themes: guessThemes(w.en, w.pos), frequencyRank: w.rank, tier: tierOf(w.rank),
-    difficulty: w.rank <= 500 ? 1 : w.rank <= 1000 ? 2 : w.rank <= 2000 ? 3 : 4, source, enriched: true, createdAt: now, updatedAt: now,
+    themes: [...new Set([...(w.themes ?? []), ...guessThemes(w.en, w.pos)])].filter((t, _i, all) => t !== "daily" || all.length === 1).slice(0, 3), frequencyRank: w.rank || undefined, tier: w.rank ? tierOf(w.rank) : undefined,
+    difficulty: !w.rank ? 2 : w.rank <= 500 ? 1 : w.rank <= 1000 ? 2 : w.rank <= 2000 ? 3 : 4, source, enriched: true, createdAt: now, updatedAt: now,
   };
 }
 

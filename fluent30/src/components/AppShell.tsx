@@ -26,6 +26,7 @@ export const ALL_NAV: NavItem[] = [
   { href: "/session", fr: "Séance du jour", en: "Today's session", icon: "session" },
   { href: "/learn", fr: "Nouveaux mots", en: "New words", icon: "sparkle" },
   { href: "/review", fr: "Réviser", en: "Review", icon: "review" },
+  { href: "/themes", fr: "Thèmes", en: "Themes", icon: "cards" },
   { href: "/around", fr: "Autour de moi", en: "Around me", icon: "sparkle" },
   { href: "/cards", fr: "Mes flashcards", en: "My flashcards", icon: "cards" },
   { href: "/library", fr: "Bibliothèque", en: "Library", icon: "book" },

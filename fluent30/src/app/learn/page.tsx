@@ -1,12 +1,13 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useLiveQuery } from "dexie-react-hooks";
 import { getDb, todayKey } from "@/lib/db";
 import { aiWords, markKnown, nextNewWords, type Candidate } from "@/lib/learn";
 import { cardFromSeed, ensureImage, lemmaOf, saveCard } from "@/lib/cards";
 import { SEED_VOCAB } from "@/lib/data/vocab";
-import { TIERS, themeEmoji, themeLabel } from "@/lib/data/types";
+import { TIERS, themeById, themeEmoji, themeLabel } from "@/lib/data/types";
 import { useSettings } from "@/hooks/useSettings";
 import { useStatus } from "@/hooks/useStatus";
 import { useT } from "@/hooks/useT";
@@ -21,6 +22,16 @@ import type { Card } from "@/lib/types";
 type Phase = "pick" | "intro" | "check" | "done";
 
 export default function LearnPage() {
+  return (
+    <Suspense fallback={null}>
+      <LearnInner />
+    </Suspense>
+  );
+}
+
+function LearnInner() {
+  const themeParam = useSearchParams().get("theme");
+  const theme = themeParam ? themeById(themeParam) : undefined;
   const s = useSettings();
   const t = useT();
   const status = useStatus();
@@ -57,9 +68,9 @@ export default function LearnPage() {
         let c: Candidate[];
         if (mode === "ai-interests") c = await aiWords("interests", { interests: s.interests.map((i) => themeLabel(i)), count: 10 });
         else if (mode === "ai-tier") c = await aiWords("tier", { tier: tier ?? 3000, count: 10 });
-        else c = await nextNewWords(mode === "auto" && remaining > 0 ? remaining : 5, s.interests);
+        else c = await nextNewWords(theme ? 10 : mode === "auto" && remaining > 0 ? remaining : 5, s.interests, theme?.id);
         if (!c.length) {
-          setError(t("Tu as couvert tout le vocabulaire intégré. Utilise la génération IA pour continuer (paliers 3 000 et avancé).", "You've covered all built-in vocabulary. Use AI generation to continue."));
+          setError(theme ? t("Tu connais déjà tous les mots de ce thème. Bravo !", "You know all the words in this theme!") : t("Tu as couvert tout le vocabulaire intégré. Utilise la génération IA pour continuer (paliers 3 000 et avancé).", "You've covered all built-in vocabulary. Use AI generation to continue."));
           return;
         }
         setBatch(c);
@@ -72,7 +83,7 @@ export default function LearnPage() {
         setLoading(false);
       }
     },
-    [remaining, s.interests, t],
+    [remaining, s.interests, t, theme],
   );
 
   const current = batch[idx];
@@ -110,7 +121,11 @@ export default function LearnPage() {
 
   return (
     <div className="mx-auto max-w-xl">
-      <PageHeader title={t("Nouveaux mots", "New words")} subtitle={t(`${newToday}/${s.dailyNewWords} aujourd'hui · 70 % mots fréquents, 30 % selon tes centres d'intérêt`, `${newToday}/${s.dailyNewWords} today · 70% frequent words, 30% your interests`)} back="/" />
+      <PageHeader
+        title={theme ? `${theme.emoji} ${s.immersion ? theme.en : theme.fr}` : t("Nouveaux mots", "New words")}
+        subtitle={theme ? t("Les mots les plus nécessaires de ce thème en premier", "Most necessary words of this theme first") : t(`${newToday}/${s.dailyNewWords} aujourd'hui · 70 % mots fréquents, 30 % thèmes prioritaires et centres d'intérêt`, `${newToday}/${s.dailyNewWords} today · 70% frequent words, 30% priority themes & interests`)}
+        back={theme ? "/themes" : "/"}
+      />
 
       {phase === "pick" && (
         <div className="space-y-4">
@@ -122,7 +137,8 @@ export default function LearnPage() {
                 : t("Objectif atteint ! Tu peux continuer si tu le souhaites — sans dépasser ce que tu peux réviser.", "Goal reached! You can keep going.")}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <Button onClick={() => start("auto")} loading={loading}>{remaining > 0 ? t(`Apprendre ${remaining} mots`, `Learn ${remaining} words`) : t("5 mots de plus", "5 more words")}</Button>
+              <Button onClick={() => start("auto")} loading={loading}>{theme ? t("Apprendre 10 mots de ce thème", "Learn 10 words from this theme") : remaining > 0 ? t(`Apprendre ${remaining} mots`, `Learn ${remaining} words`) : t("5 mots de plus", "5 more words")}</Button>
+              {!theme && <Link href="/themes" className="inline-flex h-11 items-center rounded-xl border border-line px-4 text-[15px] font-medium hover:bg-surface-2">🗂️ {t("Choisir un thème", "Pick a theme")}</Link>}
               {s.interests.length > 0 && status?.ai && (
                 <Button variant="outline" onClick={() => start("ai-interests")} disabled={loading}>✨ {t("Mots selon mes centres d'intérêt", "Words for my interests")}</Button>
               )}
@@ -158,7 +174,7 @@ export default function LearnPage() {
         <div className="animate-slide-up" key={current.word.en}>
           <div className="mb-3 flex items-center justify-between text-sm text-muted">
             <span>{idx + 1} / {batch.length}</span>
-            <Badge tone={current.origin === "frequent" ? "ink" : "coral"}>{current.origin === "frequent" ? t(`Fréquent · n°${current.word.rank}`, `Frequent · #${current.word.rank}`) : t("Personnalisé", "Personal")}</Badge>
+            <Badge tone={current.origin === "frequent" ? "ink" : "coral"}>{current.origin === "frequent" ? t(`Fréquent · n°${current.word.rank}`, `Frequent · #${current.word.rank}`) : current.theme ? `${themeEmoji(current.theme)} ${themeLabel(current.theme, s.immersion)}` : t("Personnalisé", "Personal")}</Badge>
           </div>
           <ProgressBar value={idx} max={batch.length} className="mb-4" />
           <Panel className="text-center">

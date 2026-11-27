@@ -31,40 +31,75 @@ export interface Theme {
   fr: string;
   en: string;
   emoji: string;
+  /** 1 = indispensable for travelling/speaking, 2 = everyday life, 3 = according to your interests, 4 = language tools */
+  priority: 1 | 2 | 3 | 4;
 }
 
+export const THEME_GROUPS: Record<Theme["priority"], { fr: string; en: string; descFr: string }> = {
+  1: { fr: "Indispensables", en: "Essentials", descFr: "Ce qu'il faut savoir dire en premier, en voyage comme au quotidien." },
+  2: { fr: "Vie quotidienne", en: "Everyday life", descFr: "Pour parler de ta vie, de ton entourage et de ce qui t'entoure." },
+  3: { fr: "Selon tes envies", en: "Your interests", descFr: "Pour parler de ce qui te passionne." },
+  4: { fr: "Outils de la langue", en: "Language tools", descFr: "Verbes, adjectifs, expressions : la mécanique de l'anglais." },
+};
+
 export const THEMES: Theme[] = [
-  { id: "travel", fr: "Voyage", en: "Travel", emoji: "🧳" },
-  { id: "airport", fr: "Aéroport", en: "Airport", emoji: "✈️" },
-  { id: "transport", fr: "Transports", en: "Transport", emoji: "🚆" },
-  { id: "restaurant", fr: "Restaurants", en: "Restaurants", emoji: "🍽️" },
-  { id: "food", fr: "Nourriture", en: "Food", emoji: "🥐" },
-  { id: "sport", fr: "Sport", en: "Sport", emoji: "🏃" },
-  { id: "adventure", fr: "Aventure", en: "Adventure", emoji: "🧭" },
-  { id: "health", fr: "Santé", en: "Health", emoji: "🩺" },
-  { id: "work", fr: "Travail", en: "Work", emoji: "💼" },
-  { id: "relationships", fr: "Relations", en: "Relationships", emoji: "🤝" },
-  { id: "dating", fr: "Flirt et séduction", en: "Dating & flirting", emoji: "💘" },
-  { id: "emotions", fr: "Émotions", en: "Emotions", emoji: "💭" },
-  { id: "daily", fr: "Conversation quotidienne", en: "Everyday conversation", emoji: "💬" },
-  { id: "slang", fr: "Argot et expressions familières", en: "Slang & informal", emoji: "😎" },
-  { id: "action-verbs", fr: "Verbes", en: "Verbs", emoji: "⚡" },
-  { id: "adjectives", fr: "Adjectifs", en: "Adjectives", emoji: "🎨" },
-  { id: "irregular-verbs", fr: "Verbes irréguliers", en: "Irregular verbs", emoji: "🔁" },
-  { id: "phrasal-verbs", fr: "Phrasal verbs", en: "Phrasal verbs", emoji: "🧩" },
-  { id: "idioms", fr: "Expressions idiomatiques", en: "Idioms", emoji: "🦉" },
-  { id: "time", fr: "Temps et dates", en: "Time & dates", emoji: "🕒" },
-  { id: "home", fr: "Maison", en: "Home", emoji: "🏠" },
-  { id: "shopping", fr: "Achats et argent", en: "Shopping & money", emoji: "🛍️" },
-  { id: "nature", fr: "Nature et météo", en: "Nature & weather", emoji: "🌿" },
-  { id: "people", fr: "Personnes et famille", en: "People & family", emoji: "👪" },
-  { id: "body", fr: "Corps", en: "Body", emoji: "🫀" },
-  { id: "tech", fr: "Technologie", en: "Technology", emoji: "📱" },
-  { id: "animals", fr: "Animaux", en: "Animals", emoji: "🐾" },
-  { id: "crime", fr: "Crime et enquête", en: "Crime & mystery", emoji: "🔎" },
-  { id: "clothes", fr: "Vêtements", en: "Clothes", emoji: "👕" },
-  { id: "grammar-words", fr: "Mots grammaticaux", en: "Function words", emoji: "🔗" },
+  // 1 — Indispensables
+  { id: "greetings", fr: "Salutations & politesse", en: "Greetings & politeness", emoji: "👋", priority: 1 },
+  { id: "introductions", fr: "Se présenter", en: "Introducing yourself", emoji: "🙋", priority: 1 },
+  { id: "daily", fr: "Conversation quotidienne", en: "Everyday conversation", emoji: "💬", priority: 1 },
+  { id: "numbers", fr: "Nombres & prix", en: "Numbers & prices", emoji: "🔢", priority: 1 },
+  { id: "time", fr: "Heures, jours & dates", en: "Time & dates", emoji: "🕒", priority: 1 },
+  { id: "directions", fr: "Demander son chemin", en: "Asking for directions", emoji: "🧭", priority: 1 },
+  { id: "transport", fr: "Transports", en: "Transport", emoji: "🚆", priority: 1 },
+  { id: "airport", fr: "Aéroport & avion", en: "Airport & flying", emoji: "✈️", priority: 1 },
+  { id: "accommodation", fr: "Hôtel & logement", en: "Hotel & accommodation", emoji: "🏨", priority: 1 },
+  { id: "restaurant", fr: "Restaurant & café", en: "Restaurants & cafés", emoji: "🍽️", priority: 1 },
+  { id: "shopping", fr: "Achats & argent", en: "Shopping & money", emoji: "🛍️", priority: 1 },
+  { id: "health", fr: "Santé & pharmacie", en: "Health & pharmacy", emoji: "🩺", priority: 1 },
+  { id: "emergency", fr: "Urgences & sécurité", en: "Emergencies & safety", emoji: "🚨", priority: 1 },
+  { id: "travel-problems", fr: "Problèmes en voyage", en: "Travel problems", emoji: "⚠️", priority: 1 },
+  // 2 — Vie quotidienne
+  { id: "people", fr: "Famille & personnes", en: "Family & people", emoji: "👪", priority: 2 },
+  { id: "home", fr: "Maison", en: "Home", emoji: "🏠", priority: 2 },
+  { id: "food", fr: "Nourriture & boissons", en: "Food & drink", emoji: "🥐", priority: 2 },
+  { id: "body", fr: "Corps", en: "Body", emoji: "🫀", priority: 2 },
+  { id: "clothes", fr: "Vêtements", en: "Clothes", emoji: "👕", priority: 2 },
+  { id: "emotions", fr: "Émotions & sentiments", en: "Emotions & feelings", emoji: "💭", priority: 2 },
+  { id: "opinions", fr: "Donner son avis", en: "Giving opinions", emoji: "🗣️", priority: 2 },
+  { id: "nature", fr: "Météo & nature", en: "Weather & nature", emoji: "🌦️", priority: 2 },
+  { id: "city", fr: "En ville", en: "In town", emoji: "🏙️", priority: 2 },
+  { id: "work", fr: "Travail", en: "Work", emoji: "💼", priority: 2 },
+  { id: "school", fr: "Études & école", en: "School & studies", emoji: "🎓", priority: 2 },
+  { id: "tech", fr: "Téléphone & internet", en: "Phone & internet", emoji: "📱", priority: 2 },
+  { id: "travel", fr: "Voyage", en: "Travel", emoji: "🧳", priority: 2 },
+  // 3 — Selon tes envies
+  { id: "relationships", fr: "Amis & relations", en: "Friends & relationships", emoji: "🤝", priority: 3 },
+  { id: "dating", fr: "Flirt & séduction", en: "Dating & flirting", emoji: "💘", priority: 3 },
+  { id: "party", fr: "Sorties & soirées", en: "Going out & parties", emoji: "🎉", priority: 3 },
+  { id: "sport", fr: "Sport & fitness", en: "Sport & fitness", emoji: "🏃", priority: 3 },
+  { id: "adventure", fr: "Aventure & randonnée", en: "Adventure & hiking", emoji: "🧭", priority: 3 },
+  { id: "beach", fr: "Plage & mer", en: "Beach & sea", emoji: "🏖️", priority: 3 },
+  { id: "animals", fr: "Animaux", en: "Animals", emoji: "🐾", priority: 3 },
+  { id: "cooking", fr: "Cuisine", en: "Cooking", emoji: "👩‍🍳", priority: 3 },
+  { id: "music", fr: "Musique", en: "Music", emoji: "🎵", priority: 3 },
+  { id: "movies", fr: "Films & séries", en: "Films & series", emoji: "🎬", priority: 3 },
+  { id: "books", fr: "Lecture & livres", en: "Reading & books", emoji: "📚", priority: 3 },
+  { id: "art", fr: "Art & culture", en: "Art & culture", emoji: "🎨", priority: 3 },
+  { id: "crime", fr: "Crime & enquête", en: "Crime & mystery", emoji: "🔎", priority: 3 },
+  { id: "slang", fr: "Argot & familier", en: "Slang & informal", emoji: "😎", priority: 3 },
+  // 4 — Outils de la langue
+  { id: "action-verbs", fr: "Verbes", en: "Verbs", emoji: "⚡", priority: 4 },
+  { id: "irregular-verbs", fr: "Verbes irréguliers", en: "Irregular verbs", emoji: "🔁", priority: 4 },
+  { id: "phrasal-verbs", fr: "Phrasal verbs", en: "Phrasal verbs", emoji: "🧩", priority: 4 },
+  { id: "adjectives", fr: "Adjectifs", en: "Adjectives", emoji: "🎨", priority: 4 },
+  { id: "linking", fr: "Mots de liaison", en: "Linking words", emoji: "🔗", priority: 4 },
+  { id: "idioms", fr: "Expressions idiomatiques", en: "Idioms", emoji: "🦉", priority: 4 },
+  { id: "grammar-words", fr: "Mots grammaticaux", en: "Function words", emoji: "🧱", priority: 4 },
 ];
+
+export function themeById(id: string): Theme | undefined {
+  return THEMES.find((t) => t.id === id);
+}
 
 export function themeLabel(id: string, immersion = false): string {
   const t = THEMES.find((x) => x.id === id);

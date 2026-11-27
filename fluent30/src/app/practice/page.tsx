@@ -8,6 +8,7 @@ export default function PracticePage() {
   const items: { href: string; emoji: string; title: string; desc: string; tone: string; big?: boolean }[] = [
     { href: "/games", emoji: "🎮", title: t("Mini-jeux", "Mini-games"), desc: t("20 jeux sur tes mots les plus fragiles", "20 games on your weakest words"), tone: "from-ink-500 via-ink-600 to-ink-800", big: true },
     { href: "/chat", emoji: "💬", title: t("Parler avec l'IA", "Talk with AI"), desc: t("Restaurant, voyage, flirt… à l'écrit ou à l'oral", "Real-life role-plays"), tone: "from-coral-400 via-coral-500 to-coral-600", big: true },
+    { href: "/themes", emoji: "🗂️", title: t("Thèmes de vocabulaire", "Vocabulary themes"), desc: t("Indispensables, quotidien, tes passions", "Essentials, everyday life, your passions"), tone: "from-[#fb923c] to-[#ea580c]", big: true },
     { href: "/around", emoji: "👀", title: t("Autour de moi", "Around me"), desc: t("Mets un mot anglais sur ce que tu vois", "Name what you see in English"), tone: "from-[#34d399] to-[#059669]", big: true },
     { href: "/pronunciation", emoji: "🗣️", title: t("Prononciation", "Pronunciation"), desc: t("Les pièges des francophones", "French speakers' traps"), tone: "from-mint-400 to-mint-600" },
     { href: "/verbs/irregular", emoji: "🔁", title: t("Verbes irréguliers", "Irregular verbs"), desc: "go – went – gone", tone: "from-sun-400 to-amber-500" },

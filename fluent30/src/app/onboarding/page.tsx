@@ -68,9 +68,9 @@ export default function Onboarding() {
     </div>,
     <div key="2">
       <h2 className="text-xl font-semibold">Tes centres d&apos;intérêt</h2>
-      <p className="mb-4 text-sm text-muted">Ils personnalisent 30 % du vocabulaire, les histoires et les conversations.</p>
+      <p className="mb-4 text-sm text-muted">Les thèmes indispensables (se présenter, demander son chemin, hôtel, urgences…) sont déjà prioritaires. Choisis ici tes passions : elles passent juste après.</p>
       <div className="flex flex-wrap gap-2">
-        {THEMES.filter((t) => !["grammar-words", "adjectives", "action-verbs", "phrasal-verbs", "idioms", "time"].includes(t.id)).map((t) => (
+        {THEMES.filter((t) => t.priority === 3 || t.priority === 2).map((t) => (
           <button key={t.id} onClick={() => toggle(interests, setInterests, t.id)} className={cx("rounded-full border px-3 py-2 text-sm transition", interests.includes(t.id) ? "border-ink-500 bg-ink-600 text-white" : "border-line bg-surface")}>{t.emoji} {t.fr}</button>
         ))}
       </div>

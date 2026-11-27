@@ -280,10 +280,19 @@ export type AvatarSlot = "hat" | "glasses" | "face" | "top" | "outer" | "dress" 
 
 /** How the learner's character looks (chosen at sign-up, editable for free). */
 export interface Appearance {
+  gender?: "female" | "male";
   skin: string;
-  hair: "short" | "long" | "bun" | "curly" | "ponytail" | "afro" | "buzz" | "bob" | "bald";
+  hair: "short" | "long" | "bun" | "curly" | "ponytail" | "afro" | "buzz" | "bob" | "bald" | "pixie" | "braids" | "wavy" | "spiky" | "mohawk" | "sidepart";
   hairColor: string;
+  face?: "oval" | "round" | "square" | "heart";
   eyes: "round" | "happy" | "lashes";
   eyeColor?: string;
+  brows?: "thin" | "normal" | "thick";
+  nose?: "small" | "round" | "long";
+  lips?: "thin" | "normal" | "full";
+  facialHair?: "none" | "stubble" | "moustache" | "goatee" | "short" | "full";
+  freckles?: boolean;
+  makeup?: "none" | "blush" | "lipstick" | "eyeliner";
+  /** @deprecated use facialHair */
   beard: boolean;
 }

@@ -6,10 +6,12 @@ import { SEED_VOCAB } from "./data/vocab";
 import type { SeedWord } from "./data/types";
 import { postApi } from "./api";
 import { lemmaOf } from "./cards";
+import { nextThemeWords, type ThemeWord } from "./themes";
 
 export interface Candidate {
   word: SeedWord;
-  origin: "frequent" | "personal" | "ai";
+  origin: "frequent" | "personal" | "ai" | "theme";
+  theme?: string;
 }
 
 const SKIP = new Set(["the", "a", "an"]);
@@ -26,22 +28,26 @@ async function excludedLemmas(): Promise<Set<string>> {
   return set;
 }
 
-export async function nextNewWords(count: number, interests: string[]): Promise<Candidate[]> {
+const fromTheme = (w: ThemeWord): Candidate => ({
+  word: { en: w.en, fr: w.fr, pos: w.pos, ex: w.ex, exFr: w.exFr, rank: w.rank ?? 0, themes: [w.themeId] },
+  origin: "theme",
+  theme: w.themeId,
+});
+
+/** 70 % most frequent words + 30 % from vocabulary themes (essential themes and your interests first).
+ * With `onlyTheme`, all words come from that theme (most necessary first). */
+export async function nextNewWords(count: number, interests: string[], onlyTheme?: string): Promise<Candidate[]> {
+  if (onlyTheme) return (await nextThemeWords(count, interests, onlyTheme)).map(fromTheme);
   const excluded = await excludedLemmas();
   const available = SEED_VOCAB.filter((w) => !SKIP.has(w.en) && !excluded.has(lemmaOf(w.en)));
-  const personalCount = interests.length ? Math.round(count * 0.3) : 0;
-  const frequentCount = count - personalCount;
-  const frequent = available.slice(0, frequentCount).map<Candidate>((w) => ({ word: w, origin: "frequent" }));
-  const taken = new Set(frequent.map((c) => c.word.en));
-  const personal = available
-    .filter((w) => !taken.has(w.en) && (w.themes ?? []).some((t) => interests.includes(t)))
-    .slice(0, personalCount)
-    .map<Candidate>((w) => ({ word: w, origin: "personal" }));
-  const out = [...frequent, ...personal];
-  // Not enough personalised seed words → fill with frequent ones.
+  const personalCount = Math.round(count * 0.3);
+  const frequent = available.slice(0, count - personalCount).map<Candidate>((w) => ({ word: w, origin: "frequent" }));
+  const taken = new Set(frequent.map((c) => lemmaOf(c.word.en)));
+  const themed = (await nextThemeWords(personalCount + 5, interests)).filter((w) => !taken.has(lemmaOf(w.en))).slice(0, personalCount).map(fromTheme);
+  const out = [...frequent, ...themed];
   for (const w of available) {
     if (out.length >= count) break;
-    if (!out.some((c) => c.word.en === w.en)) out.push({ word: w, origin: "frequent" });
+    if (!out.some((c) => lemmaOf(c.word.en) === lemmaOf(w.en))) out.push({ word: w, origin: "frequent" });
   }
   return out;
 }

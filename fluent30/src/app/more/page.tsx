@@ -9,6 +9,7 @@ export default function MorePage() {
   const items: { href: string; icon: IconName; title: string }[] = [
     { href: "/session", icon: "session", title: t("Séance du jour", "Today's session") },
     { href: "/learn", icon: "sparkle", title: t("Nouveaux mots", "New words") },
+    { href: "/themes", icon: "cards", title: t("Thèmes de vocabulaire", "Vocabulary themes") },
     { href: "/cards", icon: "cards", title: t("Mes flashcards", "My flashcards") },
     { href: "/cards/add", icon: "plus", title: t("Ajouter du vocabulaire", "Add vocabulary") },
     { href: "/around", icon: "sparkle", title: t("Autour de moi (nommer ce que je vois)", "Around me") },

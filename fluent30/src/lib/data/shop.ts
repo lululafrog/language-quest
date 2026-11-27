@@ -192,6 +192,12 @@ export const SKIN_TONES = ["#FFE0C7", "#F9CFA8", "#E8B38A", "#C98E63", "#9C6644"
 export const HAIR_COLORS = ["#2B1B12", "#6B4226", "#A0612E", "#E3B860", "#C9502C", "#9E9E9E", "#F2F2F2", "#7E57C2", "#26A69A"];
 export const HAIR_STYLES: { id: import("../types").Appearance["hair"]; fr: string; en: string }[] = [
   { id: "short", fr: "Courts", en: "Short" },
+  { id: "sidepart", fr: "Raie sur le côté", en: "Side part" },
+  { id: "spiky", fr: "En pics", en: "Spiky" },
+  { id: "mohawk", fr: "Crête", en: "Mohawk" },
+  { id: "pixie", fr: "Coupe garçonne", en: "Pixie cut" },
+  { id: "wavy", fr: "Ondulés", en: "Wavy" },
+  { id: "braids", fr: "Tresses", en: "Braids" },
   { id: "buzz", fr: "Très courts", en: "Buzz cut" },
   { id: "bob", fr: "Carré", en: "Bob" },
   { id: "long", fr: "Longs", en: "Long" },

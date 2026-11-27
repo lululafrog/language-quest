@@ -4,6 +4,23 @@ import { normalize } from "./text";
 import { seedByLemma } from "./data/vocab";
 
 const KEYWORDS: Record<string, string[]> = {
+  greetings: ["hello", "hi", "hey", "goodbye", "bye", "thanks", "thank", "please", "sorry", "excuse", "welcome", "cheers", "morning", "evening", "pardon"],
+  directions: ["left", "right", "straight", "corner", "crossroads", "roundabout", "map", "turn", "far", "near", "opposite", "next", "behind", "street", "avenue", "block", "north", "south", "east", "west"],
+  emergency: ["help", "police", "ambulance", "fire", "emergency", "danger", "accident", "thief", "lost", "stolen", "embassy", "injured", "hospital"],
+  accommodation: ["hotel", "hostel", "room", "reservation", "booking", "reception", "check-in", "checkout", "key", "towel", "sheet", "pillow", "airbnb", "guest", "landlord", "rent"],
+  numbers: ["one", "two", "three", "hundred", "thousand", "million", "half", "quarter", "dozen", "number", "price", "cost", "total"],
+  "travel-problems": ["delay", "delayed", "cancelled", "cancel", "missed", "luggage", "lost", "refund", "complaint", "broken", "stuck", "strike"],
+  city: ["city", "town", "square", "park", "museum", "church", "bridge", "building", "shop", "bank", "post", "library", "market", "district", "neighbourhood", "downtown"],
+  school: ["school", "university", "student", "teacher", "lesson", "exam", "homework", "class", "degree", "study", "course", "grade"],
+  music: ["music", "song", "singer", "band", "concert", "guitar", "piano", "drum", "album", "lyrics", "festival", "playlist"],
+  movies: ["film", "movie", "series", "episode", "actor", "actress", "cinema", "director", "trailer", "subtitle", "season", "scene"],
+  party: ["party", "club", "bar", "pub", "drink", "dance", "night", "birthday", "celebrate", "invite", "guest", "toast"],
+  beach: ["beach", "sea", "sand", "wave", "swim", "sunscreen", "surf", "shell", "towel", "tide", "snorkel"],
+  cooking: ["cook", "bake", "boil", "fry", "roast", "chop", "recipe", "oven", "pan", "pot", "stir", "slice", "grill"],
+  art: ["art", "painting", "painter", "museum", "gallery", "sculpture", "exhibition", "artist", "theatre", "opera", "culture"],
+  books: ["book", "novel", "author", "chapter", "page", "story", "library", "poem", "character", "plot", "read"],
+  opinions: ["think", "believe", "opinion", "agree", "disagree", "reckon", "suppose", "doubt", "prefer", "honestly"],
+  linking: ["however", "although", "because", "therefore", "anyway", "actually", "besides", "meanwhile", "otherwise", "whereas", "so"],
   animals: ["dog", "cat", "horse", "cow", "pig", "sheep", "goat", "chicken", "hen", "duck", "bird", "fish", "mouse", "rat", "rabbit", "fox", "wolf", "bear", "lion", "tiger", "elephant", "monkey", "snake", "frog", "bee", "ant", "spider", "fly", "butterfly", "whale", "dolphin", "shark", "deer", "owl", "eagle", "crow", "pigeon", "squirrel", "puppy", "kitten", "pet", "animal", "beast", "creature", "insect", "zebra", "giraffe", "camel", "donkey", "bull", "ox", "goose", "swan", "parrot", "turtle", "tortoise", "crab", "lobster", "worm", "bat", "hound", "mare", "lamb", "calf", "feather", "fur", "paw", "tail", "claw", "beak", "wing", "nest", "hive"],
   crime: ["murder", "murderer", "kill", "killer", "crime", "criminal", "police", "detective", "inspector", "suspect", "victim", "witness", "evidence", "clue", "alibi", "weapon", "gun", "knife", "poison", "blood", "body", "corpse", "theft", "thief", "steal", "rob", "robbery", "burglar", "arrest", "prison", "jail", "trial", "judge", "jury", "guilty", "innocent", "confess", "confession", "investigate", "investigation", "mystery", "motive", "culprit", "inquest", "coroner", "fingerprint", "deduce", "deduction", "accuse", "verdict", "hang", "strangle", "stab", "shoot", "corpse", "crook", "blackmail", "kidnap"],
   clothes: ["shirt", "t-shirt", "dress", "skirt", "trousers", "pants", "jeans", "shorts", "jacket", "coat", "hat", "cap", "scarf", "glove", "gloves", "sock", "socks", "shoe", "shoes", "boot", "boots", "sweater", "jumper", "hoodie", "suit", "tie", "belt", "pocket", "button", "zip", "sleeve", "collar", "uniform", "pyjamas", "underwear", "bra", "heel", "sandal", "cloak", "gown", "apron", "wear", "outfit"],

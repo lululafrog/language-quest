@@ -81,7 +81,7 @@ export default function SettingsPage() {
         <div className="mt-4">
           <p className="mb-1 text-sm">{t("Centres d'intérêt (30 % du vocabulaire personnalisé)", "Interests (30% personalised vocabulary)")}</p>
           <div className="flex flex-wrap gap-1.5">
-            {THEMES.filter((th) => th.id !== "grammar-words" && th.id !== "adjectives" && th.id !== "action-verbs").map((th) => (
+            {THEMES.filter((th) => th.priority === 3 || th.priority === 2).map((th) => (
               <button key={th.id} onClick={() => set({ interests: toggleIn(s.interests, th.id) })} className={cx("rounded-full border px-3 py-1.5 text-sm", s.interests.includes(th.id) ? "border-ink-500 bg-ink-600 text-white" : "border-line")}>{th.emoji} {s.immersion ? th.en : th.fr}</button>
             ))}
           </div>
