@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/ui";
 export default function PracticePage() {
   const t = useT();
   const items: { href: string; emoji: string; title: string; desc: string; tone: string; big?: boolean }[] = [
+    { href: "/basics", emoji: "🧱", title: t("Les bases", "The basics"), desc: t("Nombres, heure, jours, émotions… + les cours de règles", "Numbers, time, days, emotions… + rule lessons"), tone: "from-[#6366f1] to-[#a855f7]", big: true },
     { href: "/games", emoji: "🎮", title: t("Mini-jeux", "Mini-games"), desc: t("20 jeux sur tes mots les plus fragiles", "20 games on your weakest words"), tone: "from-ink-500 via-ink-600 to-ink-800", big: true },
     { href: "/chat", emoji: "💬", title: t("Parler avec l'IA", "Talk with AI"), desc: t("Restaurant, voyage, flirt… à l'écrit ou à l'oral", "Real-life role-plays"), tone: "from-coral-400 via-coral-500 to-coral-600", big: true },
     { href: "/themes", emoji: "🗂️", title: t("Thèmes de vocabulaire", "Vocabulary themes"), desc: t("Indispensables, quotidien, tes passions", "Essentials, everyday life, your passions"), tone: "from-[#fb923c] to-[#ea580c]", big: true },

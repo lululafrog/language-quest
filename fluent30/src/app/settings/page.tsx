@@ -96,6 +96,25 @@ export default function SettingsPage() {
         </div>
         <Toggle checked={s.immersion} onChange={(v) => set({ immersion: v })} label={t("Mode immersion (interface en anglais)", "Immersion mode (English interface)")} hint={t("Toute l'interface passe en anglais.", "The whole interface switches to English.")} />
         <Toggle checked={s.autoImages} onChange={(v) => set({ autoImages: v })} label={t("Illustrations automatiques", "Automatic illustrations")} hint={status?.images ? t(`Fournisseur : ${status.imageProvider === "openai" ? "OpenAI Images" : "pictogrammes SVG dessinés par Claude"} · mises en cache`, "Cached") : t("Nécessite OPENAI_API_KEY ou ANTHROPIC_API_KEY", "Requires an API key")} />
+        <Toggle checked={!!s.reduceMotion} onChange={(v) => set({ reduceMotion: v })} label={t("Réduire les animations", "Reduce motion")} hint={t("Célébrations et animations simplifiées (accessibilité).", "Simplified celebrations (accessibility).")} />
+      </Panel>
+
+      <Panel id="objectifs">
+        <h2 className="mb-1 font-semibold">{t("Objectifs de lecture", "Reading goals")}</h2>
+        <p className="mb-3 text-xs text-muted">{t("Sans culpabilité : un jour manqué par semaine est couvert automatiquement.", "No guilt: one missed day per week is covered.")}</p>
+        {([
+          ["minutesPerWeek", t("Minutes par semaine", "Minutes per week"), 15, 600, 15],
+          ["wordsPerWeek", t("Mots lus par semaine", "Words read per week"), 500, 30000, 500],
+          ["booksPerMonth", t("Livres par mois", "Books per month"), 1, 8, 1],
+        ] as const).map(([key, label, min, max, step]) => {
+          const g = s.readingGoals ?? { minutesPerWeek: 90, wordsPerWeek: 4000, booksPerMonth: 1 };
+          return (
+            <div key={key} className="mb-3">
+              <div className="flex justify-between text-sm"><span>{label}</span><span className="font-semibold tabular-nums">{g[key]}</span></div>
+              <input type="range" min={min} max={max} step={step} value={g[key]} onChange={(e) => set({ readingGoals: { ...g, [key]: Number(e.target.value) } })} className="mt-1 w-full accent-ink-600" />
+            </div>
+          );
+        })}
       </Panel>
 
       <Panel>

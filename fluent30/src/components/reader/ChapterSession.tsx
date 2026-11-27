@@ -57,7 +57,6 @@ export function ChapterSession({ book, chapter, chapterTitle, paragraphs, looked
   const advice = difficultyAdvice(lookedUp.length, wordsRead);
 
   // Vocabulary fill-ins: words looked up in this chapter, then the learner's cards present in the chapter, then useful chapter words.
-  const cards = useMemo(() => [] as string[], []);
   const [fills, setFills] = useState<Fill[]>([]);
   useEffect(() => {
     let alive = true;
@@ -84,7 +83,6 @@ export function ChapterSession({ book, chapter, chapterTitle, paragraphs, looked
       alive = false;
     };
   }, [paragraphs, lookedUp, text]);
-  void cards;
 
   const speakSentence = useMemo(() => {
     const all = paragraphs.flatMap(sentencesOf).filter((s) => {

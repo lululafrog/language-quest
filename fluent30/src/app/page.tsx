@@ -55,6 +55,12 @@ export default function Dashboard() {
         </div>
       </section>
 
+      <Link href="/basics" className="card-shadow flex items-center gap-3 rounded-3xl bg-gradient-to-r from-[#6366f1] to-[#a855f7] p-4 text-white transition active:scale-[0.99]">
+        <span className="text-3xl">🧱</span>
+        <span className="min-w-0 flex-1"><span className="block font-bold leading-tight" style={{ fontFamily: "var(--font-display)" }}>{t("Les bases", "The basics")}</span><span className="block text-xs text-white/85">{t("Nombres, heure, jours, émotions, règles essentielles", "Numbers, time, days, emotions, key rules")}</span></span>
+        <span className="text-white/80">›</span>
+      </Link>
+
       {/* Quick add: my own words */}
       <div className="grid grid-cols-2 gap-3">
         <Link href="/around" className="card-shadow flex items-center gap-3 rounded-3xl bg-gradient-to-br from-mint-400 to-mint-600 p-4 text-white transition active:scale-[0.98]">

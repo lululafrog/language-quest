@@ -68,14 +68,16 @@ export function wordInfo(word: string, opts: { properNoun?: boolean; inDictionar
   else if ((rank && rank <= 1000) || pack?.priority === 1 || (local && !rank && local.source !== "irregular")) priority = "green";
   else if (rank || pack || local) priority = "blue";
   else if (opts.inDictionary === false) priority = "grey";
-  else priority = w.length >= 11 ? "grey" : "orange";
+  else priority = w.length >= 13 ? "grey" : "orange";
   const theme = pack?.theme ?? local?.themes?.[0] ?? guessThemes(local?.lemma ?? w, local?.pos).find((t) => t !== "daily");
   const difficulty = priority === "green" ? (rank && rank <= 300 ? 1 : 2) : priority === "blue" ? 3 : priority === "orange" ? 4 : 5;
   const frequencyFr = rank
     ? `Parmi les ${rank <= 100 ? 100 : rank <= 500 ? 500 : rank <= 1000 ? "1 000" : "2 000"} mots les plus utilisés à l'oral`
     : pack
       ? "Vocabulaire utile d'un thème de conversation"
-      : priority === "orange"
+      : opts.properNoun && priority === "grey"
+        ? "Nom propre (personnage, lieu…) : pas à apprendre"
+        : priority === "orange"
         ? "Mot moins fréquent à l'oral"
         : "Mot rare ou littéraire";
   const info = { priority, rank, theme, difficulty, frequencyFr };

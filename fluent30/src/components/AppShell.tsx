@@ -10,6 +10,7 @@ import { startAutoSync } from "@/lib/sync";
 import { Icon, type IconName } from "./icons";
 import { Toaster, cx } from "./ui";
 import { RewardWatcher } from "./game/RewardWatcher";
+import { CeremonyWatcher } from "./game/CeremonyWatcher";
 
 type NavItem = { href: string; fr: string; en: string; icon: IconName };
 
@@ -37,6 +38,8 @@ export const ALL_NAV: NavItem[] = [
   { href: "/listen", fr: "Écoute & prononciation", en: "Listening & speaking", icon: "ear" },
   { href: "/translate", fr: "Traduction", en: "Translator", icon: "translate" },
   { href: "/shop", fr: "Boutique", en: "Shop", icon: "sparkle" },
+  { href: "/collection", fr: "Ma collection", en: "My collection", icon: "book" },
+  { href: "/achievements", fr: "Trophées", en: "Trophies", icon: "test" },
   { href: "/stats", fr: "Statistiques", en: "Statistics", icon: "stats" },
   { href: "/tests", fr: "Tests", en: "Tests", icon: "test" },
   { href: "/settings", fr: "Réglages", en: "Settings", icon: "settings" },
@@ -45,7 +48,7 @@ export const ALL_NAV: NavItem[] = [
 function isActive(path: string, href: string) {
   if (href === "/") return path === "/";
   if (href === "/practice") return ["/practice", "/games", "/grammar", "/verbs", "/chat", "/listen", "/pronunciation"].some((p) => path.startsWith(p));
-  if (href === "/more") return ["/more", "/cards", "/translate", "/stats", "/settings", "/tests", "/shop"].some((p) => path.startsWith(p));
+  if (href === "/more") return ["/more", "/cards", "/translate", "/stats", "/settings", "/tests", "/shop", "/collection", "/achievements"].some((p) => path.startsWith(p));
   if (href === "/review") return path.startsWith("/review") || path.startsWith("/learn") || path.startsWith("/session");
   return path.startsWith(href);
 }
@@ -121,6 +124,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <>
         {mounted ? children : null}
         <Toaster />
+        {mounted && <CeremonyWatcher />}
       </>
     );
   }
@@ -168,6 +172,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
       <Toaster />
       {mounted && <RewardWatcher />}
+      {mounted && <CeremonyWatcher />}
     </div>
   );
 }

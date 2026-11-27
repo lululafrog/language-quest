@@ -34,6 +34,11 @@ export default function ShopPage() {
 
   const onItem = async (id: string) => {
     const it = SHOP_ITEMS.find((i) => i.id === id)!;
+    if (it.unlock && !game.owned.includes(id)) {
+      toast(t(`Débloqué en terminant ${it.unlock.fr} 📖`, `Unlocked by finishing ${it.unlock.en} 📖`), "info");
+      setPreview(id);
+      return;
+    }
     if (game.owned.includes(id) || it.price === 0) {
       if (!game.owned.includes(id)) await buyItem(id);
       else await toggleEquip(id);
@@ -65,11 +70,15 @@ export default function ShopPage() {
           {previewItem && !game.owned.includes(previewItem.id) && (
             <Panel className="mx-auto mt-3 max-w-xs animate-pop text-center">
               <p className="font-semibold">{s.immersion ? previewItem.en : previewItem.fr}</p>
-              <button onClick={() => onItem(previewItem.id)} disabled={game.coins < previewItem.price} className="mt-2 inline-flex items-center gap-2 rounded-xl bg-gradient-to-b from-ink-500 to-ink-700 px-4 py-2.5 font-semibold text-white shadow-md disabled:opacity-50">
-                {t("Acheter", "Buy")} · {previewItem.price} <CoinIcon size={16} />
-              </button>
+              {previewItem.unlock ? (
+                <p className="mt-2 rounded-xl bg-coral-100 px-3 py-2 text-sm font-medium text-coral-600 dark:bg-coral-600/20">🔒 {t(`Débloqué en terminant ${previewItem.unlock.fr}`, `Unlocked by finishing ${previewItem.unlock.en}`)}</p>
+              ) : (
+                <button onClick={() => onItem(previewItem.id)} disabled={game.coins < previewItem.price} className="mt-2 inline-flex items-center gap-2 rounded-xl bg-gradient-to-b from-ink-500 to-ink-700 px-4 py-2.5 font-semibold text-white shadow-md disabled:opacity-50">
+                  {t("Acheter", "Buy")} · {previewItem.price} <CoinIcon size={16} />
+                </button>
+              )}
               <button onClick={() => setPreview(null)} className="ml-2 text-sm text-muted underline">{t("Annuler", "Cancel")}</button>
-              {game.coins < previewItem.price && <p className="mt-2 text-xs text-muted">{t(`Encore ${previewItem.price - game.coins} pièces à gagner`, `${previewItem.price - game.coins} more coins needed`)}</p>}
+              {!previewItem.unlock && game.coins < previewItem.price && <p className="mt-2 text-xs text-muted">{t(`Encore ${previewItem.price - game.coins} pièces à gagner`, `${previewItem.price - game.coins} more coins needed`)}</p>}
             </Panel>
           )}
         </div>
@@ -100,7 +109,7 @@ export default function ShopPage() {
                       <div className="p-2.5">
                         <p className="line-clamp-2 min-h-[2.4em] text-[13px] font-medium leading-snug">{s.immersion ? it.en : it.fr}</p>
                         <div className="mt-1.5 flex items-center justify-between">
-                          {owned ? <span className="text-xs font-semibold text-mint-600">{worn ? t("Porté ✓", "Worn ✓") : t("Possédé", "Owned")}</span> : it.price === 0 ? <span className="text-xs font-semibold text-mint-600">{t("Gratuit", "Free")}</span> : <span className="flex items-center gap-1 text-sm font-bold">{it.price}<CoinIcon size={14} /></span>}
+                          {owned ? <span className="text-xs font-semibold text-mint-600">{worn ? t("Porté ✓", "Worn ✓") : t("Possédé", "Owned")}</span> : it.unlock ? <span className="text-[11px] font-semibold leading-tight text-coral-600">🔒 {t(`En terminant ${it.unlock.fr}`, `Finish ${it.unlock.en}`)}</span> : it.price === 0 ? <span className="text-xs font-semibold text-mint-600">{t("Gratuit", "Free")}</span> : <span className="flex items-center gap-1 text-sm font-bold">{it.price}<CoinIcon size={14} /></span>}
                           <Badge tone={RARITY_TONE[it.rarity]} className="text-[10px]">{it.rarity}</Badge>
                         </div>
                       </div>
