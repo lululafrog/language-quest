@@ -4,13 +4,13 @@ import { useRouter } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
 import { getDb, todayKey } from "@/lib/db";
 import { cardFromEnrichment, cardFromLocal, enrichTerm, ensureImage, findDuplicate, guessKind, lemmaOf, saveCard, type EnrichResponse } from "@/lib/cards";
-import { postApi, errorMessage } from "@/lib/api";
+import { postApi, errorMessage, ApiError } from "@/lib/api";
 import { THEMES, themeEmoji, themeLabel } from "@/lib/data/types";
 import { tokenize } from "@/lib/text";
 import { useStatus } from "@/hooks/useStatus";
 import { useSettings } from "@/hooks/useSettings";
 import { useT } from "@/hooks/useT";
-import { Badge, Button, ErrorNote, PageHeader, Panel, ProgressBar, Segmented, ServiceNotice, SpeakButton, Spinner, cx, toast } from "@/components/ui";
+import { Badge, Button, ErrorNote, PageHeader, Panel, ProgressBar, Segmented, SpeakButton, Spinner, cx, toast } from "@/components/ui";
 import type { Card } from "@/lib/types";
 import { uid } from "@/lib/db";
 
@@ -19,7 +19,7 @@ interface Draft {
   input: string;
   status: "loading" | "ready" | "error";
   card?: Card;
-  enrichment?: EnrichResponse;
+  enrichment?: EnrichResponse & { engine?: "ai" | "local" };
   duplicate?: Card;
   error?: string;
 }
@@ -66,7 +66,7 @@ export default function AddCardPage() {
     for (const d of drafts) {
       if (d.status !== "ready" || !d.card) continue;
       const r = await saveCard(d.card);
-      if (s.autoImages && status?.images) void ensureImage(r.card, d.enrichment?.imagePrompt);
+      if (s.autoImages && status?.images && d.enrichment?.engine !== "local") void ensureImage(r.card, d.enrichment?.imagePrompt);
       n++;
     }
     setSaving(false);
@@ -99,7 +99,7 @@ export default function AddCardPage() {
       />
 
       {status && !status.ai && mode !== "manual" && (
-        <div className="mb-4"><ServiceNotice service={t("L'enrichissement automatique", "Automatic enrichment")}>{t("En attendant, utilisez l'ajout manuel : les mots présents dans le lexique intégré sont complétés automatiquement.", "Meanwhile use manual mode.")}</ServiceNotice></div>
+        <p className="mb-4 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">{t("L'analyse IA est momentanément indisponible : les fiches sont complétées avec le lexique intégré, le dictionnaire libre et une traduction automatique simple. Vérifie la traduction avant d'enregistrer.", "AI is unavailable: cards are completed with the built-in lexicon, a free dictionary and simple machine translation.")}</p>
       )}
 
       {mode === "text" && (
@@ -112,11 +112,11 @@ export default function AddCardPage() {
             className="w-full resize-y rounded-xl border border-line bg-surface-2 p-3 outline-none focus:border-ink-400"
           />
           <input value={context} onChange={(e) => setContext(e.target.value)} placeholder={t("Contexte (facultatif) : la phrase où vous l'avez vu", "Context (optional): the sentence where you saw it")} className="mt-2 w-full rounded-xl border border-line bg-surface-2 px-3 py-2 text-sm outline-none focus:border-ink-400" />
-          <Button className="mt-3 w-full sm:w-auto" disabled={!text.trim() || !status?.ai} onClick={() => enrichAll(text.split("\n"))}>{t("Enrichir avec l'IA", "Enrich with AI")}</Button>
+          <Button className="mt-3 w-full sm:w-auto" disabled={!text.trim()} onClick={() => enrichAll(text.split("\n"))}>{status && !status.ai ? t("Compléter les fiches", "Complete the cards") : t("Enrichir avec l'IA", "Enrich with AI")}</Button>
         </Panel>
       )}
 
-      {mode === "image" && <ScreenshotImport onPick={(items) => enrichAll(items)} disabled={!status?.ai} />}
+      {mode === "image" && <ScreenshotImport onPick={(items) => enrichAll(items)} disabled={false} />}
       {mode === "manual" && <ManualAdd onSaved={() => router.refresh()} />}
 
       {drafts.length > 0 && (
@@ -157,7 +157,15 @@ function DraftCard({ d, onChange, onRemove, immersion }: { d: Draft; onChange: (
             <SpeakButton text={c.term} accent="en-GB" label="UK" size={15} />
             <SpeakButton text={c.term} accent="en-US" label="US" size={15} />
           </div>
-          <p className="text-sm text-muted"><span className="font-mono">{e.ipaUK}</span> · <span className="font-mono">{e.ipaUS}</span> · {c.pos} · {e.frequency} · {t("niveau", "level")} {c.difficulty}/5 · {c.register}</p>
+          {e.engine === "local" ? (
+            <p className="text-sm text-muted">
+              {e.ipaUK && <span className="font-mono">{e.ipaUK} · </span>}
+              {c.pos && `${c.pos} · `}
+              <span className="font-medium text-sun-600">{t("Fiche complétée sans IA — vérifie la traduction", "Completed without AI — check the translation")}</span>
+            </p>
+          ) : (
+            <p className="text-sm text-muted"><span className="font-mono">{e.ipaUK}</span> · <span className="font-mono">{e.ipaUS}</span> · {c.pos} · {e.frequency} · {t("niveau", "level")} {c.difficulty}/5 · {c.register}</p>
+          )}
         </div>
         <Button variant="ghost" size="sm" onClick={onRemove} aria-label={t("Retirer", "Remove")}>✕</Button>
       </div>
@@ -208,9 +216,17 @@ function ScreenshotImport({ onPick, disabled }: { onPick: (items: string[]) => v
     if (!file.type.startsWith("image/")) return setError(t("Ce fichier n'est pas une image.", "Not an image."));
     setBusy(true);
     try {
-      const data = await fileToBase64(file);
-      const r = await postApi<{ text: string }>("/api/ai/ocr", { image: { data, mediaType: file.type } });
-      setExtracted(r.text);
+      let text: string;
+      try {
+        const data = await fileToBase64(file);
+        text = (await postApi<{ text: string }>("/api/ai/ocr", { image: { data, mediaType: file.type } })).text;
+      } catch (err) {
+        if (!(err instanceof ApiError) || err.status === 400) throw err;
+        // online reading unavailable → read the text on the device (free, private)
+        const { readTextOnDevice } = await import("@/lib/ocr");
+        text = (await readTextOnDevice(file)).text;
+      }
+      setExtracted(text);
       setSelected([]);
     } catch (e) {
       setError(errorMessage(e));
@@ -232,7 +248,7 @@ function ScreenshotImport({ onPick, disabled }: { onPick: (items: string[]) => v
 
   return (
     <Panel>
-      <p className="text-sm text-muted">{t("Importez ou collez une capture d'écran d'une conversation en anglais. Le texte est extrait par l'IA ; l'image n'est pas conservée.", "Import or paste a screenshot. The image is not stored.")}</p>
+      <p className="text-sm text-muted">{t("Importez ou collez une capture d'écran d'une conversation en anglais. Le texte est extrait automatiquement (par l'IA, ou directement sur ton appareil si elle est indisponible) ; l'image n'est pas conservée.", "Import or paste a screenshot. The image is not stored.")}</p>
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
       <Button className="mt-3" variant="outline" disabled={disabled || busy} loading={busy} onClick={() => fileRef.current?.click()}>{t("Choisir une image", "Choose an image")}</Button>
       <ErrorNote>{error}</ErrorNote>

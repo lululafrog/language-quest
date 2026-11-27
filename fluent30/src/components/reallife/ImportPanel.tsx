@@ -32,6 +32,7 @@ export function ImportPanel() {
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [ocr, setOcr] = useState<{ busy: boolean; progress: number; done: boolean }>({ busy: false, progress: 0, done: false });
   const notice = params.get("shareFailed") ? "L'image partagée n'a pas pu être reçue. Ouvre l'app une fois puis réessaie, ou importe-la ici." : "";
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -121,6 +122,25 @@ export function ImportPanel() {
     }
   };
 
+  /** Reads the text of the image on the device (no upload) and switches to a text import. */
+  const readLocally = async () => {
+    if (!file) return;
+    setErr("");
+    setOcr({ busy: true, progress: 0, done: false });
+    try {
+      const { readTextOnDevice } = await import("@/lib/ocr");
+      const r = await readTextOnDevice(file, (p) => setOcr((o) => ({ ...o, progress: p })));
+      setText((t) => (t.trim() ? `${r.text}\n\n${t}` : r.text));
+      setKind("text");
+      setFile(null);
+      setPreview(null);
+      setOcr({ busy: false, progress: 1, done: true });
+    } catch (e) {
+      setErr(errorMessage(e));
+      setOcr({ busy: false, progress: 0, done: false });
+    }
+  };
+
   const isImage = kind === "screenshot" || kind === "photo";
   const canSubmit = !busy && !transcribing && (isImage ? !!file : !!text.trim());
 
@@ -156,6 +176,16 @@ export function ImportPanel() {
               <button type="button" onClick={() => { setFile(null); setPreview(null); }} className="absolute right-2 top-2 rounded-full bg-black/55 p-1.5 text-white" aria-label="Retirer l'image">
                 <Icon name="trash" size={16} />
               </button>
+            </div>
+          ) : null}
+          {preview ? (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Button variant="secondary" size="sm" onClick={readLocally} loading={ocr.busy}>
+                <Icon name="eye" size={16} /> Lire le texte sur l&apos;appareil
+              </Button>
+              <span className="text-xs text-muted">
+                {ocr.busy ? `Lecture… ${Math.round(ocr.progress * 100)} %` : "Gratuit et privé : l'image n'est pas envoyée. Idéal pour une capture de texte."}
+              </span>
             </div>
           ) : (
             <button type="button" onClick={() => fileInput.current?.click()} className="flex w-full flex-col items-center gap-2 rounded-2xl border border-dashed border-ink-200 px-4 py-8 text-sm font-medium text-fg/70 transition hover:border-ink-400 dark:border-ink-800">
@@ -201,6 +231,7 @@ export function ImportPanel() {
         className="w-full rounded-2xl border border-line bg-surface px-4 py-3 text-[16px] outline-none transition focus:border-ink-400 focus:ring-2 focus:ring-ink-200 dark:focus:ring-ink-800"
       />
 
+      {ocr.done && kind === "text" && <p className="text-xs text-mint-600">Texte lu sur ton appareil — vérifie-le, puis lance l&apos;analyse.</p>}
       {err && <ErrorNote>{err}</ErrorNote>}
       <Button size="lg" className="w-full" onClick={submit} disabled={!canSubmit} loading={busy}>
         <Icon name="sparkle" size={18} /> Analyser et créer ma leçon

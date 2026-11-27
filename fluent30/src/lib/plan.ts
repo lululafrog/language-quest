@@ -33,11 +33,13 @@ export const AI_FEATURE_LABEL: Record<AiFeature, string> = {
   health: "Tests de santé (admin)",
 };
 
-export const PLAN: Record<PlanId, { label: string; dailyAi: Partial<Record<AiFeature, number>> }> = {
+export const PLAN: Record<PlanId, { label: string; dailyAi: Partial<Record<AiFeature, number>>; monthlyAi?: Partial<Record<AiFeature, number>> }> = {
   free: {
     label: "Gratuit",
     // Per user (or IP) and per day. Features not listed are only protected by the per-minute rate limit and the budget caps.
     dailyAi: { reallife: 40, journal: 20, memories: 20, chat: 200, images: 30, reader: 200, novel: 10, identify: 30, ocr: 40, transcribe: 60 },
+    // Monthly caps keep the average cost per active learner low (see the per-user monthly budget too).
+    monthlyAi: { reallife: 150, journal: 90, memories: 60, chat: 1500, images: 200, reader: 1500, novel: 20, identify: 120, ocr: 150, transcribe: 400, assess: 30, report: 60 },
   },
   premium: {
     label: "Premium (non activé)",

@@ -48,7 +48,7 @@ export function cardFromSeed(w: SeedWord, source: Card["source"] = "seed"): Card
   const now = Date.now();
   const kind = guessKind(w.en, w.pos);
   return {
-    id: uid("c"), term: w.en, lemma: lemmaOf(w.en), kind, fr: w.fr, pos: w.pos, ipa: w.ipa, example: w.ex, exampleFr: w.exFr,
+    id: uid("c"), term: w.en, lemma: lemmaOf(w.en), kind, fr: w.fr, pos: w.pos, ipa: w.ipa, definition: w.def, example: w.ex, exampleFr: w.exFr,
     themes: [...new Set([...(w.themes ?? []), ...guessThemes(w.en, w.pos)])].filter((t, _i, all) => t !== "daily" || all.length === 1).slice(0, 3), frequencyRank: w.rank || undefined, tier: w.rank ? tierOf(w.rank) : undefined,
     difficulty: !w.rank ? 2 : w.rank <= 500 ? 1 : w.rank <= 1000 ? 2 : w.rank <= 2000 ? 3 : 4, source, enriched: true, createdAt: now, updatedAt: now,
   };
@@ -124,6 +124,15 @@ export async function quickAdd(term: string, opts: { fr?: string; context?: stri
   const dup = await findDuplicate(term);
   if (dup) {
     const r = await saveCard({ ...dup, term }, {});
+    return { ...r, usedAI: false };
+  }
+  // Local-first: words and expressions of the shared lexicon (3,000 most frequent) need no AI call.
+  const local = lookupLocal(term);
+  const seed = local && local.source !== "irregular" ? seedByLemma(local.lemma) : undefined;
+  if (seed && (term.trim().split(/\s+/).length === 1 || normalize(seed.en) === normalize(term))) {
+    const card = cardFromSeed(seed, opts.source ?? "user");
+    if (opts.fr) card.fr = opts.fr; // contextual meaning chosen by the learner
+    const r = await saveCard(card);
     return { ...r, usedAI: false };
   }
   try {

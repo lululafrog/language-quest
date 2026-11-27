@@ -1,5 +1,6 @@
-// Local (offline) dictionary built from verified seed data. Used by the reader popup,
-// games and as a fallback when no AI key is configured.
+// Local (offline) dictionary built from the shared seed lexicon (3,000 most frequent words + core verbs).
+// LOCAL-FIRST: the reader popup, the translator and quick-add use it instantly and at no cost;
+// the network / AI is only called for what it cannot answer (context-specific meaning, rare words).
 import { SEED_VOCAB, seedByLemma } from "./data/vocab";
 import { CORE_VERBS } from "./data/verbs";
 import { IRREGULAR_VERBS } from "./data/irregular";
@@ -11,6 +12,7 @@ export interface LocalEntry {
   fr: string;
   pos?: string;
   ipa?: string;
+  def?: string; // simple English learner definition
   example?: string;
   exampleFr?: string;
   forms?: Record<string, string>;
@@ -24,8 +26,10 @@ export interface LocalEntry {
 const irregularByBase = new Map(IRREGULAR_VERBS.map((v) => [v[0], v]));
 
 export function lookupLocal(word: string): LocalEntry | null {
-  const clicked = word.toLowerCase();
-  for (const cand of lemmaCandidates(word)) {
+  const clicked = word.toLowerCase().trim();
+  // Multi-word entries (phrasal verbs, expressions) are looked up as a whole.
+  const cands = clicked.includes(" ") ? [clicked.replace(/^to /, "")] : lemmaCandidates(word);
+  for (const cand of cands) {
     const verb = CORE_VERBS.find((v) => v.base === cand);
     const seed = seedByLemma(cand);
     const irr = irregularByBase.get(cand);
@@ -35,6 +39,7 @@ export function lookupLocal(word: string): LocalEntry | null {
       fr: verb?.fr ?? seed?.fr ?? irr?.[3] ?? "",
       pos: seed?.pos ?? (verb || irr ? "verb" : undefined),
       ipa: verb?.ipa ?? seed?.ipa,
+      def: seed?.def,
       example: seed?.ex ?? verb?.meanings[0]?.example,
       exampleFr: seed?.exFr ?? verb?.meanings[0]?.exampleFr,
       rank: seed?.rank,
@@ -72,4 +77,10 @@ export function textDifficulty(words: string[]): { level: string; unknownShare: 
   const s = share + (avgLen - 4) * 0.03;
   const level = s < 0.08 ? "A1" : s < 0.13 ? "A2" : s < 0.19 ? "B1" : s < 0.25 ? "B2" : s < 0.32 ? "C1" : "C2";
   return { level, unknownShare: share };
+}
+
+/** True when the term (word or expression) is fully covered by the shared lexicon: no AI needed. */
+export function isInSharedLexicon(term: string): boolean {
+  const e = lookupLocal(term);
+  return !!e && e.source !== "irregular" && !!e.fr;
 }

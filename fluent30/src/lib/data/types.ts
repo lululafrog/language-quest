@@ -10,6 +10,7 @@ export interface SeedWord {
   exFr?: string; // French translation of the example
   themes?: string[]; // theme ids from THEMES
   ipa?: string; // British IPA
+  def?: string; // simple English learner definition (≤ 12 words)
 }
 
 export const TIERS = [

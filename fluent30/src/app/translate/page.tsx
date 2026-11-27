@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { postApi, ApiError, errorMessage } from "@/lib/api";
 import { trackActivity, recordMistake } from "@/lib/track";
 import { normalize } from "@/lib/text";
+import { lookupLocal, type LocalEntry } from "@/lib/lexicon";
+import { quickAdd } from "@/lib/cards";
 import { REGISTERS } from "@/lib/data/scenarios";
 import { Button, PageHeader, Panel, Segmented, ServiceNotice, ErrorNote, SpeakButton, Badge, toast, cx } from "@/components/ui";
 import { AddToCards } from "@/components/chat/AddToCards";
@@ -115,10 +117,22 @@ function Received() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function analyse() {
-    setLoading(true);
+  const [localHit, setLocalHit] = useState<LocalEntry | null>(null);
+
+  async function analyse(force = false) {
     setError(null);
     setRes(null);
+    setLocalHit(null);
+    // Local-first: a single word or a known expression is answered by the built-in dictionary, instantly and offline.
+    const q = text.trim().replace(/[.!?]+$/, "");
+    if (!force && !image && q && q.split(/\s+/).length <= 4) {
+      const hit = lookupLocal(q);
+      if (hit?.fr) {
+        setLocalHit(hit);
+        return;
+      }
+    }
+    setLoading(true);
     try {
       const r = await postApi<TranslateResult>(
         "/api/ai/translate",
@@ -150,7 +164,7 @@ function Received() {
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
           <Button variant="outline" onClick={() => fileRef.current?.click()}>🖼️ {t("Importer une capture", "Import a screenshot")}</Button>
           <span className="text-xs text-muted">{t("ou collez-la (Ctrl/⌘+V)", "or paste it (Ctrl/⌘+V)")}</span>
-          <Button className="ml-auto" onClick={analyse} loading={loading} disabled={!text.trim() && !image}>{t("Traduire et expliquer", "Translate & explain")}</Button>
+          <Button className="ml-auto" onClick={() => analyse()} loading={loading} disabled={!text.trim() && !image}>{t("Traduire et expliquer", "Translate & explain")}</Button>
         </div>
         {image && (
           <div className="mt-3 flex items-start gap-3">
@@ -163,6 +177,8 @@ function Received() {
       </Panel>
 
       <ErrorNote>{error}</ErrorNote>
+
+      {localHit && <LocalAnswer entry={localHit} onFull={() => analyse(true)} />}
 
       {res && (
         <div className="space-y-4 animate-fade">
@@ -324,4 +340,36 @@ function Correct() {
 function grammarHref(topic: string) {
   const l = grammarLessonForTopic(topic);
   return l ? `/grammar/${l.id}` : "/grammar";
+}
+
+function LocalAnswer({ entry, onFull }: { entry: LocalEntry; onFull: () => void }) {
+  const t = useT();
+  const [added, setAdded] = useState(false);
+  return (
+    <Panel className="space-y-2 animate-fade">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="text-lg font-semibold">
+            {entry.lemma} {entry.ipa && <span className="text-sm font-normal text-muted">{entry.ipa}</span>}
+          </p>
+          <p className="text-[16px]">{entry.fr}</p>
+          {entry.def && <p className="text-sm text-muted">{entry.def}</p>}
+        </div>
+        <SpeakButton text={entry.lemma} size={18} />
+      </div>
+      {entry.example && (
+        <p className="text-sm">
+          <span className="italic">{entry.example}</span>
+          {entry.exampleFr && <span className="block text-muted">{entry.exampleFr}</span>}
+        </p>
+      )}
+      <p className="text-xs text-muted">{t("Réponse du dictionnaire intégré (hors ligne, instantanée).", "Answer from the built-in dictionary (offline, instant).")}</p>
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" disabled={added} onClick={async () => { await quickAdd(entry.lemma, { source: "translator" }); setAdded(true); toast(t("Ajouté à tes cartes", "Added to your cards")); }}>
+          {added ? t("Ajouté", "Added") : t("Ajouter à mes cartes", "Add to my cards")}
+        </Button>
+        <Button size="sm" variant="outline" onClick={onFull}>{t("Analyse complète du message", "Full analysis of the message")}</Button>
+      </div>
+    </Panel>
+  );
 }

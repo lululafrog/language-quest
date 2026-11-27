@@ -68,6 +68,10 @@ export function WordPopup({ word, sentence, onClose, properNoun, bookTitle }: { 
   const [img, setImg] = useState<string | null>(null);
   const [free, setFree] = useState<{ translation: string; alternatives: string[] } | null>(null);
   const [imgLoading, setImgLoading] = useState(false);
+  // Local-first: the shared lexicon answers instantly; the AI (paid) is only asked for the meaning
+  // in this precise sentence when the learner taps "Sens dans ce contexte" — or for words the lexicon doesn't know.
+  const [contextFor, setContextFor] = useState<string | null>(null);
+  const wantContext = !local || contextFor === `${word}|${sentence}`;
 
   const lemma = ai?.lemma?.toLowerCase() || baseLemma;
   const existing = useLiveQuery(() => findDuplicate(lemma), [lemma]);
@@ -86,6 +90,7 @@ export function WordPopup({ word, sentence, onClose, properNoun, bookTitle }: { 
 
   // AI contextual translation
   useEffect(() => {
+    if (!wantContext) return;
     if (status && !status.ai) return;
     if (!status) return;
     let alive = true;
@@ -95,7 +100,7 @@ export function WordPopup({ word, sentence, onClose, properNoun, bookTitle }: { 
     return () => {
       alive = false;
     };
-  }, [word, sentence, status]);
+  }, [word, sentence, status, wantContext]);
 
   // Free automatic translation when the AI isn't available and the word isn't in the built-in lexicon.
   const needFree = !local && !!status && (!status.ai || !!aiError);
@@ -110,7 +115,7 @@ export function WordPopup({ word, sentence, onClose, properNoun, bookTitle }: { 
     };
   }, [needFree, baseLemma]);
 
-  const aiLoading = !!status?.ai && !ai && !aiError;
+  const aiLoading = wantContext && !!status?.ai && !ai && !aiError;
   const fr = ai?.contextualFr || local?.fr || free?.translation || "";
   const ipa = ai?.ipa || dict?.ipa || local?.ipa;
   const pos = ai?.pos || local?.pos || dict?.meanings[0]?.pos;
@@ -192,15 +197,20 @@ export function WordPopup({ word, sentence, onClose, properNoun, bookTitle }: { 
             <p className="text-xs font-medium uppercase tracking-wide text-muted">{ai ? t("Traduction dans ce contexte", "Translation in context") : t("Traduction", "Translation")}</p>
             <p className="mt-0.5 text-xl font-semibold">{fr || (aiLoading ? "…" : t("Pas dans le dictionnaire hors ligne", "Not in the offline dictionary"))}</p>
             {!ai && !local && free && <p className="mt-0.5 text-xs text-muted">{free.alternatives.length ? `${t("Autres sens", "Other meanings")} : ${free.alternatives.join(", ")} · ` : ""}{t("traduction automatique, hors contexte", "machine translation, out of context")}</p>}
-            {ai?.definition && <p className="mt-1 text-sm text-muted">{ai.definition}</p>}
-            {!ai?.definition && dict?.meanings[0]?.definitions[0] && <p className="mt-1 text-sm text-muted">{dict.meanings[0].definitions[0].definition}</p>}
+            {(ai?.definition || local?.def) && <p className="mt-1 text-sm text-muted">{ai?.definition || local?.def}</p>}
+            {!ai?.definition && !local?.def && dict?.meanings[0]?.definitions[0] && <p className="mt-1 text-sm text-muted">{dict.meanings[0].definitions[0].definition}</p>}
+            {!wantContext && status?.ai && (
+              <button type="button" onClick={() => setContextFor(`${word}|${sentence}`)} className="mt-2 text-sm font-semibold text-ink-600 hover:underline dark:text-ink-300">
+                {t("Sens dans ce contexte", "Meaning in this context")}
+              </button>
+            )}
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element -- local data URL */}
           {picture && <img src={picture} alt="" className="h-24 w-24 shrink-0 rounded-xl border border-line object-cover" />}
         </div>
 
         {aiLoading && <p className="flex items-center gap-2 text-sm text-muted"><Spinner className="h-4 w-4" /> {t("Analyse du contexte…", "Analysing context…")}</p>}
-        {status && !status.ai && <p className="text-xs text-muted">{t("Traduction générale du mot : la traduction adaptée à la phrase est momentanément indisponible.", "General translation: contextual translation is unavailable for now.")}</p>}
+        {wantContext && status && !status.ai && <p className="text-xs text-muted">{t("Traduction générale du mot : la traduction adaptée à la phrase est momentanément indisponible.", "General translation: contextual translation is unavailable for now.")}</p>}
         {aiError && !(aiError instanceof ApiError && aiError.notConfigured) && <ErrorNote>{errorMessage(aiError)}</ErrorNote>}
 
         {ai?.isPartOfExpression && (
