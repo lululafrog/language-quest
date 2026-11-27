@@ -74,7 +74,7 @@ export async function analyseEntry(entry: JournalEntry, level: string): Promise<
   const a = await postApi<JournalAnalysis>("/api/ai/journal", { text: entry.text, level });
   const firstAnalysis = !entry.versions;
   await getDb().journal.update(entry.id, {
-    versions: { corrected: a.corrected, natural: a.natural, notes: a.notes.map((n) => ({ from: n.from, to: n.to, why: n.why, tag: n.kind === "error" ? n.tag : undefined })) },
+    versions: { corrected: a.corrected, natural: a.natural, notes: a.notes.map((n) => ({ from: n.from, to: n.to, why: n.why, tag: n.kind === "error" ? n.tag : undefined })), pending: a.expressions },
   });
   if (firstAnalysis) {
     const seen = new Set<string>();
@@ -90,7 +90,12 @@ export async function analyseEntry(entry: JournalEntry, level: string): Promise<
 export async function keepExpressions(entry: JournalEntry, items: { en: string; fr: string }[], context?: string) {
   const ids: string[] = [];
   for (const it of items) ids.push(await addPersonalCard(it.en, it.fr, { source: "journal", journalId: entry.id, context }));
-  await getDb().journal.update(entry.id, { keptCardIds: [...new Set([...(entry.keptCardIds ?? []), ...ids])] });
+  const cur = await getDb().journal.get(entry.id);
+  const kept = new Set(items.map((i) => i.en));
+  await getDb().journal.update(entry.id, {
+    keptCardIds: [...new Set([...(cur?.keptCardIds ?? entry.keptCardIds ?? []), ...ids])],
+    ...(cur?.versions ? { versions: { ...cur.versions, pending: (cur.versions.pending ?? []).filter((p) => !kept.has(p.en)) } } : {}),
+  });
   return ids;
 }
 

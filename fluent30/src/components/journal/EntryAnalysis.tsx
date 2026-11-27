@@ -62,14 +62,15 @@ export function EntryAnalysis({ entry }: { entry: JournalEntry }) {
     }
   };
 
+  // expressions suggested by the last analysis (kept in the entry, so they survive a reload)
+  const exprs = fresh ? fresh.expressions : (v?.pending ?? []);
   const keep = async () => {
-    if (!fresh) return;
     setSaving(true);
-    const items = fresh.expressions.filter((_, i) => picked.has(i));
-    await keepExpressions(entry, items, fresh.natural.slice(0, 200));
+    const items = exprs.filter((_, i) => picked.has(i));
+    await keepExpressions(entry, items, (fresh?.natural ?? v?.natural ?? "").slice(0, 200));
     toast(`${items.length} expression${items.length > 1 ? "s" : ""} ajoutée${items.length > 1 ? "s" : ""} à tes cartes`);
     setPicked(new Set());
-    setFresh({ ...fresh, expressions: fresh.expressions.filter((_, i) => !picked.has(i)) });
+    if (fresh) setFresh({ ...fresh, expressions: fresh.expressions.filter((_, i) => !picked.has(i)) });
     setSaving(false);
   };
 
@@ -162,10 +163,10 @@ export function EntryAnalysis({ entry }: { entry: JournalEntry }) {
         </Panel>
       )}
 
-      {fresh && fresh.expressions.length > 0 && (
+      {exprs.length > 0 && (
         <Panel className="space-y-2">
           <h3 className="font-semibold">Expressions à garder</h3>
-          {fresh.expressions.map((x, i) => (
+          {exprs.map((x, i) => (
             <label key={i} className="flex items-start gap-3 rounded-2xl border border-line px-3 py-2">
               <input
                 type="checkbox"

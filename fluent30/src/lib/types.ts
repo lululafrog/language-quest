@@ -435,7 +435,7 @@ export interface JournalEntry {
   mediaKeys?: string[]; // photos (local)
   audioKey?: string; // voice recording (local)
   monthly?: boolean; // the monthly "same topic" oral check
-  versions?: { corrected: string; natural: string; notes: { from: string; to: string; why: string; tag?: string }[] };
+  versions?: { corrected: string; natural: string; notes: { from: string; to: string; why: string; tag?: string }[]; pending?: { en: string; fr: string }[] };
   keptCardIds: string[];
   createdAt: number;
   updatedAt: number;

@@ -508,7 +508,7 @@ function renderFaceItem(sp: Spec): ReactNode {
 function renderTop(sp: Spec, ctx: Ctx): ReactNode {
   const c = sp.c ?? "#FFFFFF";
   const pid = `${ctx.uid}top`;
-  const p = sp.k === "hawaii" ? "flowers" : sp.k === "stripes" ? "stripes" : sp.k === "plaid" ? "plaid" : sp.p;
+  const p = sp.k === "hawaii" ? "flowers" : sp.k === "stripes" || sp.k === "stripesLong" ? "stripes" : sp.k === "plaid" ? "plaid" : sp.p;
   const fill = fillOf(pid, p, c);
   const textColor = sp.k === "tank" ? "#FFD166" : sp.c2 ?? (c === "#FFFFFF" || c.startsWith("#F") ? "#1A1740" : "#FFFFFF");
   return (
@@ -519,11 +519,42 @@ function renderTop(sp: Spec, ctx: Ctx): ReactNode {
       ) : (
         <path d={ctx.torso} fill={fill} stroke={O} strokeWidth={W} strokeLinejoin="round" />
       )}
-      {sp.k !== "tank" && <path d="M88 102 Q100 113 112 102" stroke={O} strokeWidth="2" fill={shade(c, -0.08)} />}
+      {sp.k !== "tank" && sp.k !== "turtleneck" && sp.k !== "shirt" && <path d="M88 102 Q100 113 112 102" stroke={O} strokeWidth="2" fill={shade(c, -0.08)} />}
+      {sp.k === "sweater" && (
+        <>
+          <path d="M67 164 Q100 170 133 164 L133 172 Q100 178 67 172Z" fill={shade(c, -0.1)} stroke={O} strokeWidth="1.6" />
+          {sp.t === "fairisle" ? (
+            <g>
+              <path d="M68 124 L132 124 M68 140 L132 140" stroke={sp.c2 ?? "#C9785A"} strokeWidth="3" />
+              {[74, 86, 98, 110, 122].map((x) => <path key={x} d={`M${x} 132 l4 -5 l4 5 l-4 5Z`} fill={sp.c2 ?? "#C9785A"} />)}
+            </g>
+          ) : (
+            [80, 92, 104, 116].map((x) => <path key={x} d={`M${x} 114 Q${x + 2} 138 ${x} 162`} stroke={shade(c, -0.12)} strokeWidth="1.4" fill="none" />)
+          )}
+        </>
+      )}
+      {sp.k === "hoodie" && (
+        <>
+          <path d="M80 104 Q76 92 88 90 L112 90 Q124 92 120 104 Q100 116 80 104Z" fill={shade(c, -0.12)} stroke={O} strokeWidth="1.8" />
+          <path d="M94 110 L93 128 M106 110 L107 128" stroke={sp.c2 ?? "#FBF7F0"} strokeWidth="1.8" strokeLinecap="round" />
+          <path d="M80 150 L120 150 L124 168 L76 168Z" fill={shade(c, -0.08)} stroke={O} strokeWidth="1.6" strokeLinejoin="round" />
+          {sp.t && <text x="100" y="144" textAnchor="middle" fontSize="13" fontWeight="900" fill={sp.c2 ?? "#FBF7F0"} fontFamily="system-ui, sans-serif">{sp.t}</text>}
+        </>
+      )}
+      {sp.k === "turtleneck" && <path d="M86 96 Q100 92 114 96 L115 108 Q100 112 85 108Z" fill={shade(c, -0.06)} stroke={O} strokeWidth="1.8" />}
+      {sp.k === "shirt" && (
+        <>
+          <path d="M86 101 L100 116 L114 101 L110 97 L100 107 L90 97Z" fill={shade(c, -0.1)} stroke={O} strokeWidth="1.6" strokeLinejoin="round" />
+          <path d="M100 116 L100 172" stroke={shade(c, -0.22)} strokeWidth="1.4" />
+          {[126, 138, 150, 162].map((y) => <circle key={y} cx="103" cy={y} r="1.5" fill={shade(c, -0.35)} />)}
+          <rect x="108" y="122" width="12" height="10" rx="1.5" fill="none" stroke={shade(c, -0.22)} strokeWidth="1.3" />
+        </>
+      )}
+      {sp.k === "rashguard" && <path d="M68 128 Q100 136 132 128 L133 142 Q100 150 67 142Z" fill={sp.c2 ?? "#E9C46A"} opacity="0.9" />}
       {sp.k === "polo" && <><path d="M86 104 L100 116 L114 104 L110 100 L100 108 L90 100Z" fill={shade(c, -0.15)} stroke={O} strokeWidth="1.8" /><circle cx="100" cy="124" r="1.8" fill={O} /><circle cx="100" cy="132" r="1.8" fill={O} /></>}
       {sp.k === "hawaii" && <path d="M86 104 L100 122 L114 104" stroke={O} strokeWidth={W} fill={shade(c, -0.15)} strokeLinejoin="round" />}
       {sp.k === "football" && <><path d="M88 104 L100 114 L112 104" stroke="#fff" strokeWidth="4" fill="none" /><text x="100" y="152" textAnchor="middle" fontSize="24" fontWeight="900" fill="#fff" fontFamily="system-ui, sans-serif">{sp.t}</text></>}
-      {sp.t && sp.k !== "football" && <text x="100" y="146" textAnchor="middle" fontSize={sp.t.length > 5 ? 10.5 : 15} fontWeight="900" fill={textColor} fontFamily="system-ui, sans-serif">{heart(sp.t)}</text>}
+      {sp.t && !["football", "hoodie", "sweater"].includes(sp.k) && <text x="100" y="146" textAnchor="middle" fontSize={sp.t.length > 5 ? 10.5 : 15} fontWeight="900" fill={textColor} fontFamily="system-ui, sans-serif">{heart(sp.t)}</text>}
       {torsoShade}
       {torsoGloss}
     </g>
@@ -612,6 +643,39 @@ function renderOuter(sp: Spec, ctx: Ctx): ReactNode {
           <circle cx="100" cy="138" r="1.8" fill={O} />
         </g>
       );
+    case "hoodieZip":
+    case "fleece":
+    case "souvenir":
+    case "raincoat": {
+      const long = sp.k === "raincoat";
+      return (
+        <g>
+          {sleeves(c)}
+          <path d={long ? "M68 116 Q70 103 86 101 L114 101 Q130 103 132 116 L137 190 Q100 196 63 190Z" : ctx.torso} fill={c} stroke={O} strokeWidth={W} strokeLinejoin="round" />
+          <path d={`M100 104 L100 ${long ? 192 : 172}`} stroke={dark} strokeWidth="2" />
+          {sp.k === "fleece" && <path d="M86 98 Q100 94 114 98 L114 108 Q100 104 86 108Z" fill={shade(c, -0.1)} stroke={O} strokeWidth="1.6" />}
+          {sp.k === "hoodieZip" && <path d="M80 104 Q76 92 88 90 L112 90 Q124 92 120 104 Q100 112 80 104Z" fill={shade(c, -0.12)} stroke={O} strokeWidth="1.8" />}
+          {sp.k === "raincoat" && (
+            <>
+              <path d="M78 104 Q74 88 88 86 L112 86 Q126 88 122 104 Q100 112 78 104Z" fill={shade(c, -0.1)} stroke={O} strokeWidth="1.8" />
+              {[120, 140, 160].map((y) => <circle key={y} cx="106" cy={y} r="2.2" fill={dark} />)}
+              <path d="M70 150 L86 150 M114 150 L130 150" stroke={dark} strokeWidth="2" />
+            </>
+          )}
+          {sp.k === "souvenir" && (
+            <>
+              <path d="M88 102 Q100 112 112 102" stroke={sp.c2 ?? "#E9C46A"} strokeWidth="4" fill="none" />
+              <path d="M66 166 Q100 172 134 166" stroke={sp.c2 ?? "#E9C46A"} strokeWidth="5" fill="none" />
+              {/* embroidered wave & sun motif */}
+              <circle cx="117" cy="128" r="7" fill={sp.c2 ?? "#E9C46A"} opacity="0.9" />
+              <path d="M74 146 Q80 138 86 146 Q92 138 98 146" stroke="#FBF7F0" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+              <path d="M66 126 Q100 118 134 126" stroke="#fff" strokeWidth="3" opacity="0.18" fill="none" />
+            </>
+          )}
+          {torsoShade}
+        </g>
+      );
+    }
     default: {
       // jacket (open front, long sleeves)
       return (
@@ -639,6 +703,28 @@ function renderOuter(sp: Spec, ctx: Ctx): ReactNode {
 function renderDress(sp: Spec, ctx: Ctx): ReactNode {
   const c = sp.c ?? "#E53935";
   const pid = `${ctx.uid}dress`;
+  if (sp.k === "swimsuit") {
+    const fill = fillOf(pid, sp.p, c);
+    return (
+      <g>
+        {patternDefs(pid, sp.p, c, sp.c2)}
+        <path d="M84 102 L86 112 M116 102 L114 112" stroke={c} strokeWidth="4" strokeLinecap="round" />
+        <path d={`M${78 + ctx.sx} 112 Q100 118 ${122 - ctx.sx} 112 Q126 140 ${122 - ctx.sx} 150 Q128 166 120 178 L108 178 Q100 168 92 178 L80 178 Q72 166 ${78 + ctx.sx} 150 Q74 140 ${78 + ctx.sx} 112Z`} fill={fill} stroke={O} strokeWidth={W} strokeLinejoin="round" />
+        {sp.c2 && !sp.p && <path d="M76 140 Q100 146 124 140" stroke={sp.c2} strokeWidth="4" fill="none" />}
+      </g>
+    );
+  }
+  if (sp.k === "wetsuit") {
+    return (
+      <g>
+        <path d={ctx.torso} fill={c} stroke={O} strokeWidth={W} strokeLinejoin="round" />
+        <path d="M68 124 Q100 116 132 124 L132 132 Q100 124 68 132Z" fill={sp.c2 ?? "#4C8DA8"} />
+        <path d="M100 104 L100 172" stroke={shade(c, 0.25)} strokeWidth="2" />
+        <path d="M88 102 Q100 110 112 102" stroke={O} strokeWidth="2" fill={shade(c, 0.1)} />
+        {torsoShade}
+      </g>
+    );
+  }
   const long = sp.k === "dressLong";
   const fill = fillOf(pid, sp.p, c);
   return (
@@ -650,6 +736,19 @@ function renderDress(sp: Spec, ctx: Ctx): ReactNode {
       <path d="M88 105 Q100 114 112 105" stroke={O} strokeWidth="2" fill="none" />
       <path d="M66 146 Q100 152 134 146" stroke={shade(c, -0.3)} strokeWidth="3" fill="none" />
       <path d="M124 150 L136 198" stroke="#000" strokeWidth="8" opacity="0.07" />
+    </g>
+  );
+}
+
+/** Legs of one-piece suits (wetsuit): long dark legs + hips. */
+function renderSuitLegs(sp: Spec): ReactNode {
+  const c = sp.c ?? "#263238";
+  return (
+    <g>
+      <Limb d="M89 160 Q88 190 87 210" w={19} color={c} />
+      <Limb d="M111 160 Q112 190 113 210" w={19} color={c} />
+      <path d="M67 148 Q100 154 133 148 L131 176 Q100 182 69 176Z" fill={c} stroke={O} strokeWidth={W} strokeLinejoin="round" />
+      <path d="M80 196 L94 196 M106 196 L120 196" stroke={sp.c2 ?? "#4C8DA8"} strokeWidth="3" />
     </g>
   );
 }
@@ -686,6 +785,34 @@ function renderBottom(sp: Spec, ctx: Ctx): ReactNode {
           {hips(c)}
         </g>
       );
+    case "sarong": {
+      const pidS = `${ctx.uid}sarong`;
+      return (
+        <g>
+          {patternDefs(pidS, sp.p ?? "flowers", c, sp.c2)}
+          <path d="M67 148 L133 148 L140 206 Q100 212 60 206Z" fill={fillOf(pidS, sp.p ?? "flowers", c)} {...s} />
+          <path d="M126 150 L112 206" stroke={dark} strokeWidth="2" />
+          <path d="M124 150 Q132 158 128 168 Q122 160 124 150Z" fill={dark} stroke={O} strokeWidth="1.4" />
+        </g>
+      );
+    }
+    case "boardshorts": {
+      const pidB = `${ctx.uid}board`;
+      return (
+        <g>
+          {patternDefs(pidB, sp.p, c, sp.c2)}
+          <Limb d="M88 162 Q88 180 87 190" w={26} color={fillOf(pidB, sp.p, c)} />
+          <Limb d="M112 162 Q112 180 113 190" w={26} color={fillOf(pidB, sp.p, c)} />
+          {hips(fillOf(pidB, sp.p, c))}
+          {!sp.p && <path d="M75 156 L75 196 M125 156 L125 196" stroke={sp.c2 ?? "#FBF7F0"} strokeWidth="3" />}
+          <path d="M96 152 L100 160 L104 152" stroke={sp.c2 ?? "#FBF7F0"} strokeWidth="1.6" fill="none" />
+        </g>
+      );
+    }
+    case "longskirt":
+      return <g><path d="M68 148 L132 148 L140 212 Q100 218 60 212Z" fill={fill} {...s} />{patternDefs(pid, sp.p, c, sp.c2)}<path d="M82 156 Q80 186 78 210 M118 156 Q120 186 122 210" stroke={dark} strokeWidth="1.3" fill="none" opacity="0.6" /></g>;
+    case "denimskirt":
+      return <g><path d="M68 148 L132 148 L137 186 Q100 190 63 186Z" fill={c} {...s} /><path d="M100 150 L100 188" stroke={dark} strokeWidth="1.6" /><path d="M66 180 Q100 184 134 180" stroke="#E3C08A" strokeWidth="1.3" strokeDasharray="2 2" fill="none" /></g>;
     case "skirt":
       return <g><path d="M68 148 L132 148 L142 194 Q100 200 58 194Z" fill={c} {...s} />{[80, 92, 104, 116, 128].map((x) => <path key={x} d={`M${x - 4} 152 L${x - 2} 194`} stroke={dark} strokeWidth="1.5" />)}</g>;
     case "kilt":
@@ -729,6 +856,10 @@ function renderShoes(sp: Spec): ReactNode {
   switch (sp.k) {
     case "flipflops":
       return both((x) => <g transform={`translate(${x} 0)`}><ellipse cx="84" cy="221" rx="15" ry="5" fill={c} stroke={O} strokeWidth={2} /><path d="M78 217 L85 211 L92 217" stroke={shade(c, -0.3)} strokeWidth={3} fill="none" /></g>);
+    case "sandals":
+      return both((x) => <g transform={`translate(${x} 0)`}><ellipse cx="84" cy="221.5" rx="15.5" ry="4.8" fill={shade(c, -0.25)} stroke={O} strokeWidth={2} /><path d="M73 216 L95 216 M75 210 L93 210" stroke={c} strokeWidth="4" strokeLinecap="round" /><path d="M89 208 L89 220" stroke={c} strokeWidth="3" /></g>);
+    case "loafers":
+      return both((x) => <g transform={`translate(${x} 0)`}><path d="M70 220 Q70 210 80 210 L90 210 Q99 211 100 219 L100 221 Q100 225 95 225 L73 225 Q70 225 70 220Z" fill={c} stroke={O} strokeWidth={W} /><path d="M80 213 L92 213" stroke={sp.c2 ?? shade(c, 0.3)} strokeWidth="2.2" strokeLinecap="round" /><path d="M70 222 L100 222" stroke={shade(c, -0.4)} strokeWidth="2.5" /></g>);
     case "crocs":
       return both((x) => <g transform={`translate(${x} 0)`}><path d="M70 220 Q70 208 84 208 Q98 208 99 220 Q98 226 84 226 Q70 226 70 220Z" fill={c} stroke={O} strokeWidth={W} />{[[78, 214], [85, 212], [92, 214]].map(([cx, cy], i) => <circle key={i} cx={cx} cy={cy} r="1.6" fill={shade(c, -0.35)} />)}<path d="M72 214 Q70 206 78 206" stroke={shade(c, -0.2)} strokeWidth="2.5" fill="none" /></g>);
     case "socksSandals":
@@ -749,6 +880,8 @@ function backpackBack(sp: Spec): ReactNode {
       <rect x="54" y="96" width="92" height="84" rx="20" fill={c} stroke={O} strokeWidth={W} />
       <rect x="64" y="84" width="72" height="22" rx="10" fill={shade(c, -0.15)} stroke={O} strokeWidth={W} />
       <rect x="66" y="78" width="68" height="10" rx="5" fill="#8D6E63" stroke={O} strokeWidth="1.8" />
+      {sp.t === "hike" && <><rect x="50" y="170" width="100" height="16" rx="8" fill={sp.c2 ?? "#7F9C7A"} stroke={O} strokeWidth={W} /><path d="M66 170 L66 186 M134 170 L134 186" stroke={O} strokeWidth="1.4" /></>}
+      {sp.t === "mini" && <circle cx="140" cy="120" r="5" fill={sp.c2 ?? "#E9C46A"} stroke={O} strokeWidth="1.4" />}
     </g>
   );
 }
@@ -769,6 +902,16 @@ function renderBag(sp: Spec): ReactNode {
 
 function renderNeck(sp: Spec): ReactNode {
   switch (sp.k) {
+    case "shells":
+      return <g><path d="M78 104 Q100 124 122 104" stroke="#8C6A4A" strokeWidth="1.4" fill="none" />{[[82, 110], [91, 116], [100, 118], [109, 116], [118, 110]].map(([x, y], i) => <path key={i} d={`M${x - 3} ${y} Q${x} ${y - 5} ${x + 3} ${y} Q${x} ${y + 4} ${x - 3} ${y}Z`} fill={i === 2 ? "#E9B5A0" : "#F6EDE1"} stroke={O} strokeWidth="1.1" />)}</g>;
+    case "compass":
+      return <g><path d="M84 102 Q100 128 116 102" stroke="#B8903A" strokeWidth="1.3" fill="none" /><circle cx="100" cy="128" r="7.5" fill="#D4A64A" stroke={O} strokeWidth="1.6" /><circle cx="100" cy="128" r="5" fill="#FBF7F0" /><path d="M100 124 L102 128 L100 132 L98 128Z" fill="#C0533F" /></g>;
+    case "pearls":
+      return <g>{Array.from({ length: 11 }, (_, i) => { const t = i / 10; const x = 80 + 40 * t; const y = 104 + Math.sin(t * Math.PI) * 12; return <circle key={i} cx={x} cy={y} r="2.6" fill="#F4F1EA" stroke="#B9B0A3" strokeWidth="0.8" />; })}</g>;
+    case "bracelets":
+      return <g>{[0, 4].map((d) => <g key={d}><path d={`M${48} ${152 + d} Q54 ${156 + d} 61 ${152 + d}`} stroke={["#C9785A", "#7F9C7A"][d / 4]} strokeWidth="2.6" fill="none" strokeLinecap="round" /><path d={`M${139} ${152 + d} Q146 ${156 + d} 153 ${152 + d}`} stroke={["#E9C46A", "#4C8DA8"][d / 4]} strokeWidth="2.6" fill="none" strokeLinecap="round" /></g>)}</g>;
+    case "scarfPlaid":
+      return <g><path d="M72 104 Q100 118 128 104 L128 112 Q100 128 72 112Z" fill={sp.c ?? "#A33B3B"} stroke={O} strokeWidth="2" /><rect x="112" y="110" width="13" height="42" rx="3" fill={sp.c ?? "#A33B3B"} stroke={O} strokeWidth="2" /><path d="M115 112 L115 150 M121 112 L121 150 M112 124 L125 124 M112 138 L125 138" stroke={sp.c2 ?? "#2E4A3A"} strokeWidth="2" opacity="0.7" /><path d="M112 150 L112 156 M116 150 L116 156 M120 150 L120 156 M124 150 L124 156" stroke={O} strokeWidth="1.2" /></g>;
     case "lei":
       return <>{[[70, 106], [78, 115], [88, 121], [100, 123], [112, 121], [122, 115], [130, 106]].map(([x, y], i) => <circle key={i} cx={x} cy={y} r="6.5" fill={["#FF7A6B", "#FFD166", "#FF8FB1", "#5FD3B5"][i % 4]} stroke={O} strokeWidth={1.5} />)}</>;
     case "camera":
@@ -788,6 +931,14 @@ function renderNeck(sp: Spec): ReactNode {
 
 function handItem(sp: Spec): ReactNode {
   switch (sp.k) {
+    case "suitcaseHard":
+      return <g><rect x="150" y="146" width="38" height="62" rx="9" fill={sp.c ?? "#7F9C7A"} stroke={O} strokeWidth={W} />{[160, 169, 178].map((x) => <path key={x} d={`M${x} 150 L${x} 204`} stroke={shade(sp.c ?? "#7F9C7A", -0.2)} strokeWidth="2" />)}<path d="M162 146 L162 126 L176 126 L176 146" stroke={O} strokeWidth={W} fill="none" /><circle cx="158" cy="212" r="4" fill={O} /><circle cx="180" cy="212" r="4" fill={O} />{sp.t === "stickers" && <><circle cx="164" cy="164" r="6" fill="#E9C46A" stroke={O} strokeWidth="1" /><rect x="170" y="180" width="13" height="9" rx="2" fill="#C9785A" stroke={O} strokeWidth="1" transform="rotate(-12 176 184)" /><rect x="154" y="186" width="11" height="8" rx="2" fill="#4C8DA8" stroke={O} strokeWidth="1" /></>}</g>;
+    case "racket":
+      return <g transform="rotate(20 146 166)"><path d="M146 168 L146 132" stroke="#5A4636" strokeWidth="4" strokeLinecap="round" /><ellipse cx="146" cy="116" rx="13" ry="17" fill="none" stroke={sp.c ?? "#C9785A"} strokeWidth="3.5" /><g stroke="#D8CFC2" strokeWidth="0.8">{[-8, -4, 0, 4, 8].map((d) => <path key={d} d={`M${146 + d} 101 L${146 + d} 131`} />)}{[-10, -5, 0, 5, 10].map((d) => <path key={d} d={`M134 ${116 + d} L158 ${116 + d}`} />)}</g></g>;
+    case "surfboard":
+      return <g transform="rotate(8 160 130)"><path d="M160 30 Q178 80 174 200 Q160 214 146 200 Q142 80 160 30Z" fill={sp.c ?? "#F4EBDD"} stroke={O} strokeWidth={W} /><path d="M160 34 L160 206" stroke={sp.c2 ?? "#4C8DA8"} strokeWidth="3" /><path d="M150 150 Q160 156 170 150" stroke={sp.c2 ?? "#4C8DA8"} strokeWidth="2" fill="none" /></g>;
+    case "ball":
+      return <g><circle cx="150" cy="176" r="12" fill="#FBF7F0" stroke={O} strokeWidth={W} /><path d="M150 170 L156 174 L154 181 L146 181 L144 174Z" fill="#2F2A28" /><path d="M150 164 L150 170 M156 174 L161 172 M154 181 L157 186 M146 181 L143 186 M144 174 L139 172" stroke="#2F2A28" strokeWidth="1.2" /></g>;
     case "baguette":
       return <g transform="rotate(25 146 168)"><rect x="139" y="118" width="13" height="82" rx="6.5" fill="#E0A458" stroke={O} strokeWidth={W} />{[130, 146, 162, 178].map((y) => <path key={y} d={`M142 ${y} L149 ${y - 5}`} stroke="#B9763A" strokeWidth="2" />)}</g>;
     case "map":
@@ -841,6 +992,28 @@ function renderHat(sp: Spec, ctx: Ctx): ReactNode {
   const dark = shade(c, -0.2);
   const s = { stroke: O, strokeWidth: W, strokeLinejoin: "round" as const };
   switch (sp.k) {
+    case "chullo":
+      return (
+        <g>
+          <path d="M62 52 Q62 14 100 13 Q138 14 138 52Z" fill={c} {...s} />
+          <path d="M62 50 L58 82 Q64 86 68 80 L70 54Z M138 50 L142 82 Q136 86 132 80 L130 54Z" fill={c} {...s} />
+          <path d="M64 30 L136 30 M63 42 L137 42" stroke={sp.c2 ?? "#E9C46A"} strokeWidth="4" />
+          {[72, 86, 100, 114, 128].map((x) => <path key={x} d={`M${x - 4} 36 l4 -4 l4 4 l-4 4Z`} fill="#FBF7F0" />)}
+          <path d="M60 84 L58 96 M140 84 L142 96" stroke={sp.c2 ?? "#E9C46A"} strokeWidth="2.4" strokeLinecap="round" />
+          <circle cx="100" cy="11" r="6" fill={sp.c2 ?? "#E9C46A"} {...s} />
+        </g>
+      );
+    case "bushhat":
+      return (
+        <g>
+          <path d="M34 44 Q100 30 166 44 Q154 54 100 54 Q46 54 34 44Z" fill={shade(c, -0.08)} {...s} />
+          <path d="M68 46 L72 18 Q100 8 128 18 L132 46Z" fill={c} {...s} />
+          <path d="M70 38 Q100 32 130 38 L130 44 Q100 38 70 44Z" fill="#5A4636" />
+          <path d="M126 22 Q138 28 134 40" stroke={shade(c, -0.25)} strokeWidth="1.6" fill="none" />
+        </g>
+      );
+    case "sweatband":
+      return <g><path d="M60 50 Q100 30 140 50 L140 60 Q100 40 60 60Z" fill={c} {...s} />{sp.c2 && <path d="M62 55 Q100 36 138 55" stroke={sp.c2} strokeWidth="2.5" fill="none" />}</g>;
     case "cap":
       return (
         <g>
@@ -874,7 +1047,15 @@ function renderHat(sp: Spec, ctx: Ctx): ReactNode {
     case "beret":
       return <g><ellipse cx="96" cy="32" rx="42" ry="15" fill={c} {...s} /><path d="M96 18 L98 10" stroke={O} strokeWidth="3" strokeLinecap="round" /></g>;
     case "beanie":
-      return <g><path d="M62 50 Q62 14 100 14 Q138 14 138 50Z" fill={c} {...s} /><rect x="60" y="40" width="80" height="14" rx="6" fill={sp.c2 ?? "#fff"} {...s} /><circle cx="100" cy="12" r="9" fill={sp.c2 ?? "#fff"} {...s} /></g>;
+      return (
+        <g>
+          <path d="M62 50 Q62 14 100 14 Q138 14 138 50Z" fill={c} {...s} />
+          {[76, 88, 100, 112, 124].map((x) => <path key={x} d={`M${x} 22 L${x} 42`} stroke={shade(c, -0.15)} strokeWidth="1.4" />)}
+          <rect x="60" y="40" width="80" height="14" rx="6" fill={sp.c2 ?? "#fff"} {...s} />
+          {sp.t === "maple" && <path d="M100 22 l3 6 l5 -2 l-2 6 l5 2 l-6 3 l1 4 l-6 -2 l-6 2 l1 -4 l-6 -3 l5 -2 l-2 -6 l5 2Z" fill="#B23A3A" />}
+          {sp.t !== "plain" && <circle cx="100" cy="12" r="9" fill={sp.c2 ?? "#fff"} {...s} />}
+        </g>
+      );
     case "bowler":
       return <g><ellipse cx="100" cy="40" rx="48" ry="9" fill="#212121" {...s} /><path d="M70 40 Q70 8 100 8 Q130 8 130 40Z" fill="#2B2B2B" {...s} /><rect x="70" y="32" width="60" height="6" fill="#4E342E" /></g>;
     case "conical":

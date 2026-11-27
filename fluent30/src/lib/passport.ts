@@ -7,6 +7,13 @@ import { gentleStreak } from "./goals";
 import { DURABLE_DAYS, State } from "./srs";
 import { ALL_LESSONS, PATH, type CefrLevel } from "./curriculum";
 import { DESTINATIONS, type Destination, type StampMetric } from "./data/destinations";
+import { WORLD } from "./data/world";
+
+/** World-map destinations whose missions are all completed. */
+export async function completedWorldDestinations(): Promise<Set<string>> {
+  const done = new Set((await getDb().missions.where("status").equals("done").toArray()).map((m) => m.id));
+  return new Set(WORLD.filter((d) => d.missions.every((m) => done.has(m.id))).map((d) => d.id));
+}
 
 export const STAMP_PREFIX = "stamp:";
 const LEVELS: CefrLevel[] = ["A1", "A2", "B1", "B2", "C1"];
@@ -59,9 +66,14 @@ export async function passportStats(): Promise<PassportStats> {
 
 export async function passportState(): Promise<{ stats: PassportStats; stamps: StampState[]; souvenirs: Destination[] }> {
   const db = getDb();
-  const [stats, records] = await Promise.all([passportStats(), db.achievements.where("id").startsWith(STAMP_PREFIX).toArray()]);
+  const [stats, records, world] = await Promise.all([passportStats(), db.achievements.where("id").startsWith(STAMP_PREFIX).toArray(), completedWorldDestinations()]);
   const at = new Map(records.map((r) => [r.id.slice(STAMP_PREFIX.length), r.unlockedAt]));
-  const stamps = DESTINATIONS.map((dest) => ({ dest, unlockedAt: at.get(dest.id), value: Math.min(stats[dest.rule.metric], dest.rule.n), target: dest.rule.n }));
+  const stamps = DESTINATIONS.map((dest) => ({
+    dest,
+    unlockedAt: at.get(dest.id),
+    value: dest.world && world.has(dest.id) ? dest.rule.n : Math.min(stats[dest.rule.metric], dest.rule.n),
+    target: dest.rule.n,
+  }));
   return { stats, stamps, souvenirs: stamps.filter((s) => s.unlockedAt).map((s) => s.dest) };
 }
 
@@ -70,7 +82,8 @@ export async function claimStamps(): Promise<Destination[]> {
   const db = getDb();
   const stats = await passportStats();
   const have = new Set((await db.achievements.where("id").startsWith(STAMP_PREFIX).toArray()).map((r) => r.id));
-  const fresh = DESTINATIONS.filter((d) => !have.has(STAMP_PREFIX + d.id) && stats[d.rule.metric] >= d.rule.n);
+  const world = await completedWorldDestinations();
+  const fresh = DESTINATIONS.filter((d) => !have.has(STAMP_PREFIX + d.id) && (stats[d.rule.metric] >= d.rule.n || (d.world && world.has(d.id))));
   if (!fresh.length) return [];
   const now = Date.now();
   await db.achievements.bulkPut(fresh.map((d) => ({ id: STAMP_PREFIX + d.id, unlockedAt: now, updatedAt: now })));
