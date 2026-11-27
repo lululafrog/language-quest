@@ -11,11 +11,11 @@ import { Badge, Spinner, cx, toast } from "@/components/ui";
 import type { Book } from "@/lib/types";
 
 const COVER: Record<LibraryCategory, string> = {
-  policier: "from-[#1f2937] to-[#4b5563]",
+  thriller: "from-[#1f2937] to-[#4b5563]", devperso: "from-[#15803d] to-[#86efac]", horreur: "from-[#450a0a] to-[#991b1b]", courtes: "from-[#0369a1] to-[#38bdf8]",
   aventure: "from-[#0e7490] to-[#14b8a6]",
   romance: "from-[#be185d] to-[#f472b6]",
   fantastique: "from-[#4c1d95] to-[#7c3aed]",
-  jeunesse: "from-[#ea580c] to-[#fbbf24]",
+  classiques: "from-[#ea580c] to-[#fbbf24]",
 };
 
 /** 100 classics shipped with the app: no download service needed, readable offline. */
