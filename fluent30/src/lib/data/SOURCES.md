@@ -13,7 +13,14 @@ Ces listes ont servi de **référence** pour l'ordre des mots ; aucune liste n'e
 
 - rangs 1 à ~300 : ordre proche de NGSL / NGSL-Spoken, avec quelques mots très utiles à l'oral remontés (`okay`, `yeah`, `sorry`, `please`…) ;
 - au-delà : vocabulaire courant sélectionné d'après ces listes et **regroupé en partie par thème** (famille, nourriture, voyage…), donc l'ordre n'y reflète qu'approximativement la fréquence ;
-- après dédoublonnage, le lexique intégré compte environ 1 700 entrées ; les paliers 3 000 et « avancé » sont générés à la demande par l'IA.
+- rangs 1714–3000 approximatifs, inspirés de NGSL (CC BY-SA 4.0) : verbes, phrasal verbs, noms, adjectifs, adverbes,
+  nombres et expressions orales fréquents absents des listes précédentes (`vocab-4.ts` à `vocab-7.ts`) ;
+- chaque entrée (3 000+) comporte une traduction française, une **définition simple en anglais** (≤ 12 mots,
+  `vocab-details-*.ts` pour les rangs 1–1713), un exemple parlé et sa traduction, tous rédigés pour Fluent30.
+
+Ce lexique est **commun à tous les utilisateurs** et embarqué dans l'application : il fonctionne hors ligne et
+répond sans appel réseau ni IA (liseuse, traducteur, ajout de mots). Aucune donnée personnelle n'y est stockée.
+- après dédoublonnage, le lexique intégré compte un peu plus de 3 000 entrées ; seul le palier « avancé » (au-delà de 3 000) est complété à la demande par l'IA.
 
 Le rang affiché dans l'application est donc un **indicateur d'utilité**, pas une donnée de corpus.
 

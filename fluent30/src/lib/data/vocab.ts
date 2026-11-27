@@ -8,6 +8,7 @@ import { VOCAB_3 } from "./vocab-3";
 import { VOCAB_4 } from "./vocab-4";
 import { VOCAB_5 } from "./vocab-5";
 import { VOCAB_6 } from "./vocab-6";
+import { VOCAB_7 } from "./vocab-7";
 import { VOCAB_DETAILS } from "./vocab-details";
 
 export const SEED_VOCAB: SeedWord[] = (() => {
@@ -15,7 +16,7 @@ export const SEED_VOCAB: SeedWord[] = (() => {
   const out: SeedWord[] = [];
   const base = [...VOCAB_1, ...VOCAB_2, ...VOCAB_3].sort((a, b) => a.rank - b.rank);
   // New words (ranks ≈ 1714–3000) come after the original lists, in their own order.
-  for (const w of [...base, ...VOCAB_4, ...VOCAB_5, ...VOCAB_6]) {
+  for (const w of [...base, ...VOCAB_4, ...VOCAB_5, ...VOCAB_6, ...VOCAB_7]) {
     const k = w.en.toLowerCase().trim();
     if (seen.has(k)) continue;
     seen.add(k);

@@ -23,7 +23,7 @@ tout ce qui suit fonctionne hors connexion une fois les pages visitées.
 
 | Fonction | Service | Clé nécessaire |
 | --- | --- | --- |
-| Flashcards, FSRS, nouveaux mots (lexique intégré ≈ 1 700 mots), statistiques, tests | local | aucune |
+| Flashcards, FSRS, nouveaux mots (lexique intégré : 3 000 mots fréquents avec traduction, définition et exemple), statistiques, tests | local | aucune |
 | 20 mini-jeux, verbes essentiels (38 verbes), 33 leçons de grammaire | local | aucune |
 | Liseuse, import EPUB / PDF / TXT, 12 histoires graduées A1–C2 | local | aucune |
 | Synthèse vocale (accents selon l'appareil), reconnaissance vocale | navigateur (Web Speech) | aucune — Chrome, Edge, Safari |
