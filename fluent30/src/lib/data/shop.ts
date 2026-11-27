@@ -12,7 +12,7 @@ export interface Spec {
 
 export type ShopCategory =
   | "casquettes" | "bobs" | "chapeaux" | "lunettes" | "visage" | "hauts" | "ponchos" | "vestes" | "robes"
-  | "jeans" | "shorts" | "chaussures" | "sacs" | "accessoires" | "mains" | "decors";
+  | "jeans" | "shorts" | "chaussures" | "sacs" | "accessoires" | "mains" | "decors" | "litteraires";
 
 export interface ShopItem {
   id: string;
@@ -23,6 +23,8 @@ export interface ShopItem {
   price: number;
   rarity: "commun" | "rare" | "épique" | "légendaire";
   spec: Spec;
+  /** exclusive item: granted when the learner finishes one of these books (Gutenberg / library ids) */
+  unlock?: { ids: number[]; fr: string; en: string };
 }
 
 const rar = (price: number): ShopItem["rarity"] => (price >= 400 ? "légendaire" : price >= 180 ? "épique" : price >= 90 ? "rare" : "commun");
@@ -163,6 +165,40 @@ export const SHOP_ITEMS: ShopItem[] = [
   I("bg-space", "background", "decors", "Station spatiale", "Space station", 800, { k: "space" }),
 ];
 
+/** Literary collections: exclusive rewards for finishing a book of that universe, then wearable forever. */
+const L = (id: string, slot: AvatarSlot, fr: string, en: string, price: number, spec: Spec, unlock?: ShopItem["unlock"]): ShopItem => ({ ...I(id, slot, "litteraires", fr, en, price, spec), unlock });
+const HOLMES = { ids: [1661, 2852, 244, 2097, 834, 108, 3289, 2350, 69700], fr: "Sherlock Holmes", en: "Sherlock Holmes" };
+const ALICE = { ids: [11, 12], fr: "Alice au pays des merveilles", en: "Alice in Wonderland" };
+const DRACULA = { ids: [345], fr: "Dracula", en: "Dracula" };
+const TREASURE = { ids: [120], fr: "L'Île au trésor", en: "Treasure Island" };
+const AUSTEN = { ids: [1342, 161, 158, 105], fr: "un roman de Jane Austen", en: "a Jane Austen novel" };
+const GATSBY = { ids: [64317], fr: "Gatsby le Magnifique", en: "The Great Gatsby" };
+SHOP_ITEMS.push(
+  L("lit-deerstalker", "hat", "Chapeau de Sherlock (deerstalker)", "Sherlock's deerstalker", 0, { k: "deerstalker" }, HOLMES),
+  L("lit-inverness", "outer", "Manteau à pèlerine de détective", "Detective's Inverness cape", 0, { k: "inverness" }, HOLMES),
+  L("lit-magnifier", "hand", "Loupe de détective", "Magnifying glass", 0, { k: "magnifier" }, HOLMES),
+  L("lit-pipe", "face", "Pipe de Baker Street", "Baker Street pipe", 0, { k: "pipe" }, HOLMES),
+  L("lit-alice-dress", "dress", "Robe bleue et tablier d'Alice", "Alice's blue dress & apron", 0, { k: "aliceDress" }, ALICE),
+  L("lit-alice-band", "hat", "Serre-tête noir d'Alice", "Alice's black headband", 0, { k: "headband" }, ALICE),
+  L("lit-pocketwatch", "neck", "Montre à gousset du Lapin blanc", "White Rabbit's pocket watch", 0, { k: "pocketwatch" }, ALICE),
+  L("lit-vampcape", "outer", "Cape gothique du comte", "The Count's gothic cape", 0, { k: "vampcape" }, DRACULA),
+  L("lit-tricorn", "hat", "Tricorne de pirate", "Pirate tricorn", 0, { k: "tricorn" }, TREASURE),
+  L("lit-eyepatch", "face", "Bandeau de pirate", "Pirate eye-patch", 0, { k: "eyepatch" }, TREASURE),
+  L("lit-parrot", "neck", "Perroquet sur l'épaule", "Parrot on the shoulder", 0, { k: "parrot" }, TREASURE),
+  L("lit-piratecoat", "outer", "Redingote de capitaine", "Captain's coat", 0, { k: "piratecoat" }, TREASURE),
+  L("lit-regency", "dress", "Robe Régence taille empire", "Regency empire-waist gown", 0, { k: "regency" }, AUSTEN),
+  L("lit-bonnet", "hat", "Capote Régence à rubans", "Regency bonnet", 0, { k: "bonnet" }, AUSTEN),
+  L("lit-tailcoat", "outer", "Habit à queue de pie (Mr Darcy)", "Mr Darcy's tailcoat", 0, { k: "tailcoat" }, AUSTEN),
+  L("lit-flapper", "dress", "Robe charleston à franges", "Flapper dress with fringes", 0, { k: "flapper", c: "#C9A227" }, GATSBY),
+  L("lit-featherband", "hat", "Bandeau à plume années 20", "1920s feather headband", 0, { k: "featherband" }, GATSBY),
+  L("lit-boater", "hat", "Canotier", "Boater hat", 0, { k: "boater" }, GATSBY),
+  L("lit-creamsuit", "outer", "Costume crème de Gatsby", "Gatsby's cream suit", 0, { k: "creamsuit" }, GATSBY),
+  // travel outfits (buyable)
+  L("trv-fedora", "hat", "Chapeau d'aventurier", "Adventurer's fedora", 140, { k: "fedora" }),
+  L("trv-pith", "hat", "Casque d'explorateur", "Explorer's helmet", 160, { k: "pith" }),
+  L("trv-flapper-black", "dress", "Robe années 20 noire", "Black 1920s dress", 260, { k: "flapper", c: "#1F1F2B" }),
+);
+
 export const SHOP_BY_ID = new Map(SHOP_ITEMS.map((i) => [i.id, i]));
 
 /** Legacy ids from the first wardrobe → new ids. */
@@ -185,6 +221,7 @@ export const CATEGORIES: { id: ShopCategory; fr: string; en: string; emoji: stri
   { id: "accessoires", fr: "Accessoires", en: "Accessories", emoji: "📷" },
   { id: "mains", fr: "Dans la main", en: "In hand", emoji: "🥖" },
   { id: "decors", fr: "Décors", en: "Scenes", emoji: "🏝️" },
+  { id: "litteraires", fr: "Tenues littéraires", en: "Literary outfits", emoji: "📚" },
 ];
 
 // ---------- Appearance (free) ----------

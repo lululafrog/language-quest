@@ -158,6 +158,7 @@ export async function buyItem(itemId: string): Promise<{ ok: boolean; reason?: s
   const g = await getGame();
   if (!item) return { ok: false, reason: "Objet introuvable", game: g };
   if (g.owned.includes(itemId)) return { ok: true, game: g };
+  if (item.unlock) return { ok: false, reason: `Débloqué en terminant ${item.unlock.fr}`, game: g };
   if (g.coins < item.price) return { ok: false, reason: "Pas assez de pièces", game: g };
   const next = { ...g, coins: g.coins - item.price, owned: [...g.owned, itemId], equipped: withItem(g.equipped, item.slot, itemId) };
   await saveGame(next);
@@ -185,4 +186,57 @@ function withItem(eq: Partial<Record<AvatarSlot, string>>, slot: AvatarSlot, id:
   }
   if (slot === "top" || slot === "bottom") delete next.dress;
   return next;
+}
+
+// ---------- Rewards used by reading (ceremony, achievements) ----------
+export async function addCoins(n: number): Promise<GameState> {
+  const g = await getGame();
+  const next = { ...g, coins: g.coins + n, totalEarned: g.totalEarned + Math.max(0, n) };
+  await saveGame(next);
+  return next;
+}
+
+/** Gives exclusive items for free (literary collections); returns the ones newly granted. */
+export async function grantItems(ids: string[]): Promise<string[]> {
+  const g = await getGame();
+  const fresh = ids.filter((id) => !g.owned.includes(id) && SHOP_BY_ID.has(id));
+  if (fresh.length) await saveGame({ ...g, owned: [...g.owned, ...fresh] });
+  return fresh;
+}
+
+/** Exclusive literary items unlocked by finishing the given Gutenberg/library book id. */
+export function itemsUnlockedBy(libraryId: number | undefined): string[] {
+  if (!libraryId) return [];
+  return SHOP_ITEMS.filter((i) => i.unlock?.ids.includes(libraryId)).map((i) => i.id);
+}
+
+// ---------- Personal bookshelf ----------
+export const DEFAULT_SHELF = { style: "oak", decor: [] as string[], placed: {} as Record<string, string>, shelves: 2 };
+
+export async function getShelf() {
+  const g = await getGame();
+  return { ...DEFAULT_SHELF, ...(g.shelf ?? {}), owned: g.owned, coins: g.coins };
+}
+
+export async function buyShelfThing(kind: "decor" | "style", id: string, price: number): Promise<{ ok: boolean; reason?: string }> {
+  const g = await getGame();
+  const shelf = { ...DEFAULT_SHELF, ...(g.shelf ?? {}) };
+  const key = kind === "style" ? `style:${id}` : id;
+  if (shelf.decor.includes(key)) {
+    if (kind === "style") await saveGame({ ...g, shelf: { ...shelf, style: id } });
+    return { ok: true };
+  }
+  if (g.coins < price) return { ok: false, reason: `Il te manque ${price - g.coins} pièces` };
+  await saveGame({ ...g, coins: g.coins - price, shelf: { ...shelf, decor: [...shelf.decor, key], ...(kind === "style" ? { style: id } : {}) } });
+  return { ok: true };
+}
+
+export async function placeDecor(slot: string, decorId: string | null) {
+  const g = await getGame();
+  const shelf = { ...DEFAULT_SHELF, ...(g.shelf ?? {}) };
+  const placed = { ...shelf.placed };
+  for (const [k, v] of Object.entries(placed)) if (v === decorId) delete placed[k];
+  if (decorId) placed[slot] = decorId;
+  else delete placed[slot];
+  await saveGame({ ...g, shelf: { ...shelf, placed } });
 }

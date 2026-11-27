@@ -11,6 +11,10 @@ import { speak } from "@/lib/speech";
 import { useStatus } from "@/hooks/useStatus";
 import { useT } from "@/hooks/useT";
 import { Badge, Button, ErrorNote, Sheet, SpeakButton, Spinner, toast } from "@/components/ui";
+import { PRIORITY_INFO, wordInfo } from "@/lib/priority";
+import { themeEmoji, themeLabel } from "@/lib/data/types";
+import { emit } from "@/lib/events";
+import { useSettings } from "@/hooks/useSettings";
 
 export interface DictResult {
   word: string;
@@ -49,8 +53,9 @@ const POS_FR: Record<string, string> = {
   num: "nombre", modal: "modal", expr: "expression",
 };
 
-export function WordPopup({ word, sentence, onClose }: { word: string; sentence: string; onClose: () => void }) {
+export function WordPopup({ word, sentence, onClose, properNoun, bookTitle }: { word: string; sentence: string; onClose: () => void; properNoun?: boolean; bookTitle?: string }) {
   const t = useT();
+  const settings = useSettings();
   const status = useStatus();
   const local = lookupLocal(word);
   const baseLemma = local?.lemma ?? lemmaOf(word);
@@ -110,11 +115,25 @@ export function WordPopup({ word, sentence, onClose }: { word: string; sentence:
   const ipa = ai?.ipa || dict?.ipa || local?.ipa;
   const pos = ai?.pos || local?.pos || dict?.meanings[0]?.pos;
   const isInflected = ai ? ai.isInflected : !!local?.isInflected;
+  const info = wordInfo(word, { properNoun, inDictionary: dictState === "ok" ? true : dictState === "none" && !local ? false : undefined });
+  const prio = PRIORITY_INFO[info.priority];
+  const everydayExample = ai?.example || local?.example;
 
   async function add(term: string, frText: string) {
     setAdding(term);
     try {
       const r = await quickAdd(term, { context: sentence, source: "reader", fr: frText || undefined, example: sentence, pos: ai?.pos || local?.pos || dict?.meanings[0]?.pos });
+      // Keep the sentence from the book on the card (plus an everyday example when available).
+      const quote = `📖 ${bookTitle ? `${bookTitle} : ` : ""}« ${sentence.slice(0, 280)} »`;
+      const card = await getDb().cards.get(r.card.id);
+      if (card) {
+        const patch: Partial<typeof card> = {};
+        if (!card.notes?.includes(sentence.slice(0, 40))) patch.notes = card.notes ? `${card.notes}\n${quote}` : quote;
+        if (!card.example) patch.example = everydayExample ?? sentence;
+        if (everydayExample && card.example === sentence) patch.example = everydayExample;
+        if (Object.keys(patch).length) await getDb().cards.update(card.id, patch);
+      }
+      emit("word:saved", { cardId: r.card.id, source: "reader" });
       setAdded((a) => [...a, term]);
       toast(r.merged ? t("Déjà dans vos flashcards — mis à jour", "Already in your flashcards — updated") : t("Ajouté aux flashcards ✓", "Added to flashcards ✓"));
     } catch (e) {
@@ -147,11 +166,19 @@ export function WordPopup({ word, sentence, onClose }: { word: string; sentence:
     <Sheet open onClose={onClose} title={<span className="flex items-baseline gap-2"><span className="text-2xl">{word}</span>{ipa && <span className="text-base font-normal text-muted">{ipa}</span>}</span>}>
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
-          <SpeakButton text={word} label={t("Écouter", "Listen")} />
-          {dict?.audioUK && <button className="rounded-full bg-surface-2 px-3 py-1.5 text-sm" onClick={() => new Audio(dict.audioUK!).play().catch(() => speak(word, { accent: "en-GB" }))}>🇬🇧 UK</button>}
-          {dict?.audioUS && <button className="rounded-full bg-surface-2 px-3 py-1.5 text-sm" onClick={() => new Audio(dict.audioUS!).play().catch(() => speak(word, { accent: "en-US" }))}>🇺🇸 US</button>}
+          <SpeakButton text={word} accent={settings.reader.voice ?? settings.accent} label={t("Écouter", "Listen")} />
+          <button className="rounded-full bg-surface-2 px-3 py-1.5 text-sm" onClick={() => (dict?.audioUK ? new Audio(dict.audioUK).play().catch(() => speak(word, { accent: "en-GB" })) : speak(word, { accent: "en-GB" }))}>🇬🇧 UK</button>
+          <button className="rounded-full bg-surface-2 px-3 py-1.5 text-sm" onClick={() => (dict?.audioUS ? new Audio(dict.audioUS).play().catch(() => speak(word, { accent: "en-US" })) : speak(word, { accent: "en-US" }))}>🇺🇸 US</button>
           {pos && <Badge tone="gray">{t(POS_FR[pos] ?? pos, pos)}</Badge>}
           {local?.rank && <Badge tone="mint">{t(`Top ${local.rank <= 100 ? 100 : local.rank <= 500 ? 500 : local.rank <= 1000 ? "1 000" : local.rank <= 2000 ? "2 000" : "3 000"}`, `Top ${local.rank <= 100 ? 100 : local.rank <= 500 ? 500 : local.rank <= 1000 ? "1,000" : local.rank <= 2000 ? "2,000" : "3,000"}`)}</Badge>}
+        </div>
+
+        <div className="flex items-start gap-3 rounded-xl border border-line p-3" style={{ borderLeft: `5px solid ${prio.color}` }}>
+          <div className="min-w-0 flex-1 text-sm">
+            <p className="font-semibold" style={{ color: prio.color }}>● {t(prio.fr, prio.en)} <span className="font-normal text-muted">· {t("difficulté", "difficulty")} {info.difficulty}/5</span></p>
+            <p className="mt-0.5 text-muted">{prio.descFr}</p>
+            <p className="mt-0.5 text-xs text-muted">{info.frequencyFr}{info.theme ? ` · ${themeEmoji(info.theme)} ${themeLabel(info.theme, settings.immersion)}` : ""}</p>
+          </div>
         </div>
 
         {isInflected && (
@@ -188,7 +215,7 @@ export function WordPopup({ word, sentence, onClose }: { word: string; sentence:
 
         {(ai?.example || local?.example) && (
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted">{t("Exemple", "Example")}</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted">{t("Exemple de la vie quotidienne", "Everyday example")}</p>
             <p className="mt-0.5 flex items-start gap-1 italic">
               <span className="flex-1">{ai?.example || local?.example}</span>
               <SpeakButton text={(ai?.example || local?.example)!} size={16} className="-mt-1" />
@@ -196,6 +223,11 @@ export function WordPopup({ word, sentence, onClose }: { word: string; sentence:
             {(ai?.exampleFr || local?.exampleFr) && <p className="text-sm text-muted">{ai?.exampleFr || local?.exampleFr}</p>}
           </div>
         )}
+
+        <div className="rounded-xl bg-surface-2 p-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">📖 {t("Dans le livre", "In the book")}</p>
+          <p className="mt-0.5 font-serif text-[15px] italic leading-relaxed">{sentence}</p>
+        </div>
 
         {local?.forms && (
           <div>
