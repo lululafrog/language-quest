@@ -95,7 +95,7 @@ function FormsQuiz({ verb }: { verb: CoreVerb }) {
       </p>
       <form onSubmit={(e) => { e.preventDefault(); if (result) next(); else void check(); }} className="flex gap-2">
         <input
-          autoFocus value={input} onChange={(e) => setInput(e.target.value)} disabled={!!result}
+          value={input} onChange={(e) => setInput(e.target.value)} disabled={!!result}
           autoCapitalize="off" autoCorrect="off" spellCheck={false}
           className={cx("h-11 flex-1 rounded-xl border bg-surface px-3 outline-none focus:border-ink-400", result === "wrong" ? "border-coral-500 animate-shake" : result ? "border-mint-500" : "border-line")}
           placeholder={t("Tapez la forme…", "Type the form…")}
@@ -228,7 +228,7 @@ function GapFill({ verb }: { verb: CoreVerb }) {
       <p className="mb-2 text-xs text-muted">{t(`Utilisez la bonne forme de « ${verb.base} ».`, `Use the right form of "${verb.base}".`)}</p>
       <form onSubmit={(e) => { e.preventDefault(); if (result) next(); else void check(); }} className="flex gap-2">
         <input
-          autoFocus value={input} onChange={(e) => setInput(e.target.value)} disabled={!!result}
+          value={input} onChange={(e) => setInput(e.target.value)} disabled={!!result}
           autoCapitalize="off" autoCorrect="off" spellCheck={false}
           className={cx("h-11 flex-1 rounded-xl border bg-surface px-3 outline-none focus:border-ink-400", result === "wrong" ? "border-coral-500 animate-shake" : result ? "border-mint-500" : "border-line")}
           placeholder="…"

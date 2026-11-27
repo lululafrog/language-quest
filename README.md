@@ -23,3 +23,9 @@ Le dossier est un site statique, sans compilation. Il suffit de le glisser-dépo
 - `sw.js` : cache hors ligne. **Après une modification, changer `CACHE` (ex. `v2`) pour forcer la mise à jour.**
 
 Technique : Preact + htm (API React), intégrés dans `js/vendor/`, sans étape de build.
+
+---
+
+## 🇬🇧 Fluent30 (nouvelle application)
+
+Le dossier [`fluent30/`](fluent30/README.md) contient **Fluent30**, une application Next.js d'apprentissage de l'anglais pour francophones (flashcards FSRS, liseuse interactive, mini-jeux, verbes, grammaire, conversation IA). Voir son README pour l'installation.

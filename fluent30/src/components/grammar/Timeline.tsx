@@ -7,7 +7,6 @@ const COLORS: Record<TimelineColor, string> = { ink: "#6a55f2", coral: "#ff7a6b"
 
 const W = 340;
 const PAD = 22;
-const AXIS_Y = 132;
 const x = (at: number) => PAD + ((Math.max(-1, Math.min(1, at)) + 1) / 2) * (W - PAD * 2);
 
 /** Interactive tense timeline: past — now — future. Tap a mark to see and hear its example. */
@@ -15,7 +14,9 @@ export function Timeline({ spec, labels }: { spec: TimelineSpec; labels?: { past
   const [sel, setSel] = useState(0);
   const lbl = labels ?? { past: "passé", now: "maintenant", future: "futur" };
   const lanes = spec.marks.length;
-  const laneY = (i: number) => AXIS_Y - 24 - (lanes - 1 - i) * 34;
+  // Lanes are spaced so that each label sits clear of the mark above and below.
+  const AXIS_Y = 44 + Math.max(1, lanes) * 46;
+  const laneY = (i: number) => AXIS_Y - 28 - (lanes - 1 - i) * 46;
   const height = AXIS_Y + 30;
   const current = spec.marks[sel];
 
@@ -77,9 +78,9 @@ export function Timeline({ spec, labels }: { spec: TimelineSpec; labels?: { past
           }
           return (
             <g key={i} className="animate-pop cursor-pointer" style={style} onClick={() => setSel(i)} role="button" aria-label={m.label} tabIndex={0} onKeyDown={(e) => e.key === "Enter" && setSel(i)}>
-              <rect x={0} y={y - 20} width={W} height={34} fill="transparent" />
+              <rect x={0} y={y - 28} width={W} height={46} fill="transparent" />
               {shape}
-              <text x={Math.min(W - 60, Math.max(60, cx0))} y={y - 13} textAnchor="middle" fontSize="11.5" fontWeight={active ? 700 : 500} fill={active ? c : "var(--fg)"}>
+              <text x={Math.min(W - 60, Math.max(60, cx0))} y={y - 15} textAnchor="middle" fontSize="11.5" fontWeight={active ? 700 : 500} fill={active ? c : "var(--fg)"}>
                 {m.label}
               </text>
             </g>

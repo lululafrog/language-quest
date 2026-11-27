@@ -95,3 +95,6 @@ body { font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* Inputs inside flex rows must be allowed to shrink on narrow screens. */
+input, select, textarea { min-width: 0; }

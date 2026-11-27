@@ -45,5 +45,5 @@ export function jsonError(status: number, code: string, message: string) {
 }
 
 export function notConfigured(service: string, envVar: string) {
-  return jsonError(503, "not_configured", `${service} n'est pas configuré sur le serveur (variable ${envVar} manquante).`);
+  return jsonError(503, "not_configured", `Service non configuré sur le serveur : ${service} (variable ${envVar} manquante).`);
 }

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
 import { useSettings } from "@/hooks/useSettings";
 import { useOnline } from "@/hooks/useOnline";
 import { setSpeechPrefs, loadVoices } from "@/lib/speech";
@@ -46,7 +46,12 @@ function isActive(path: string, href: string) {
   return path.startsWith(href);
 }
 
+const noopSubscribe = () => () => {};
+
 export function AppShell({ children }: { children: ReactNode }) {
+  // The app is local-first (IndexedDB): pages render on the client only, which also avoids
+  // hydration mismatches from randomised exercises.
+  const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
   const path = usePathname();
   const settings = useSettings();
   const online = useOnline();
@@ -110,7 +115,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   if (immersive) {
     return (
       <>
-        {children}
+        {mounted ? children : null}
         <Toaster />
       </>
     );
@@ -140,7 +145,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="min-w-0 flex-1">
         {!online && <div className="bg-sun-100 px-4 py-1.5 text-center text-xs text-amber-800 md:hidden dark:bg-sun-500/15 dark:text-sun-100">{t("Hors ligne — flashcards et livres téléchargés disponibles", "Offline — flashcards and downloaded books available")}</div>}
-        <main className="mx-auto w-full max-w-5xl px-4 pb-28 pt-5 sm:px-6 md:pb-12 md:pt-8">{children}</main>
+        <main className="mx-auto w-full max-w-5xl px-4 pb-28 pt-5 sm:px-6 md:pb-12 md:pt-8">{mounted ? children : <div className="space-y-4"><div className="h-10 w-48 animate-pulse rounded-xl bg-surface-2" /><div className="h-40 animate-pulse rounded-2xl bg-surface-2" /></div>}</main>
       </div>
 
       {/* Bottom nav (mobile) */}

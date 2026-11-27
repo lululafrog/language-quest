@@ -9,7 +9,13 @@ L'ordre des mots (champ `rank`) suit au plus près les listes de fréquence de l
 - Pour les cas limites, nous avons tenu compte de l'ordre observé dans la partie orale du British National Corpus (BNC).
 
 Licence des listes NGSL : **Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0)**, sur https://www.newgeneralservicelist.com.
-Seul l'ordre de fréquence (le rang) vient de ces listes. Nous l'avons ajusté à la marge pour regrouper certains mots très utiles à l'oral (`okay`, `yeah`, `sorry`, `please`…) et pour écarter les formes fléchies en double.
+Ces listes ont servi de **référence** pour l'ordre des mots ; aucune liste n'est copiée telle quelle. Concrètement :
+
+- rangs 1 à ~300 : ordre proche de NGSL / NGSL-Spoken, avec quelques mots très utiles à l'oral remontés (`okay`, `yeah`, `sorry`, `please`…) ;
+- au-delà : vocabulaire courant sélectionné d'après ces listes et **regroupé en partie par thème** (famille, nourriture, voyage…), donc l'ordre n'y reflète qu'approximativement la fréquence ;
+- après dédoublonnage, le lexique intégré compte environ 1 700 entrées ; les paliers 3 000 et « avancé » sont générés à la demande par l'IA.
+
+Le rang affiché dans l'application est donc un **indicateur d'utilité**, pas une donnée de corpus.
 
 ## Contenu rédigé pour Fluent30
 
@@ -22,8 +28,8 @@ Les traductions françaises, les phrases d'exemple (orientées vers l'oral et le
 | Les 100 mots essentiels | 1–100 |
 | Les 500 mots les plus utiles | 101–500 |
 | Les 1 000 mots fréquents | 501–1 000 |
-| Les 2 000 mots fréquents | 1 001–2 000 |
-| Les 3 000 mots fréquents | 2 001–3 000 |
+| Les 2 000 mots fréquents | 1 001–~1 700 (lexique intégré) |
+| Les 3 000 mots fréquents | générés par l'IA |
 | Vocabulaire intermédiaire et avancé | au-delà de 3 000 |
 
 ## Mots connus et niveau CECRL

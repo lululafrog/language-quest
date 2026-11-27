@@ -79,8 +79,8 @@ export function Reader({ bookId }: { bookId: string }) {
   const t = useT();
   const settings = useSettings();
   const db = getDb();
-  const book = useLiveQuery(() => db.books.get(bookId), [bookId]);
-  const content = useLiveQuery(() => db.bookContent.get(bookId), [bookId]);
+  const book = useLiveQuery(async () => (await db.books.get(bookId)) ?? null, [bookId]);
+  const content = useLiveQuery(async () => (await db.bookContent.get(bookId)) ?? null, [bookId]);
   const cards = useLiveQuery(() => db.cards.toArray(), []);
 
   const [chapter, setChapter] = useState<number | null>(null);
