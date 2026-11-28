@@ -42,3 +42,19 @@ Les traductions françaises, les phrases d'exemple (orientées vers l'oral et le
 ## Mots connus et niveau CECRL
 
 Le nombre de mots mémorisés **n'est pas** assimilé à un niveau CECRL (A1–C2). Les niveaux CECRL décrivent des compétences de communication : compréhension écrite et orale, expression écrite et orale, interaction. Le vocabulaire n'en est qu'un indicateur parmi d'autres. Fluent30 estime donc le niveau avec prudence, en combinant plusieurs compétences et des tests réguliers.
+
+## Lexique étendu (≈ 10 000 entrées) et univers de vocabulaire
+
+- **Contenu original** écrit pour Fluent30 (traductions, définitions, phrases d'exemple et leur traduction, astuces,
+  notes de registre, faux amis, différences UK / US). Aucune entrée n'est copiée d'un dictionnaire ou d'une liste
+  propriétaire ; le contenu appartient au projet et peut être réutilisé librement par lui.
+- **Niveaux CECRL** : estimation éditoriale par entrée (jugement de niveau d'apprenant), pas une liste officielle.
+- **Priorité 70 / 30** : environ 70 % d'éléments très courants de la vie réelle, 30 % d'éléments plus riches ou
+  spécialisés. Cette proportion guide la sélection ; elle ne garantit pas la maîtrise de l'anglais.
+- **Organisation** : 20 univers, ≈ 230 sous-thèmes (`src/lib/vocab/universes.ts`) ; chaque entrée a 1 à 4 sous-thèmes
+  et une catégorie (mot, verbe, verbe irrégulier, phrasal verb, expression idiomatique, connecteur, familier,
+  collocation, expression de natif, faux ami, phrase utile, UK / US).
+- **Fichiers** : `lexicon/core-meta.json` (sous-thèmes et catégories des 3 374 mots du lexique intégré) et
+  `lexicon/ext.json` (entrées étendues), chargés à la demande et disponibles hors ligne après la première visite.
+- **Contrôles automatiques** (tests/vocab.test.ts) : pas de doublon, exemple contenant le mot, champs obligatoires,
+  note obligatoire pour les faux amis et les différences UK / US, chaque sous-thème alimenté.

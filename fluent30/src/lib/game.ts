@@ -1,6 +1,6 @@
 "use client";
 // Gamification: XP levels, coins, daily quests, streak rewards and the tourist's wardrobe.
-import { getDb, todayKey } from "./db";
+import { getDb, getSettings, todayKey } from "./db";
 import { computeStreak } from "./track";
 import { DESTINATIONS_CONTENT } from "./atlas/destinations";
 import { legacyMissionDest } from "./atlas/legacy";
@@ -253,6 +253,8 @@ export interface ProgressStats {
   mastered: number; // words durably memorised (FSRS stability ≥ 21 days)
   streak: number; // total active days (never lost — rewards regularity without penalty)
   missions: Record<string, number>; // destination id → missions completed
+  consolidated: number; // words consolidated (FSRS review state, stability ≥ 7 days on a skill, not being relearnt)
+  collections: string[]; // vocabulary collections completed
 }
 
 export async function progressStats(): Promise<ProgressStats> {
@@ -265,13 +267,15 @@ export async function progressStats(): Promise<ProgressStats> {
     db.missions.where("status").equals("done").toArray(),
   ]);
   const mastered = new Set(srs.filter((x) => x.stability >= 21).map((x) => x.cardId)).size;
+  const consolidated = new Set(srs.filter((x) => x.stability >= 7).map((x) => x.cardId)).size;
+  const collections = (await getSettings()).collectionsDone ?? [];
   const activeDays = days.filter((d) => d.seconds > 30 || d.reviews > 0 || d.newWords > 0 || d.xp > 0).length;
   const byDest: Record<string, number> = {};
   for (const m of missions) {
     const dest = MISSION_DEST.get(m.id) ?? m.id.split("-")[0];
     byDest[dest] = (byDest[dest] ?? 0) + 1;
   }
-  return { lessons, books, mastered, streak: activeDays, missions: byDest };
+  return { lessons, books, mastered, streak: activeDays, missions: byDest, consolidated, collections };
 }
 
 /** Current value of an earn rule. */
@@ -287,6 +291,8 @@ export function earnValue(rule: EarnRule, st: ProgressStats): number {
     case "books": return st.books;
     case "mastered": return st.mastered;
     case "streak": return st.streak;
+    case "consolidated": return st.consolidated;
+    case "collection": return rule.dest && st.collections.includes(rule.dest) ? 1 : 0;
     case "missions": return rule.dest ? st.missions[rule.dest] ?? 0 : Object.values(st.missions).reduce((a, b) => a + b, 0);
   }
 }

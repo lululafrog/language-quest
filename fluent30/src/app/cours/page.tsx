@@ -128,7 +128,7 @@ export default function CoursHub() {
       <SectionHeader title={t("Vocabulaire essentiel", "Essential vocabulary")} />
       <ListGroup>
         <ListRow href="/learn" tone="mint" icon={<Icon name="sparkle" size={20} />} title={t("Les mots les plus fréquents", "The most frequent words")} subtitle={t("Par paliers : 100, 500, 1 000, 2 000 mots", "In tiers: 100, 500, 1,000, 2,000 words")} />
-        <ListRow href="/themes" tone="mint" icon={<Icon name="globe" size={20} />} title={t("Vocabulaire par thème", "Vocabulary by theme")} subtitle={t("Indispensables d'abord, puis tes centres d'intérêt", "Essentials first, then your interests")} />
+        <ListRow href="/vocab" tone="mint" icon={<Icon name="globe" size={20} />} title={t("Vocabulaire par univers", "Vocabulary by universe")} subtitle={t("20 univers, carte mentale, collections", "20 universes, mind map, collections")} />
       </ListGroup>
 
       {/* Sheets */}

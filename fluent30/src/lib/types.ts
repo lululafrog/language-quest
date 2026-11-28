@@ -42,6 +42,12 @@ export interface Card {
   journalId?: string;
   /** CEFR level of the word (A1…C1), from the shared lexicon or estimated */
   cefr?: Cefr;
+  /** vocabulary universes: sub-theme ids "universe.sub" (lib/vocab/universes) */
+  subs?: string[];
+  /** grammatical / usage category (word, verb, phrasal, idiom, connector, falsefriend…) */
+  cat?: string;
+  /** distinct meaning when the same word exists twice (e.g. "bank" = banque / rive) */
+  sense?: string;
   /** answers given in games and exercises (first attempt per question) */
   gameStats?: { correct: number; wrong: number; hints: number; lastAt?: number };
   /** where the learner has met this word: game ids, "reader", "lesson", "mission", "photo"… (deduplicated) */
@@ -278,6 +284,13 @@ export interface Settings {
   lastSyncAt?: number;
   /** vocabulary level estimated from the learner's real answers in games (may differ from pathLevel) */
   vocabLevel?: { level: Cefr; down?: boolean; at: number };
+  /** vocabulary space: preferred view, garden on/off, favourite universes */
+  vocabView?: "map" | "universes" | "library";
+  vocabGarden?: boolean;
+  favoriteUniverses?: string[];
+  /** vocabulary collections completed (rewards) and garden stages already celebrated */
+  collectionsDone?: string[];
+  gardenSeen?: Record<string, number>;
   /** last choices on the game mode screen */
   gamePrefs?: { mode: "new" | "review"; theme?: string };
   updatedAt: number;

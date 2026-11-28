@@ -163,7 +163,7 @@ export default function VocabProgress() {
             return (
               <li key={g.id}>
                 <div className="flex items-baseline justify-between text-sm">
-                  <Link href={`/games/mcq?mode=new&theme=${g.id}`} className="hover:underline">{g.emoji} {g.fr}</Link>
+                  <Link href={`/games/mcq?mode=new&theme=${g.id}`} className="hover:underline">{g.fr}</Link>
                   <span className="text-xs text-muted tabular-nums">{th.mastered} / {th.words}</span>
                 </div>
                 <ProgressBar value={th.mastered} max={Math.max(1, th.words)} tone="ink" className="mt-1" />

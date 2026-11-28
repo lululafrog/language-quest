@@ -8,7 +8,10 @@ import { lookupLocal } from "./lexicon";
 import { seedByLemma } from "./data/vocab";
 import { tierOf, type SeedWord } from "./data/types";
 import { IRREGULAR_FORMS } from "./data/irregular";
-import { lemmaCandidates, normalize } from "./text";
+import { lemmaCandidates, normalize, splitAlternatives } from "./text";
+import { cardLevel, lexWord } from "./vocab/words";
+import { subForLegacy } from "./vocab/universes";
+import { catFromPos } from "./vocab/lexicon-full";
 import { guessThemes } from "./autotheme";
 import type { Card, EntryKind, Enrichment } from "./types";
 
@@ -105,11 +108,13 @@ export interface AddResult {
 /** Save a card (or merge into an existing one with the same lemma) and schedule it for review. */
 export async function saveCard(card: Card, opts: { mergeDuplicates?: boolean; countAsNew?: boolean } = {}): Promise<AddResult> {
   const db = getDb();
+  card = classifyCard(card);
   const dup = await findDuplicate(card.term);
   if (dup && opts.mergeDuplicates !== false) {
     const variants = new Set([...(dup.variants ?? []), ...(normalize(card.term) !== normalize(dup.term) ? [card.term] : [])]);
     const themes = [...new Set([...dup.themes, ...card.themes])];
-    await db.cards.update(dup.id, { variants: [...variants], themes, suspended: false });
+    const subs = [...new Set([...(dup.subs ?? []), ...(card.subs ?? [])])].slice(0, 4);
+    await db.cards.update(dup.id, { variants: [...variants], themes, subs, suspended: false, updatedAt: Date.now() });
     await scheduleNewCard(dup.id);
     return { card: { ...dup, variants: [...variants], themes }, duplicateOf: dup, merged: true };
   }
@@ -119,9 +124,46 @@ export async function saveCard(card: Card, opts: { mergeDuplicates?: boolean; co
   return { card };
 }
 
+/** True when two French translations share at least one meaning ("banque, rive" vs "rive" → same). */
+export function sameMeaning(a: string, b: string): boolean {
+  const A = new Set(splitAlternatives(a).map((x) => normalize(x)));
+  return splitAlternatives(b).some((x) => A.has(normalize(x)) || [...A].some((y) => y.length > 3 && (y.includes(normalize(x)) || normalize(x).includes(y))));
+}
+
+async function findSense(lemma: string, fr: string): Promise<Card | undefined> {
+  const all = await getDb().cards.where("lemma").equals(lemma).toArray();
+  return all.find((c) => sameMeaning(c.fr, fr));
+}
+
+/**
+ * Classifies a word wherever it comes from (book, game, lesson, conversation, photo, mission, manual list):
+ * sub-themes, universe, category and CEFR level from the shared lexicon when the word is known, otherwise from its
+ * themes and part of speech. Never overwrites what is already set.
+ */
+export function classifyCard(card: Card): Card {
+  const lex = lexWord(card.lemma) ?? lexWord(card.term);
+  const subs = card.subs?.length ? card.subs : lex?.subs?.length ? lex.subs : [...new Set(card.themes.map(subForLegacy).filter((x): x is string => !!x))].slice(0, 3);
+  return {
+    ...card,
+    subs: subs.length ? subs : ["daily.small-talk"],
+    cat: card.cat ?? lex?.cat ?? catFromPos(card.pos, card.term),
+    cefr: card.cefr ?? cardLevel(card),
+  };
+}
+
 /** Quick add from any screen (reader, chat report, translator): enrich with AI if possible, else local data. */
 export async function quickAdd(term: string, opts: { fr?: string; context?: string; source?: Card["source"]; example?: string; pos?: string } = {}): Promise<AddResult & { usedAI: boolean }> {
   const dup = await findDuplicate(term);
+  if (dup && opts.fr && !sameMeaning(dup.fr, opts.fr) && dup.sense !== opts.fr) {
+    // same word, clearly different meaning (e.g. "bank" = banque / rive): a separate entry for this sense
+    const other = await findSense(dup.lemma, opts.fr);
+    if (other) return { card: other, duplicateOf: other, merged: true, usedAI: false };
+    const card: Card = classifyCard({ ...dup, id: uid("c"), fr: opts.fr, sense: opts.fr, example: opts.example ?? undefined, exampleFr: undefined, context: opts.context, source: opts.source ?? "user", variants: [], createdAt: Date.now(), updatedAt: Date.now(), gameStats: undefined, seenIn: undefined, imageKey: undefined });
+    await getDb().cards.put(card);
+    await scheduleNewCard(card.id);
+    await trackActivity({ newWords: 1, xp: 5 });
+    return { card, usedAI: false };
+  }
   if (dup) {
     const r = await saveCard({ ...dup, term }, {});
     return { ...r, usedAI: false };

@@ -80,7 +80,7 @@ export const STATUS_INFO: Record<WordStatus, { label: string; short: string; des
   learning: { label: "En cours d'apprentissage", short: "En cours", desc: "Réussi récemment, la mémoire n'est pas encore stable.", tone: "ink" },
   review: { label: "À réviser", short: "À réviser", desc: "Raté, trouvé avec un indice, trop lentement, ou date de révision passée.", tone: "coral" },
   good: { label: "Bien maîtrisé", short: "Bien maîtrisés", desc: "Retrouvé sans aide ; il reviendra dans quelques jours pour vérifier.", tone: "mint" },
-  durable: { label: "Maîtrisé durablement", short: "Durables", desc: "Réussi plusieurs fois sur plusieurs semaines.", tone: "mint" },
+  durable: { label: "Maîtrisé durablement", short: "Durables", desc: "Réussi plusieurs fois sur plusieurs semaines, y compris pour le retrouver toi-même.", tone: "mint" },
 };
 
 const REVIEW_STATE = 2;
@@ -100,9 +100,22 @@ export function statusOf(states: SrsState[], history: { last?: { rating: Grade; 
   if (history.last && history.last.rating <= 2) return "review";
   if (done.some((s) => s.state === REVIEW_STATE && s.due <= now)) return "review";
   const stab = Math.max(...done.map((s) => s.stability));
-  if (stab >= DURABLE_DAYS && history.successes >= 3) return "durable";
+  // recognising a word is not using it: "durable" also needs the word to be produced (FR → EN, cloze, speaking…)
+  const prod = done.find((s) => s.skill === "production");
+  if (stab >= DURABLE_DAYS && history.successes >= 3 && prod && prod.stability >= GOOD_DAYS) return "durable";
   if (stab >= GOOD_DAYS) return "good";
   return "learning";
+}
+
+export type SkillMastery = "none" | "fragile" | "solid";
+/** Recognition (EN → FR, listening) vs active use (FR → EN, cloze, speaking), shown separately. */
+export function skillMastery(states: SrsState[]): { recognition: SkillMastery; production: SkillMastery } {
+  const level = (xs: SrsState[]): SkillMastery => {
+    const done = xs.filter((s) => s.reps > 0);
+    if (!done.length) return "none";
+    return Math.max(...done.map((s) => s.stability)) >= GOOD_DAYS && !done.some((s) => s.state === RELEARNING) ? "solid" : "fragile";
+  };
+  return { recognition: level(states.filter((s) => s.skill !== "production")), production: level(states.filter((s) => s.skill === "production")) };
 }
 
 /** Mastery score 0–100 shown on a word (stability on a log scale, penalised by recent failures). */

@@ -22,9 +22,9 @@ export type Collection =
 
 /** Earned (not buyable) item: unlocked by real progress, checked by lib/game.ts → checkEarnedItems(). */
 export interface EarnRule {
-  kind: "lessons" | "missions" | "books" | "mastered" | "streak";
+  kind: "lessons" | "missions" | "books" | "mastered" | "streak" | "consolidated" | "collection";
   n: number;
-  /** destination id for "missions" (world destination id, see data/world.ts) */
+  /** destination id for "missions" (world destination id, see data/world.ts); collection id for "collection" */
   dest?: string;
   fr: string;
   en: string;
@@ -253,6 +253,28 @@ export const SHOP_ITEMS: ShopItem[] = [
   E("x-lessons-20", "outer", "vestes", "Veste d'explorateur", "Explorer's jacket", { k: "safari", c: "#7C8B5A" }, { kind: "lessons", n: 20, fr: "20 cours validés", en: "20 lessons passed" }, "safari"),
   E("x-words-100", "hat", "chapeaux", "Chapeau de globe-trotteur", "Globetrotter's hat", { k: "fedora", c: "#D8C8A8", c2: "#7F9C7A" }, { kind: "mastered", n: 100, fr: "100 mots maîtrisés", en: "100 words mastered" }, "adventure"),
   E("x-words-500", "bag", "sacsados", "Sac de grand voyageur", "Seasoned traveller's pack", { k: "backpack", c: "#2B3A55", c2: "#E9C46A", t: "hike" }, { kind: "mastered", n: 500, fr: "500 mots maîtrisés", en: "500 words mastered" }, "backpacker", "légendaire"),
+
+  // ---------- Vocabulary: consolidated-word milestones (real memory, not cards viewed) and collections completed
+  E("x-vocab-100", "hand", "objets", "Carnet de mots en lin", "Linen word notebook", { k: "journal" }, { kind: "consolidated", n: 100, fr: "100 mots consolidés", en: "100 words consolidated" }, "literary", "rare"),
+  E("x-vocab-250", "neck", "bijoux", "Pendentif boussole des mots", "Word-compass pendant", { k: "compass" }, { kind: "consolidated", n: 250, fr: "250 mots consolidés", en: "250 words consolidated" }, "adventure", "rare"),
+  E("x-vocab-500", "hat", "chapeaux", "Panama du polyglotte", "Polyglot's panama", { k: "panama" }, { kind: "consolidated", n: 500, fr: "500 mots consolidés", en: "500 words consolidated" }, "eusummer"),
+  E("x-vocab-1000", "neck", "bijoux", "Montre à gousset du grand voyageur", "Great traveller's pocket watch", { k: "pocketwatch" }, { kind: "consolidated", n: 1000, fr: "1 000 mots consolidés", en: "1,000 words consolidated" }, "literary"),
+  E("x-vocab-2500", "outer", "vestes", "Trench d'explorateur", "Explorer's trench coat", { k: "trench", c: "#C9A97A" }, { kind: "consolidated", n: 2500, fr: "2 500 mots consolidés", en: "2,500 words consolidated" }, "citytrip", "légendaire"),
+  E("x-vocab-5000", "background", "decors", "Grande carte murale du globe-trotteur", "Globetrotter wall map", { k: "room", t: "roadmap" }, { kind: "consolidated", n: 5000, fr: "5 000 mots consolidés", en: "5,000 words consolidated" }, "literary", "légendaire"),
+  E("x-col-first100", "neck", "objets", "Badge « Premiers mots »", "“First words” badge", { k: "badge" }, { kind: "collection", dest: "first100", n: 1, fr: "Collection « Mes 100 premiers mots » terminée", en: "“My first 100 words” completed" }, undefined, "rare"),
+  E("x-col-verbs", "hand", "objets", "Guide des verbes", "Verb guidebook", { k: "guide" }, { kind: "collection", dest: "verbs", n: 1, fr: "Collection « Les verbes indispensables » terminée", en: "“Essential verbs” completed" }, "backpacker", "rare"),
+  E("x-col-airport", "neck", "objets", "Tour de cou d'embarquement", "Boarding lanyard", { k: "badge" }, { kind: "collection", dest: "airport", n: 1, fr: "Collection « Survivre à l'aéroport » terminée", en: "“Surviving the airport” completed" }, "airport"),
+  E("x-col-solo", "hand", "objets", "Carte du voyageur solo", "Solo traveller's map", { k: "map" }, { kind: "collection", dest: "solo", n: 1, fr: "Collection « Voyager seul à l'étranger » terminée", en: "“Travelling solo” completed" }, "backpacker"),
+  E("x-col-flirt", "hat", "bijoux", "Fleur à la boutonnière", "Buttonhole flower", { k: "flowerpin" }, { kind: "collection", dest: "flirt", n: 1, fr: "Collection « Flirter en anglais » terminée", en: "“Flirting in English” completed" }, "eusummer"),
+  E("x-col-native", "hat", "chapeaux", "Casquette plate londonienne", "London flat cap", { k: "flatcap", c: "#5B5B5B" }, { kind: "collection", dest: "native", n: 1, fr: "Collection « Parler comme un natif » terminée", en: "“Speak like a native” completed" }, "citytrip"),
+  E("x-col-restaurant", "hand", "objets", "Tasse réutilisable de chef", "Chef's keep cup", { k: "keepcup", c: "#C6623B" }, { kind: "collection", dest: "restaurant", n: 1, fr: "Collection « Commander au restaurant » terminée", en: "“Ordering at the restaurant” completed" }, "citytrip", "rare"),
+  E("x-col-friends", "neck", "bijoux", "Bracelets d'amitié", "Friendship bracelets", { k: "bracelets" }, { kind: "collection", dest: "friends", n: 1, fr: "Collection « Se faire des amis en voyage » terminée", en: "“Making friends abroad” completed" }, "backpacker"),
+  E("x-col-school", "face", "visage", "Lunettes rondes d'érudit", "Scholar's round glasses", { k: "glRound" }, { kind: "collection", dest: "school", n: 1, fr: "Collection « Les expressions que l'école ne nous apprend pas » terminée", en: "“What school never taught us” completed" }, "literary"),
+  E("x-col-literal", "hand", "objets", "Loupe anti-traduction littérale", "Anti-literal-translation magnifier", { k: "magnifier" }, { kind: "collection", dest: "literal", n: 1, fr: "Collection « Arrêter de traduire mot à mot » terminée", en: "“Stop translating word for word” completed" }, "literary"),
+  E("x-col-phrasal", "bag", "sacsados", "Besace des phrasal verbs", "Phrasal-verb satchel", { k: "pouch", c: "#8A3F24" }, { kind: "collection", dest: "phrasal", n: 1, fr: "Collection « Les phrasal verbs incontournables » terminée", en: "“Must-know phrasal verbs” completed" }, "backpacker"),
+  E("x-col-interview", "top", "chemises", "Chemise d'entretien", "Interview shirt", { k: "shirt", c: "#DCE6ED" }, { kind: "collection", dest: "interview", n: 1, fr: "Collection « Préparer un entretien » terminée", en: "“Job interview” completed" }, "citytrip"),
+  E("x-col-stories", "neck", "objets", "Appareil photo de reporter", "Reporter's camera", { k: "camera" }, { kind: "collection", dest: "stories", n: 1, fr: "Collection « Raconter ses aventures » terminée", en: "“Telling your adventures” completed" }, "adventure"),
+  E("x-col-humour", "face", "visage", "Lunettes étoilées", "Star glasses", { k: "glStar" }, { kind: "collection", dest: "humour", n: 1, fr: "Collection « Développer son humour en anglais » terminée", en: "“Humour in English” completed" }, "eusummer"),
   E("x-books-1", "hand", "valises", "Valise de lecteur", "Reader's suitcase", { k: "suitcaseHard", c: "#C9785A", t: "stickers" }, { kind: "books", n: 1, fr: "1 livre terminé", en: "1 book finished" }, "backpacker", "rare"),
   E("x-streak-7", "neck", "bijoux", "Bracelets de la semaine", "One-week bracelets", { k: "bracelets" }, { kind: "streak", n: 7, fr: "7 jours d'apprentissage", en: "7 days of learning" }, "backpacker", "rare"),
   E("x-streak-30", "dress", "maillots", "Maillot du voyageur fidèle", "Loyal traveller's swimsuit", { k: "swimsuit", c: "#2B3A55", c2: "#C9785A" }, { kind: "streak", n: 30, fr: "30 jours d'apprentissage", en: "30 days of learning" }, "beach"),

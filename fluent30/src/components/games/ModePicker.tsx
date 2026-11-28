@@ -74,13 +74,13 @@ export function ModePicker({ gameId, onStart }: { gameId: string; onStart: (mode
 
       <p className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-muted">{t("Thème (facultatif)", "Theme (optional)")}</p>
       <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
-        {[{ id: undefined as string | undefined, fr: "Tous", emoji: "🌍" }, ...THEME_GROUPS].map((g) => (
+        {[{ id: undefined as string | undefined, fr: "Tous les univers" }, ...THEME_GROUPS].map((g) => (
           <button
             key={g.id ?? "all"}
             onClick={() => setTheme(g.id)}
             className={cx("shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition", theme === g.id ? "border-ink-600 bg-ink-600 text-white" : "border-line bg-surface text-muted hover:text-fg")}
           >
-            {g.emoji} {g.fr}
+            {g.fr}
           </button>
         ))}
       </div>

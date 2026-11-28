@@ -3,7 +3,9 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useT } from "@/hooks/useT";
 import { useStatus } from "@/hooks/useStatus";
 import { computeOverview } from "@/lib/progress";
-import { LinkButton, ListGroup, ListRow, Panel, SectionHeader } from "@/components/ui";
+import Link from "next/link";
+import { LinkButton, ListGroup, ListRow, SectionHeader } from "@/components/ui";
+import { UniverseArt } from "@/components/vocab/UniverseArt";
 import { Icon } from "@/components/icons";
 
 export default function PracticePage() {
@@ -20,28 +22,14 @@ export default function PracticePage() {
         <p className="mt-1 text-sm text-muted">{t("70 % du temps : utiliser l'anglais, pas seulement l'apprendre.", "70% of the time: using English, not just studying it.")}</p>
       </header>
 
-      <Panel tone="highlight" className="mb-6">
-        <div className="flex items-center gap-4">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-ink-600 text-white"><Icon name="review" size={24} /></span>
-          <div className="min-w-0 flex-1">
-            <p className="font-semibold">{due ? t(`${due} mots t'attendent`, `${due} words are waiting`) : t("Tu es à jour", "You're up to date")}</p>
-            <p className="text-sm text-muted">{due ? t("La répétition espacée les ramène au bon moment.", "Spaced repetition brings them back at the right time.") : t("Apprends de nouveaux mots ou joue pour les ancrer.", "Learn new words or play to anchor them.")}</p>
-          </div>
+      <Link href="/vocab" className="mb-6 block overflow-hidden rounded-3xl border border-line bg-surface shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+        <UniverseArt id="travel" className="block h-28 w-full" />
+        <div className="p-4">
+          <p className="font-display text-xl font-semibold">{t("Vocabulaire", "Vocabulary")}</p>
+          <p className="text-sm text-muted">{due ? t(`${due} mots à réviser · 20 univers à explorer`, `${due} words to review · 20 universes`) : t("Apprendre, réviser et explorer 20 univers", "Learn, review and explore 20 universes")}</p>
         </div>
-        {due > 0 ? (
-          <LinkButton href="/review" className="mt-4 w-full">{t(`Réviser ${due} mots`, `Review ${due} words`)}</LinkButton>
-        ) : (
-          <LinkButton href="/learn" className="mt-4 w-full">{t("Apprendre de nouveaux mots", "Learn new words")}</LinkButton>
-        )}
-      </Panel>
-
-      <SectionHeader title={t("Flashcards", "Flashcards")} />
-      <ListGroup>
-        <ListRow href="/review" icon={<Icon name="review" size={20} />} title={t("Réviser", "Review")} subtitle={due ? t(`${due} mots prêts`, `${due} words ready`) : t("Rien en attente", "Nothing due")} />
-        <ListRow href="/learn" icon={<Icon name="sparkle" size={20} />} title={t("Nouveaux mots", "New words")} subtitle={t("70 % fréquents, 30 % tes centres d'intérêt", "70% frequent, 30% your interests")} />
-        <ListRow href="/cards" icon={<Icon name="flashcards" size={20} />} title={t("Mes cartes", "My cards")} subtitle={o ? t(`${o.totalCards} cartes`, `${o.totalCards} cards`) : undefined} />
-        <ListRow href="/practice/mindmap" tone="mint" icon={<Icon name="layers" size={20} />} title={t("Carte mentale", "Mind map")} subtitle={t("Ton vocabulaire par univers, points forts et manques", "Your vocabulary by topic, strengths and gaps")} />
-      </ListGroup>
+      </Link>
+      {due > 0 && <LinkButton href="/vocab/play?mode=review&size=10" className="-mt-3 mb-6 w-full">{t(`Réviser ${Math.min(due, 10)} mots maintenant`, `Review ${Math.min(due, 10)} words now`)}</LinkButton>}
 
       <SectionHeader title={t("Ta vraie vie", "Your real life")} subtitle={t("Tes contenus restent privés", "Your content stays private")} />
       <ListGroup>
@@ -66,8 +54,8 @@ export default function PracticePage() {
           <ListRow href="/listen" icon={<Icon name="headphones" size={20} />} title={t("Écoute", "Listening")} subtitle={t("Dialogues, dictées, accents", "Dialogues, dictation, accents")} />
           <ListRow href="/pronunciation" icon={<Icon name="mic" size={20} />} title={t("Prononciation", "Pronunciation")} subtitle={t("Les pièges des francophones", "French speakers' traps")} />
           <ListRow href="/translate" icon={<Icon name="translate" size={20} />} title={t("Traducteur", "Translator")} subtitle={t("Comprendre un message et y répondre", "Understand a message and reply")} />
+          <ListRow href="/cards" icon={<Icon name="flashcards" size={20} />} title={t("Mes cartes", "My cards")} subtitle={o ? t(`${o.totalCards} cartes`, `${o.totalCards} cards`) : undefined} />
           <ListRow href="/cards/add" icon={<Icon name="plus" size={20} />} title={t("Ajouter un mot", "Add a word")} subtitle={t("Mot, phrase ou capture d'écran", "Word, sentence or screenshot")} />
-          <ListRow href="/themes" icon={<Icon name="globe" size={20} />} title={t("Thèmes de vocabulaire", "Vocabulary themes")} subtitle={t("Indispensables, quotidien, passions", "Essentials, everyday life, passions")} />
         </ListGroup>
       </details>
     </div>

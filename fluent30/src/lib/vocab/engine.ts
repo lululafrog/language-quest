@@ -6,14 +6,15 @@
 // There is ONE personal vocabulary base: the `cards` table (deduplicated by lemma), with FSRS states in `srs` and the
 // answer history in `reviewLogs`. Words met in books, lessons, photos, captures, missions or games all land there.
 import { getDb, getSettings, saveSettings, todayKey, uid } from "../db";
-import { cardFromSeed, findDuplicate, lemmaOf } from "../cards";
+import { cardFromSeed, classifyCard, findDuplicate, lemmaOf } from "../cards";
 import { gradeCard } from "../srs";
 import { trackActivity } from "../track";
 import { shuffle } from "../text";
 import type { PoolItem } from "../pool";
 import type { Card, Cefr, Grade, ReviewLog, Skill, SrsState } from "../types";
 import { CEFR_LEVELS, cefrIndex, estimateLevel, gradeOf, levelMix, statusOf, type LevelEstimate, type LevelState, type Outcome, type WordStatus } from "./core";
-import { cardLevel, inGroup, lexicon, lexWord, themeGroup, type LexWord } from "./words";
+import { cardLevel, inGroup, lexWord, themeGroup, type LexWord } from "./words";
+import { loadFullLexicon } from "./lexicon-full";
 
 export type WordMode = "new" | "review";
 
@@ -38,14 +39,14 @@ export function itemFromCard(c: Card, weakness = 0.5): PoolItem {
 
 // ---------- learner data ----------
 
-interface WordData {
+export interface WordData {
   card: Card;
   states: SrsState[];
   logs: ReviewLog[];
   status: WordStatus;
 }
 
-async function loadWords(): Promise<WordData[]> {
+export async function loadWords(): Promise<WordData[]> {
   const db = getDb();
   const [cards, srs, logs] = await Promise.all([db.cards.toArray(), db.srs.toArray(), db.reviewLogs.toArray()]);
   const st = new Map<string, SrsState[]>();
@@ -62,7 +63,7 @@ async function loadWords(): Promise<WordData[]> {
     });
 }
 
-function historyOf(logs: ReviewLog[]) {
+export function historyOf(logs: ReviewLog[]) {
   const last = logs[logs.length - 1];
   return { last: last ? { rating: last.rating, at: last.at } : undefined, successes: logs.filter((l) => l.rating >= 3).length };
 }
@@ -171,8 +172,8 @@ export function reviewPriority(w: WordData, now = Date.now()): number {
 async function selectNew(n: number, opts: SelectOpts, level: LevelState, known: Set<string>): Promise<PoolItem[]> {
   const group = themeGroup(opts.theme);
   const usable = (w: LexWord, withTheme: boolean) =>
-    !known.has(w.lemma) && !SKIP_POS.has(w.pos) && !opts.exclude?.has(`seed:${w.rank}`) && (!withTheme || inGroup(w.themes, group)) && (!opts.filter || opts.filter(itemFromLex(w)));
-  const lex = lexicon();
+    !known.has(w.lemma) && !SKIP_POS.has(w.pos) && !opts.exclude?.has(`seed:${w.rank}`) && (!withTheme || inGroup([...(w.themes ?? []), ...(w.subs ?? [])], group)) && (!opts.filter || opts.filter(itemFromLex(w)));
+  const lex: LexWord[] = await loadFullLexicon();
   const picked: LexWord[] = [];
   const take = (cands: LexWord[], k: number) => {
     // frequent words first: random sample among the most frequent remaining words of the level (progressive)
@@ -212,7 +213,7 @@ export async function selectWords(opts: SelectOpts): Promise<Selection> {
   const group = themeGroup(opts.theme);
   const now = Date.now();
   const cands = words
-    .filter((w) => !opts.exclude?.has(w.card.id) && inGroup(w.card.themes, group))
+    .filter((w) => !opts.exclude?.has(w.card.id) && inGroup([...w.card.themes, ...(w.card.subs ?? [])], group))
     .map((w) => ({ w, p: reviewPriority(w, now), item: itemFromCard(w.card, w.status === "review" ? 0.9 : 0.5) }))
     .filter((x) => x.p > 0 && (!opts.filter || opts.filter(x.item)));
   // the most urgent first, with some variety among words of similar priority
@@ -232,7 +233,7 @@ export async function reviewCount(theme?: string): Promise<{ toReview: number; t
   const words = await loadWords();
   const group = themeGroup(theme);
   const now = Date.now();
-  const inTheme = words.filter((w) => inGroup(w.card.themes, group));
+  const inTheme = words.filter((w) => inGroup([...w.card.themes, ...(w.card.subs ?? [])], group));
   return { toReview: inTheme.filter((w) => reviewPriority(w, now) >= 2).length, total: inTheme.length };
 }
 
@@ -262,9 +263,10 @@ export async function ensureCard(item: PoolItem, source: Card["source"] = "game"
         id: uid("c"), term: item.en, lemma: lemmaOf(item.en), kind: "word", fr: item.fr, pos: item.pos, example: item.example, exampleFr: item.exampleFr,
         ipa: item.ipa, definition: item.def, synonyms: item.synonyms, themes: item.themes ?? ["daily"], cefr: item.cefr, source, enriched: true, createdAt: now, updatedAt: now,
       };
-  await db.cards.put(card);
+  const classified = classifyCard(card);
+  await db.cards.put(classified);
   await trackActivity({ newWords: 1 });
-  return { card, created: true };
+  return { card: classified, created: true };
 }
 
 /**

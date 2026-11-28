@@ -138,7 +138,7 @@ function LearnInner() {
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <Button onClick={() => start("auto")} loading={loading}>{theme ? t("Apprendre 10 mots de ce thème", "Learn 10 words from this theme") : remaining > 0 ? t(`Apprendre ${remaining} mots`, `Learn ${remaining} words`) : t("5 mots de plus", "5 more words")}</Button>
-              {!theme && <Link href="/themes" className="inline-flex h-11 items-center rounded-xl border border-line px-4 text-[15px] font-medium hover:bg-surface-2">🗂️ {t("Choisir un thème", "Pick a theme")}</Link>}
+              {!theme && <Link href="/vocab#explorer" className="inline-flex h-11 items-center rounded-xl border border-line px-4 text-[15px] font-medium hover:bg-surface-2">{t("Choisir un univers", "Pick a universe")}</Link>}
               {s.interests.length > 0 && status?.ai && (
                 <Button variant="outline" onClick={() => start("ai-interests")} disabled={loading}>✨ {t("Mots selon mes centres d'intérêt", "Words for my interests")}</Button>
               )}

@@ -23,7 +23,7 @@ tout ce qui suit fonctionne hors connexion une fois les pages visitées.
 
 | Fonction | Service | Clé nécessaire |
 | --- | --- | --- |
-| Flashcards, FSRS, nouveaux mots (lexique intégré : 3 000 mots fréquents + ≈ 370 mots B2/C1, chacun avec niveau CECRL, traduction, définition et exemple), statistiques, tests | local | aucune |
+| Espace vocabulaire `/vocab` : ≈ 10 000 entrées A1→C1 (mots, phrasal verbs, expressions, connecteurs, faux amis, UK/US…), 20 univers et ≈ 230 sous-thèmes, carte mentale interactive, univers illustrés, bibliothèque, jardin de mots, collections, flashcards (7 formats, FSRS), statistiques, tests | local | aucune |
 | Jeux de vocabulaire intelligents (24 jeux, modes « nouveaux mots » / « réviser », niveau réel A1→C1, répétition espacée, tableau de bord `/games/progress`) — moteur central `src/lib/vocab/` | local | aucune |
 | 20 mini-jeux, verbes essentiels (38 verbes), 33 leçons de grammaire | local | aucune |
 | Liseuse, import EPUB / PDF / TXT, 12 histoires graduées A1–C2 | local | aucune |

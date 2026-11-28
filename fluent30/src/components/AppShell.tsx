@@ -38,10 +38,9 @@ export const SECTIONS: NavSection[] = [
   },
   {
     href: "/practice", fr: "Pratique", en: "Practice", icon: "practice",
-    match: ["/practice", "/review", "/learn", "/cards", "/themes", "/around", "/games", "/listen", "/pronunciation", "/chat", "/translate", "/session"],
+    match: ["/practice", "/vocab", "/review", "/learn", "/cards", "/themes", "/around", "/games", "/listen", "/pronunciation", "/chat", "/translate", "/session"],
     children: [
-      { href: "/review", fr: "Réviser", en: "Review", icon: "review" },
-      { href: "/practice/mindmap", fr: "Carte mentale", en: "Mind map", icon: "layers" },
+      { href: "/vocab", fr: "Vocabulaire", en: "Vocabulary", icon: "flashcards" },
       { href: "/practice/real-life", fr: "My Real Life English", en: "My Real Life English", icon: "camera" },
       { href: "/practice/journal", fr: "Journal", en: "Journal", icon: "pen" },
       { href: "/practice/memories", fr: "Memory Cards", en: "Memory Cards", icon: "heart" },
@@ -85,7 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const settings = useSettings();
   const online = useOnline();
-  const immersive = path.startsWith("/library/read");
+  const immersive = path.startsWith("/library/read") || path.startsWith("/vocab/play");
 
   // Theme
   useEffect(() => {

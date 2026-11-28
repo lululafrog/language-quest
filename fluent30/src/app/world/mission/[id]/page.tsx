@@ -9,6 +9,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { getDb } from "@/lib/db";
 import { getPrefs, setSpeechPrefs, stopSpeaking } from "@/lib/speech";
 import { gameSignal } from "@/lib/srs";
+import { AddWordButton } from "@/components/vocab/AddWordButton";
 import { getLesson } from "@/lib/curriculum";
 import { useSettings } from "@/hooks/useSettings";
 import { accentFor, destName, getAtlasMission, learnerBand, reviewItems, selectExercises, type ReviewItem } from "@/lib/atlas/engine";
@@ -322,10 +323,11 @@ export default function MissionPage() {
               {mission.phrases.map((p, i) => (
                 <div key={i} className="flex items-start gap-1 px-3 py-2.5">
                   <SpeakButton text={p.en} accent={accent} size={16} className="-ml-1 shrink-0" />
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-[15.5px] font-medium">{p.en}</p>
                     <p className="text-[14px] text-muted">{p.fr}</p>
                   </div>
+                  <AddWordButton en={p.en} fr={p.fr} source="mission" />
                 </div>
               ))}
             </div>
@@ -338,6 +340,7 @@ export default function MissionPage() {
                   <span key={v.id} className="inline-flex items-center gap-1 rounded-full border border-line bg-surface py-1 pl-3 pr-1 text-[14px]">
                     {v.en} <span className="text-muted">· {v.fr}</span>
                     <SpeakButton text={v.en} accent={accent} size={13} className="p-1" />
+                    <AddWordButton en={v.en} fr={v.fr} source="mission" className="h-7 w-7 text-sm" />
                   </span>
                 ))}
               </div>

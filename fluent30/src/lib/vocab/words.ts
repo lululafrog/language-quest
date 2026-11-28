@@ -3,6 +3,7 @@ import { SEED_VOCAB } from "../data/vocab";
 import { VOCAB_CEFR } from "../data/vocab-cefr";
 import type { SeedWord } from "../data/types";
 import type { Card, Cefr } from "../types";
+import { UNIVERSES } from "./universes";
 import { cefrFromDifficulty, cefrFromRank, isCefr } from "./core";
 
 export interface ThemeGroup {
@@ -12,19 +13,8 @@ export interface ThemeGroup {
   themes: string[];
 }
 
-/** Themes offered on the game mode screen (each groups several lexicon themes). */
-export const THEME_GROUPS: ThemeGroup[] = [
-  { id: "travel", fr: "Voyage", emoji: "✈️", themes: ["travel", "airport", "transport", "accommodation", "directions", "travel-problems", "beach", "adventure", "city"] },
-  { id: "food", fr: "Restauration", emoji: "🍽️", themes: ["restaurant", "food", "cooking"] },
-  { id: "emotions", fr: "Émotions", emoji: "😊", themes: ["emotions", "opinions"] },
-  { id: "work", fr: "Travail", emoji: "💼", themes: ["work", "tech", "school"] },
-  { id: "sport", fr: "Sport", emoji: "⚽", themes: ["sport", "body"] },
-  { id: "relations", fr: "Relations", emoji: "💞", themes: ["relationships", "people", "dating", "party", "greetings", "introductions"] },
-  { id: "daily", fr: "Vie quotidienne", emoji: "🏠", themes: ["daily", "home", "time", "shopping", "clothes", "numbers"] },
-  { id: "health", fr: "Santé", emoji: "🩺", themes: ["health", "body", "emergency"] },
-  { id: "nature", fr: "Nature", emoji: "🌿", themes: ["nature", "animals", "beach"] },
-  { id: "culture", fr: "Culture", emoji: "🎭", themes: ["art", "books", "movies", "music"] },
-];
+/** Themes offered on the game mode screen = the 20 vocabulary universes (one taxonomy for the whole app). */
+export const THEME_GROUPS: ThemeGroup[] = UNIVERSES.map((u) => ({ id: u.id, fr: u.fr, emoji: "", themes: [...u.legacy, ...u.subs.map((x) => x.id)] }));
 
 export function themeGroup(id?: string): ThemeGroup | undefined {
   return id ? THEME_GROUPS.find((g) => g.id === id) : undefined;
@@ -55,6 +45,18 @@ export interface LexWord extends SeedWord {
   level: Cefr;
   synonym?: string;
   lemma: string;
+  /** extended lexicon fields (lexicon-full.ts) */
+  cat?: string;
+  subs?: string[];
+  ant?: string;
+  tip?: string;
+  note?: string;
+}
+
+/** Entries of the extended lexicon, registered once it has been loaded (lexicon-full.ts). */
+const extended = new Map<string, LexWord>();
+export function registerExtended(words: LexWord[]) {
+  for (const w of words) if (!extended.has(w.lemma)) extended.set(w.lemma, w);
 }
 
 let cache: LexWord[] | null = null;
@@ -67,7 +69,8 @@ export function lexicon(): LexWord[] {
 const byLemma = new Map<string, LexWord>();
 export function lexWord(term: string): LexWord | undefined {
   if (!byLemma.size) for (const w of lexicon()) byLemma.set(w.lemma, w);
-  return byLemma.get(term.toLowerCase().trim().replace(/^to /, ""));
+  const k = term.toLowerCase().trim().replace(/^to /, "");
+  return extended.get(k) ?? byLemma.get(k);
 }
 
 /** CEFR level of a learner's card: stored value, else the lexicon level, else from its difficulty. */
