@@ -23,7 +23,8 @@ tout ce qui suit fonctionne hors connexion une fois les pages visitées.
 
 | Fonction | Service | Clé nécessaire |
 | --- | --- | --- |
-| Flashcards, FSRS, nouveaux mots (lexique intégré : 3 000 mots fréquents avec traduction, définition et exemple), statistiques, tests | local | aucune |
+| Flashcards, FSRS, nouveaux mots (lexique intégré : 3 000 mots fréquents + ≈ 370 mots B2/C1, chacun avec niveau CECRL, traduction, définition et exemple), statistiques, tests | local | aucune |
+| Jeux de vocabulaire intelligents (24 jeux, modes « nouveaux mots » / « réviser », niveau réel A1→C1, répétition espacée, tableau de bord `/games/progress`) — moteur central `src/lib/vocab/` | local | aucune |
 | 20 mini-jeux, verbes essentiels (38 verbes), 33 leçons de grammaire | local | aucune |
 | Liseuse, import EPUB / PDF / TXT, 12 histoires graduées A1–C2 | local | aucune |
 | Synthèse vocale (accents selon l'appareil), reconnaissance vocale | navigateur (Web Speech) | aucune — Chrome, Edge, Safari |

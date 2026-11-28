@@ -1,11 +1,12 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Badge, Button, Panel, SpeakButton, cx } from "@/components/ui";
+import { Badge, Button, Panel, cx } from "@/components/ui";
 import { useT } from "@/hooks/useT";
-import { reportAnswer, type Level, type MissedItem } from "@/lib/games/engine";
+import { elapsedSince, reportAnswer, type Level, type MissedItem } from "@/lib/games/engine";
 import type { PoolItem } from "@/lib/pool";
 import { speak } from "@/lib/speech";
 import { GameHeader, type FinishPayload } from "./common";
+import { WordFeedback } from "./WordFeedback";
 import { firstFr } from "./PairsGame";
 
 const ROWS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
@@ -17,7 +18,11 @@ export function HangmanGame({ gameId, words, level, onFinish }: { gameId: string
   const [guessed, setGuessed] = useState<Set<string>>(() => new Set(level === 1 ? [words[0]?.en[0]?.toLowerCase() ?? ""] : []));
   const [solved, setSolved] = useState(0);
   const missed = useRef<MissedItem[]>([]);
+  const startedAt = useRef(0);
   const w = words[i];
+  useEffect(() => {
+    startedAt.current = Date.now();
+  }, [i]);
   const word = w?.en.toLowerCase() ?? "";
   const errors = [...guessed].filter((g) => g && !word.includes(g)).length;
   const won = !!word && [...word].every((c) => !/[a-z]/.test(c) || guessed.has(c));
@@ -35,9 +40,11 @@ export function HangmanGame({ gameId, words, level, onFinish }: { gameId: string
       speak(w.en);
       if (nowWon) setSolved((s) => s + 1);
       else missed.current.push({ en: w.en, fr: w.fr, cardId: w.cardId });
-      void reportAnswer({ correct: nowWon, cardId: w.cardId, skill: "production", mistake: { id: `spelling:${word}`, type: "spelling", label: w.en, detail: w.fr } });
+      const errs = [...g].filter((x) => x && !word.includes(x)).length;
+      // found with many wrong letters = found with difficulty → the word goes to review
+      void reportAnswer({ correct: nowWon, approximate: nowWon && errs > 2, cardId: w.cardId, skill: "production", word: w, gameId, ms: elapsedSince(startedAt.current), typed: true, mistake: { id: `spelling:${word}`, type: "spelling", label: w.en, detail: w.fr } });
     },
-    [over, guessed, w, word],
+    [over, guessed, w, word, gameId],
   );
 
   useEffect(() => {
@@ -79,11 +86,7 @@ export function HangmanGame({ gameId, words, level, onFinish }: { gameId: string
         </div>
         {over ? (
           <div className="animate-fade space-y-3">
-            <p className={cx("font-semibold", won ? "text-mint-600" : "text-coral-600")}>{won ? t("Bravo !", "Well done!") : t("Perdu — le mot était :", "Out of lives — the word was:")}</p>
-            <div className="flex items-center justify-center gap-1 text-xl font-semibold">
-              {w.en} <SpeakButton text={w.en} />
-            </div>
-            {w.example && <p className="text-sm text-muted">{w.example}</p>}
+            <WordFeedback item={w} verdict={won ? (errors > 2 ? "close" : "exact") : "wrong"} reason={won ? t(`Trouvé avec ${errors} erreurs : il reviendra bientôt.`, `Found with ${errors} mistakes.`) : t("Plus de vies : retiens son orthographe, il reviendra plus tard.", "Out of lives: it will come back later.")} />
             <Button className="w-full" onClick={next} autoFocus>
               {i + 1 >= words.length ? t("Voir le résultat", "See results") : t("Mot suivant", "Next word")}
             </Button>

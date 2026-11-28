@@ -73,7 +73,7 @@ export function IrregularQuiz({ mode, onExit }: { mode: string; onExit: () => vo
       setMissed((m) => [...m, item.verb]);
       await recordMistake({ id: `irregular:${item.verb.base}`, type: "conjugation", label: `${item.verb.base} – ${item.verb.past} – ${item.verb.pp}`, detail: item.verb.fr });
     }
-    if (item.cardId) await gameSignal(item.cardId, ok, "production");
+    if (item.cardId) await gameSignal(item.cardId, ok, "production", "verbs");
   };
 
   const next = async () => {

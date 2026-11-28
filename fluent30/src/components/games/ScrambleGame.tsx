@@ -1,12 +1,13 @@
 "use client";
-import { useMemo, useRef, useState } from "react";
-import { Button, Panel, SpeakButton, cx } from "@/components/ui";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Button, Panel, cx } from "@/components/ui";
 import { useT } from "@/hooks/useT";
-import { reportAnswer, type MissedItem } from "@/lib/games/engine";
+import { elapsedSince, reportAnswer, type MissedItem } from "@/lib/games/engine";
 import type { PoolItem } from "@/lib/pool";
 import { speak } from "@/lib/speech";
 import { shuffle } from "@/lib/text";
 import { GameHeader, type FinishPayload } from "./common";
+import { WordFeedback } from "./WordFeedback";
 import { firstFr } from "./PairsGame";
 
 function scramble(word: string): string[] {
@@ -30,6 +31,10 @@ export function ScrambleGame({ gameId, words, onFinish }: { gameId: string; word
   const [state, setState] = useState<"play" | "ok" | "fail">("play");
   const [score, setScore] = useState(0);
   const missed = useRef<MissedItem[]>([]);
+  const startedAt = useRef(0);
+  useEffect(() => {
+    startedAt.current = Date.now();
+  }, [i]);
   const built = picked.map((k) => tiles[k].c).join("");
 
   function place(next: number[], hintsUsed: number) {
@@ -42,7 +47,7 @@ export function ScrambleGame({ gameId, words, onFinish }: { gameId: string; word
     const credit = hintsUsed === 0 ? 1 : hintsUsed === 1 ? 0.5 : 0;
     setScore((s) => s + credit);
     if (credit < 1) missed.current.push({ en: w.en, fr: w.fr, cardId: w.cardId });
-    void reportAnswer({ correct: hintsUsed <= 1, cardId: w.cardId, skill: "production" });
+    void reportAnswer({ correct: true, hint: hintsUsed > 0, cardId: w.cardId, skill: "production", word: w, gameId, ms: elapsedSince(startedAt.current), typed: true });
   }
 
   function hint() {
@@ -60,7 +65,7 @@ export function ScrambleGame({ gameId, words, onFinish }: { gameId: string; word
   function giveUp() {
     setState("fail");
     missed.current.push({ en: w.en, fr: w.fr, cardId: w.cardId });
-    void reportAnswer({ correct: false, cardId: w.cardId, skill: "production", mistake: { id: `spelling:${target}`, type: "spelling", label: w.en, detail: w.fr } });
+    void reportAnswer({ correct: false, cardId: w.cardId, skill: "production", word: w, gameId, mistake: { id: `spelling:${target}`, type: "spelling", label: w.en, detail: w.fr } });
     speak(w.en);
   }
 
@@ -111,10 +116,7 @@ export function ScrambleGame({ gameId, words, onFinish }: { gameId: string; word
           </>
         ) : (
           <div className="animate-fade space-y-3">
-            <div className="flex items-center justify-center gap-1 text-xl font-semibold">
-              {w.en} <SpeakButton text={w.en} />
-            </div>
-            {w.example && <p className="text-sm text-muted">{w.example}</p>}
+            <WordFeedback item={w} verdict={state === "fail" ? "wrong" : hints > 0 ? "close" : "exact"} reason={state === "fail" ? t("Retiens son orthographe : il reviendra plus tard.", "Remember the spelling.") : t("Trouvé avec un indice : il reviendra bientôt.", "Found with a hint.")} />
             <Button className="w-full" onClick={next} autoFocus>{i + 1 >= words.length ? t("Voir le résultat", "See results") : t("Suivant", "Next")}</Button>
           </div>
         )}

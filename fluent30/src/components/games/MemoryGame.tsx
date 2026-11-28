@@ -3,6 +3,7 @@ import { useMemo, useRef, useState } from "react";
 import { Badge, cx } from "@/components/ui";
 import { useT } from "@/hooks/useT";
 import { reportAnswer, type MissedItem } from "@/lib/games/engine";
+import type { PoolItem } from "@/lib/pool";
 import { speak } from "@/lib/speech";
 import { shuffle } from "@/lib/text";
 import { GameHeader, type FinishPayload } from "./common";
@@ -35,7 +36,8 @@ export function MemoryGame({ gameId, items, onFinish }: { gameId: string; items:
       setFound(f);
       const it = items.find((i) => i.key === a.pair)!;
       setTimeout(() => speak(it.en), 300);
-      void reportAnswer({ correct: !missed.current.has(a.pair), cardId: it.cardId });
+      // the memory game also tests where cards are: a pair found late counts as "with difficulty", never as a miss
+      void reportAnswer({ correct: true, approximate: missed.current.has(a.pair), cardId: it.cardId, word: "weakness" in it ? (it as PoolItem) : undefined, gameId });
       setOpen([]);
       if (f.size === items.length)
         setTimeout(

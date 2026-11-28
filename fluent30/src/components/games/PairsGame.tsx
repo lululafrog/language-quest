@@ -1,11 +1,13 @@
 "use client";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Panel, cx } from "@/components/ui";
 import { useT } from "@/hooks/useT";
-import { reportAnswer, type MissedItem } from "@/lib/games/engine";
+import { elapsedSince, reportAnswer, type MissedItem } from "@/lib/games/engine";
 import { speak } from "@/lib/speech";
 import { shuffle, splitAlternatives } from "@/lib/text";
 import { GameHeader, Notice, type FinishPayload } from "./common";
+import { WordFeedback } from "./WordFeedback";
+import type { PoolItem } from "@/lib/pool";
 
 export interface PairItem {
   key: string;
@@ -16,6 +18,7 @@ export interface PairItem {
   en: string;
   fr: string;
   cardId?: string;
+  word?: PoolItem;
 }
 
 export function PairsGame({ gameId, items, notice, onFinish }: { gameId: string; items: PairItem[]; notice?: string; onFinish: (p: FinishPayload) => void }) {
@@ -26,6 +29,11 @@ export function PairsGame({ gameId, items, notice, onFinish }: { gameId: string;
   const [matched, setMatched] = useState<Set<string>>(new Set());
   const [bad, setBad] = useState<{ l: string; r: string } | null>(null);
   const missed = useRef<Map<string, MissedItem>>(new Map());
+  const since = useRef(0);
+  const [last, setLast] = useState<{ it: PairItem; ok: boolean; other?: PairItem } | null>(null);
+  useEffect(() => {
+    since.current = Date.now();
+  }, []);
 
   function pickRight(key: string) {
     if (bad || !selL) return;
@@ -34,15 +42,19 @@ export function PairsGame({ gameId, items, notice, onFinish }: { gameId: string;
       const m = new Set(matched).add(selL);
       setMatched(m);
       speak(it.en);
-      if (!missed.current.has(selL)) void reportAnswer({ correct: true, cardId: it.cardId });
+      if (!missed.current.has(selL)) void reportAnswer({ correct: true, cardId: it.cardId, word: it.word, gameId, ms: elapsedSince(since.current) });
+      since.current += elapsedSince(since.current);
+      setLast({ it, ok: true });
       setSelL(null);
       if (m.size === items.length) setTimeout(() => onFinish({ score: items.length - missed.current.size, total: items.length, missed: [...missed.current.values()] }), 500);
     } else {
       setBad({ l: selL, r: key });
       if (!missed.current.has(selL)) {
         missed.current.set(selL, { en: it.en, fr: it.fr, cardId: it.cardId });
-        void reportAnswer({ correct: false, cardId: it.cardId, mistake: { id: `vocab:${it.en.toLowerCase()}`, type: "vocab", label: it.en, detail: it.fr } });
+        void reportAnswer({ correct: false, cardId: it.cardId, word: it.word, gameId, mistake: { id: `vocab:${it.en.toLowerCase()}`, type: "vocab", label: it.en, detail: it.fr } });
       }
+      const other = items.find((i) => i.key === key);
+      setLast({ it, ok: false, other });
       setTimeout(() => {
         setBad(null);
         setSelL(null);
@@ -89,6 +101,16 @@ export function PairsGame({ gameId, items, notice, onFinish }: { gameId: string;
           </div>
         </div>
       </Panel>
+      {last?.it.word && (
+        <div className="mt-3" key={last.it.key + String(last.ok)}>
+          <WordFeedback
+            compact={last.ok}
+            item={last.it.word}
+            verdict={last.ok ? "exact" : "wrong"}
+            reason={!last.ok && last.other ? t(`« ${last.other.right} » correspond à « ${last.other.left.startsWith("data:") ? last.other.en : last.other.left} », pas à ce mot.`, `"${last.other.right}" goes with another item.`) : undefined}
+          />
+        </div>
+      )}
     </div>
   );
 }

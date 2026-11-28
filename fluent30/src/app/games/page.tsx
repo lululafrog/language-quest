@@ -1,8 +1,10 @@
 "use client";
 import Link from "next/link";
 import { useLiveQuery } from "dexie-react-hooks";
-import { useMemo, useState } from "react";
-import { Badge, PageHeader, Panel, cx } from "@/components/ui";
+import { useEffect, useMemo, useState } from "react";
+import { Badge, PageHeader, Panel, ProgressBar, cx } from "@/components/ui";
+import { levelOverview, vocabDashboard } from "@/lib/vocab/engine";
+import { levelLabel, type LevelEstimate } from "@/lib/vocab/core";
 import { useT } from "@/hooks/useT";
 import { getDb } from "@/lib/db";
 import { CATEGORY_LABELS, GAMES, gameById, type GameCategory, type GameDef } from "@/lib/games/registry";
@@ -27,6 +29,34 @@ function recommend(mistakes: Mistake[], results: GameResult[]): { game: GameDef;
   for (const r of results) last.set(r.gameId, Math.max(last.get(r.gameId) ?? 0, r.at));
   const g = [...GAMES].sort((a, b) => (last.get(a.id) ?? 0) - (last.get(b.id) ?? 0))[0];
   return { game: g, reasonFr: last.has(g.id) ? "Le jeu que tu n'as pas fait depuis le plus longtemps." : "Un jeu que tu n'as pas encore essayé.", reasonEn: last.has(g.id) ? "The game you haven't played for the longest." : "A game you haven't tried yet." };
+}
+
+function VocabHeader() {
+  const t = useT();
+  const [info, setInfo] = useState<{ est: LevelEstimate; learned: number; reviewed: number; toReview: number } | null>(null);
+  const logs = useLiveQuery(() => getDb().reviewLogs.count(), []);
+  useEffect(() => {
+    Promise.all([levelOverview(), vocabDashboard()]).then(([est, d]) => setInfo({ est, learned: d.today.learned, reviewed: d.today.reviewed, toReview: d.counts.review }));
+  }, [logs]);
+  if (!info) return null;
+  const today =
+    info.learned || info.reviewed
+      ? t(`Aujourd'hui : ${info.learned} nouveau${info.learned > 1 ? "x" : ""} mot${info.learned > 1 ? "s" : ""} appris, ${info.reviewed} révisé${info.reviewed > 1 ? "s" : ""}.`, `Today: ${info.learned} new, ${info.reviewed} reviewed.`)
+      : info.toReview
+        ? t(`${info.toReview} mots à réviser t'attendent.`, `${info.toReview} words to review.`)
+        : t("Chaque jeu te propose d'apprendre de nouveaux mots ou de réviser les tiens.", "Each game: learn new words or review yours.");
+  return (
+    <Link href="/games/progress" className="mb-4 block">
+      <Panel className="transition hover:border-ink-300">
+        <div className="flex items-center justify-between gap-2 text-sm">
+          <span className="font-semibold">{levelLabel(info.est.state)}</span>
+          <span className="text-xs font-medium text-ink-600 dark:text-ink-300">{t("Mes progrès ›", "My progress ›")}</span>
+        </div>
+        <ProgressBar value={info.est.progress} tone="mint" className="mt-2" />
+        <p className="mt-2 text-sm text-muted">{today}</p>
+      </Panel>
+    </Link>
+  );
 }
 
 export default function GamesHub() {
@@ -54,10 +84,12 @@ export default function GamesHub() {
     <div>
       <PageHeader
         title={t("Mini-jeux", "Games")}
-        subtitle={t("Ils utilisent tes mots les moins maîtrisés et le vocabulaire essentiel. La précision compte plus que la vitesse.", "They use your weakest words and core vocabulary. Accuracy counts more than speed.")}
+        subtitle={t("Avant chaque jeu de vocabulaire : apprendre de nouveaux mots ou réviser les tiens. Tout est enregistré et revient au bon moment.", "Before each vocabulary game: learn new words or review yours.")}
         back="/practice"
         action={todayPlays > 0 ? <Badge tone="mint">{todayPlays} {t("aujourd'hui", "today")}</Badge> : undefined}
       />
+
+      <VocabHeader />
 
       {rec && (
         <Link href={`/games/${rec.game.id}`} className="mb-5 block">

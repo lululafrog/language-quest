@@ -17,6 +17,13 @@ export interface PoolItem {
   imageKey?: string;
   synonyms?: string[];
   weakness: number; // 0..1, higher = needs more practice
+  /** vocabulary engine (lib/vocab): level, pronunciation, definition, themes, and whether it is a new word */
+  cefr?: import("./types").Cefr;
+  ipa?: string;
+  def?: string;
+  themes?: string[];
+  isNew?: boolean;
+  rank?: number;
 }
 
 function fromCard(c: Card, weakness: number): PoolItem {

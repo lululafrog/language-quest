@@ -12,6 +12,7 @@ export interface SayItem {
   key: string;
   en: string;
   fr: string;
+  word?: import("@/lib/pool").PoolItem;
   cardId?: string;
 }
 
@@ -55,7 +56,7 @@ export function PronunciationGame({ gameId, items, onFinish }: { gameId: string;
   function next(passed: boolean) {
     if (passed) setScore((s) => s + 1);
     else missed.current.push({ en: it.en, fr: it.fr, cardId: it.cardId, note: t("À retravailler à l'oral", "Practise saying it again") });
-    if (!selfMode) void reportAnswer({ correct: passed, cardId: it.cardId, skill: "production", mistake: { id: `pron:${it.en.toLowerCase()}`, type: "pronunciation", label: it.en, detail: it.fr } });
+    if (!selfMode) void reportAnswer({ correct: passed, cardId: it.cardId, skill: "production", word: it.word, gameId, mistake: { id: `pron:${it.en.toLowerCase()}`, type: "pronunciation", label: it.en, detail: it.fr } });
     const finalScore = score + (passed ? 1 : 0);
     if (i + 1 >= items.length) {
       onFinish({ score: finalScore, total: items.length, missed: missed.current, extra: selfMode ? t("Mode auto-évaluation (sans reconnaissance vocale).", "Self-assessment mode (no speech recognition).") : t("Retour indicatif : la reconnaissance vocale ne remplace pas l'oreille d'un professeur.", "Indicative feedback: speech recognition doesn't replace a teacher's ear.") });

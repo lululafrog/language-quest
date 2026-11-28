@@ -47,7 +47,7 @@ function Practice({ items, accent, onFinish }: { items: QueueItem[]; accent: str
 
   const record = (o: ExerciseOutcome) => {
     setOutcome(o);
-    if (item.review) void gameSignal(item.review.cardId, o.correct);
+    if (item.review) void gameSignal(item.review.cardId, o.correct, "recognition", "mission");
     if (item.retry) return;
     if (o.override) {
       first.current.set(item.key, { correct: true });

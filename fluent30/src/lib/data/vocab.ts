@@ -1,6 +1,6 @@
 // Aggregates the built-in frequency vocabulary (deduplicated, re-ranked contiguously).
 // This is the SHARED, GENERIC lexicon (same for every learner, bundled with the app, works offline):
-// ranks 1–3000 with French translations, learner definitions and spoken examples. Personal data never lives here.
+// ranks 1–3000 (frequency) then ≈ 370 advanced B2/C1 words, with French translations, learner definitions and spoken examples. Personal data never lives here.
 import type { SeedWord } from "./types";
 import { VOCAB_1 } from "./vocab-1";
 import { VOCAB_2 } from "./vocab-2";
@@ -10,13 +10,17 @@ import { VOCAB_5 } from "./vocab-5";
 import { VOCAB_6 } from "./vocab-6";
 import { VOCAB_7 } from "./vocab-7";
 import { VOCAB_DETAILS } from "./vocab-details";
+import { ADV_B2 } from "./vocab-b2";
+import { ADV_C1 } from "./vocab-c1";
 
 export const SEED_VOCAB: SeedWord[] = (() => {
   const seen = new Set<string>();
   const out: SeedWord[] = [];
   const base = [...VOCAB_1, ...VOCAB_2, ...VOCAB_3].sort((a, b) => a.rank - b.rank);
   // New words (ranks ≈ 1714–3000) come after the original lists, in their own order.
-  for (const w of [...base, ...VOCAB_4, ...VOCAB_5, ...VOCAB_6, ...VOCAB_7]) {
+  // Advanced B2 / C1 vocabulary (beyond the 3,000 most frequent words), each with its own CEFR level.
+  const advanced: SeedWord[] = [...ADV_B2.map((w) => ({ ...w, cefr: w.cefr ?? "B2", rank: 0 })), ...ADV_C1.map((w) => ({ ...w, cefr: "C1", rank: 0 }))];
+  for (const w of [...base, ...VOCAB_4, ...VOCAB_5, ...VOCAB_6, ...VOCAB_7, ...advanced]) {
     const k = w.en.toLowerCase().trim();
     if (seen.has(k)) continue;
     seen.add(k);

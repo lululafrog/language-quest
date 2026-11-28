@@ -4,7 +4,9 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { Badge, Button, LinkButton, Panel, ProgressBar, Spinner, cx, toast } from "@/components/ui";
 import { useT } from "@/hooks/useT";
 import { quickAdd } from "@/lib/cards";
-import { computeLevel, saveResult, type Level, type MissedItem } from "@/lib/games/engine";
+import { computeLevel, flushAnswers, saveResult, sessionLog, type Level, type MissedItem } from "@/lib/games/engine";
+import { updateLevel } from "@/lib/vocab/engine";
+import { levelLabel, type LevelEstimate } from "@/lib/vocab/core";
 import { gameById } from "@/lib/games/registry";
 import { levenshtein, normalize } from "@/lib/text";
 
@@ -15,11 +17,20 @@ export interface FinishPayload {
   extra?: ReactNode;
 }
 
+/** What the game changed in the learner's vocabulary (from the answers saved by the vocabulary engine). */
+export interface VocabSummary {
+  newWords: number;
+  reviewed: number;
+  toReview: string[];
+  mastered: number;
+  level: LevelEstimate;
+}
+
 /** Loads the adaptive level and exposes finish() that saves the result. */
 export function useGameSession(gameId: string) {
   const [level, setLevel] = useState<Level | null>(null);
   const started = useRef(0);
-  const [result, setResult] = useState<(FinishPayload & { xp: number }) | null>(null);
+  const [result, setResult] = useState<(FinishPayload & { xp: number; vocab?: VocabSummary }) | null>(null);
   const [round, setRound] = useState(0);
 
   useEffect(() => {
@@ -37,7 +48,23 @@ export function useGameSession(gameId: string) {
   const finish = useCallback(
     async (p: FinishPayload) => {
       const xp = await saveResult(gameId, p.score, p.total, (Date.now() - started.current) / 1000).catch(() => 0);
-      setResult({ ...p, xp });
+      let vocab: VocabSummary | undefined;
+      if (sessionLog.length) {
+        await flushAnswers();
+        const byCard = new Map<string, (typeof sessionLog)[number]>();
+        for (const a of sessionLog) byCard.set(a.cardId, { ...a, createdCard: (byCard.get(a.cardId)?.createdCard ?? false) || a.createdCard });
+        const all = [...byCard.values()];
+        const level = await updateLevel().catch(() => null);
+        if (level)
+          vocab = {
+            newWords: all.filter((a) => a.createdCard).length,
+            reviewed: all.filter((a) => !a.createdCard).length,
+            toReview: all.filter((a) => a.status === "review").map((a) => a.en),
+            mastered: all.filter((a) => a.status === "good" || a.status === "durable").length,
+            level,
+          };
+      }
+      setResult({ ...p, xp, vocab });
     },
     [gameId],
   );
@@ -83,13 +110,24 @@ export function LevelBadge({ level }: { level: Level }) {
   return <Badge tone={level === 1 ? "mint" : level === 2 ? "ink" : "coral"}>{labels[level]}</Badge>;
 }
 
-export function EndScreen({ gameId, result, onReplay }: { gameId: string; result: FinishPayload & { xp: number }; onReplay: () => void }) {
+const LEVEL_MSG: Record<NonNullable<LevelEstimate["change"]>, (l: string) => string> = {
+  up: (l) => `🎉 Bravo : ton vocabulaire passe au niveau ${l} ! Les nouveaux mots seront un peu plus riches.`,
+  down: (l) => `🧱 On consolide un peu le niveau en dessous de ${l} : quelques parties pour bien ancrer, puis on remonte.`,
+  recovered: (l) => `💪 Bases consolidées : retour au niveau ${l}.`,
+  back: (l) => `🧱 On reprend au niveau ${l} pour bâtir des bases solides.`,
+};
+
+export function EndScreen({ gameId, result, onReplay, mode, onChangeMode }: { gameId: string; result: FinishPayload & { xp: number; vocab?: VocabSummary }; onReplay: () => void; mode?: "new" | "review"; onChangeMode?: () => void }) {
   const t = useT();
   const acc = result.total ? result.score / result.total : 0;
   const [added, setAdded] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<string | null>(null);
-  const msg =
-    acc >= 0.9 ? t("Excellent ! Mémorisation solide.", "Excellent! Solid recall.") : acc >= 0.7 ? t("Bien joué !", "Well done!") : acc >= 0.5 ? t("Pas mal — on consolide.", "Not bad — keep consolidating.") : t("Continue : c'est en se trompant qu'on retient.", "Keep going: mistakes help memory.");
+  const v = result.vocab;
+  const msg = v && v.newWords >= 3 && acc >= 0.7
+    ? t(`Super : ${v.newWords} nouveaux mots dans ta collection !`, `Great: ${v.newWords} new words!`)
+    : v && v.reviewed >= 3 && acc >= 0.8
+      ? t("Belle révision : ta mémoire se renforce.", "Great review: your memory is getting stronger.")
+      : acc >= 0.9 ? t("Excellent ! Mémorisation solide.", "Excellent! Solid recall.") : acc >= 0.7 ? t("Bien joué !", "Well done!") : acc >= 0.5 ? t("Pas mal — on consolide.", "Not bad — keep consolidating.") : t("Continue : c'est en se trompant qu'on retient.", "Keep going: mistakes help memory.");
 
   async function add(m: MissedItem) {
     setBusy(m.en);
@@ -127,10 +165,41 @@ export function EndScreen({ gameId, result, onReplay }: { gameId: string; result
         {result.extra && <div className="mt-3 text-sm text-muted">{result.extra}</div>}
       </Panel>
 
+      {result.vocab && (
+        <Panel className="space-y-3">
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-xl bg-sun-100/70 p-2 dark:bg-sun-500/15">
+              <div className="text-2xl font-semibold tabular-nums">{result.vocab.newWords}</div>
+              <div className="text-[11px] text-muted">{t("nouveaux mots", "new words")}</div>
+            </div>
+            <div className="rounded-xl bg-mint-100/70 p-2 dark:bg-mint-600/15">
+              <div className="text-2xl font-semibold tabular-nums">{result.vocab.reviewed}</div>
+              <div className="text-[11px] text-muted">{t("mots révisés", "reviewed")}</div>
+            </div>
+            <div className="rounded-xl bg-coral-100/70 p-2 dark:bg-coral-600/15">
+              <div className="text-2xl font-semibold tabular-nums">{result.vocab.toReview.length}</div>
+              <div className="text-[11px] text-muted">{t("à revoir", "to review")}</div>
+            </div>
+          </div>
+          {result.vocab.level.change && <p className="animate-pop rounded-xl bg-ink-50 p-3 text-sm font-medium dark:bg-ink-900/40">{LEVEL_MSG[result.vocab.level.change](result.vocab.level.state.level)}</p>}
+          <div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-semibold">{levelLabel(result.vocab.level.state)}</span>
+              <span className="text-xs text-muted">{Math.round(result.vocab.level.progress * 100)} %</span>
+            </div>
+            <ProgressBar value={result.vocab.level.progress} tone="mint" className="mt-1.5" />
+          </div>
+          <p className="text-xs text-muted">
+            {t("Tout est enregistré dans ton vocabulaire : les mots trouvés du premier coup reviendront dans quelques jours pour vérifier qu'ils sont retenus, les autres plus tôt.", "Everything is saved in your vocabulary.")}{" "}
+            <Link href="/games/progress" className="font-medium text-ink-600 underline-offset-2 hover:underline dark:text-ink-300">{t("Mes progrès ›", "My progress ›")}</Link>
+          </p>
+        </Panel>
+      )}
+
       {result.missed.length > 0 && (
         <Panel>
           <h2 className="font-semibold">🧠 {t("Rappel : à retenir", "Recap: to remember")}</h2>
-          <p className="mb-3 text-sm text-muted">{t("Les éléments manqués reviendront plus vite dans tes révisions.", "Missed items will come back sooner in your reviews.")}</p>
+          <p className="mb-3 text-sm text-muted">{t("Les éléments manqués reviennent plus vite : demain, puis de plus en plus espacés.", "Missed items come back sooner.")}</p>
           <ul className="divide-y divide-line">
             {dedupe(result.missed).map((m) => (
               <li key={m.en} className="flex items-center gap-3 py-2.5">
@@ -139,8 +208,8 @@ export function EndScreen({ gameId, result, onReplay }: { gameId: string; result
                   <div className="text-sm text-muted">{m.fr}</div>
                   {m.note && <div className="mt-0.5 text-xs text-muted">{m.note}</div>}
                 </div>
-                {m.cardId ? (
-                  <Badge tone="sun">{t("En révision", "In review")}</Badge>
+                {m.cardId || result.vocab?.toReview.includes(m.en) || sessionLog.some((a) => a.en === m.en) ? (
+                  <Badge tone="sun">{t("À réviser", "To review")}</Badge>
                 ) : added.has(m.en) ? (
                   <Badge tone="mint">✓ {t("Ajouté", "Added")}</Badge>
                 ) : (
@@ -167,6 +236,11 @@ export function EndScreen({ gameId, result, onReplay }: { gameId: string; result
           {t("Tous les jeux", "All games")}
         </LinkButton>
       </div>
+      {onChangeMode && (
+        <button onClick={onChangeMode} className="w-full text-center text-sm text-muted underline-offset-2 hover:underline">
+          {mode === "new" ? t("Passer en mode « Réviser mon vocabulaire »", "Switch to review mode") : t("Changer de mode ou de thème", "Change mode or theme")}
+        </button>
+      )}
     </div>
   );
 }

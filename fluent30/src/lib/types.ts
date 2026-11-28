@@ -4,7 +4,8 @@ export type Skill = "recognition" | "production" | "listening";
 export const SKILLS: Skill[] = ["recognition", "production", "listening"];
 
 export type EntryKind = "word" | "verb" | "expression" | "phrase" | "phrasal";
-export type CardSource = "seed" | "user" | "reader" | "conversation" | "translator" | "verbs" | "grammar" | "around" | "reallife" | "memory" | "journal" | "mission";
+export type CardSource = "seed" | "user" | "reader" | "conversation" | "translator" | "verbs" | "grammar" | "around" | "reallife" | "memory" | "journal" | "mission" | "game";
+export type Cefr = "A1" | "A2" | "B1" | "B2" | "C1";
 export type Register = "familier" | "courant" | "professionnel" | "soutenu";
 
 /** A learning item (word, verb, expression, sentence). */
@@ -39,6 +40,12 @@ export interface Card {
   captureId?: string;
   memoryId?: string;
   journalId?: string;
+  /** CEFR level of the word (A1…C1), from the shared lexicon or estimated */
+  cefr?: Cefr;
+  /** answers given in games and exercises (first attempt per question) */
+  gameStats?: { correct: number; wrong: number; hints: number; lastAt?: number };
+  /** where the learner has met this word: game ids, "reader", "lesson", "mission", "photo"… (deduplicated) */
+  seenIn?: string[];
   createdAt: number;
   updatedAt: number;
 }
@@ -134,6 +141,8 @@ export interface DayActivity {
   grammarExercises: number;
   xp: number;
   around?: number; // things named in English with the "Autour de moi" exercise
+  /** snapshot of the number of well-mastered words that day (vocabulary dashboard chart) */
+  masteredWords?: number;
   updatedAt: number;
 }
 
@@ -267,6 +276,10 @@ export interface Settings {
   readingMode?: "immersive" | "assisted" | "bilingual";
   readingGoals?: { minutesPerWeek: number; wordsPerWeek: number; booksPerMonth: number };
   lastSyncAt?: number;
+  /** vocabulary level estimated from the learner's real answers in games (may differ from pathLevel) */
+  vocabLevel?: { level: Cefr; down?: boolean; at: number };
+  /** last choices on the game mode screen */
+  gamePrefs?: { mode: "new" | "review"; theme?: string };
   updatedAt: number;
 }
 

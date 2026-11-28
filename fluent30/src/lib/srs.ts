@@ -7,6 +7,9 @@ import { trackActivity, recordMistake } from "./track";
 import type { Card, Grade, ReviewLog, Skill, SrsState } from "./types";
 
 const scheduler = fsrs(generatorParameters({ enable_fuzz: true, enable_short_term: true, request_retention: 0.9, maximum_interval: 3650 }));
+/** Games and exercises: long-term steps only (miss → next day, first success → ≈ 2 days, then ≈ 5–10 days, then weeks);
+ * the in-session repetition of a missed word is handled by the game itself. Same FSRS states as the flashcards. */
+const longTerm = fsrs(generatorParameters({ enable_fuzz: true, enable_short_term: false, request_retention: 0.9, maximum_interval: 3650 }));
 
 export const DURABLE_DAYS = 21; // stability threshold to count a word as "durably memorised"
 
@@ -66,12 +69,12 @@ export function formatInterval(ms: number): string {
 }
 
 /** Apply a review. Returns the updated state. */
-export async function gradeCard(cardId: string, skill: Skill, grade: Grade, opts: { ms?: number; context?: ReviewLog["context"] } = {}) {
+export async function gradeCard(cardId: string, skill: Skill, grade: Grade, opts: { ms?: number; context?: ReviewLog["context"]; longTerm?: boolean } = {}) {
   const db = getDb();
   const id = `${cardId}:${skill}`;
   const cur = (await db.srs.get(id)) ?? newSrs(cardId, skill);
   const now = new Date();
-  const res = scheduler.next(toFsrs(cur), now, grade as unknown as FGrade);
+  const res = (opts.longTerm ? longTerm : scheduler).next(toFsrs(cur), now, grade as unknown as FGrade);
   const next = fromFsrs({ id, cardId, skill }, res.card);
   await db.transaction("rw", db.srs, db.reviewLogs, async () => {
     await db.srs.put(next);
@@ -87,8 +90,18 @@ export async function gradeCard(cardId: string, skill: Skill, grade: Grade, opts
 
 /** Lightweight signal from games: correct answers count as "Good", wrong as "Again" but only when due-ish,
  * so that games reinforce memory without wrecking the schedule. */
-export async function gameSignal(cardId: string, correct: boolean, skill: Skill = "recognition") {
+export async function gameSignal(cardId: string, correct: boolean, skill: Skill = "recognition", where = "exercise") {
   const db = getDb();
+  // every answer counts in the word's personal statistics (same counters as the vocabulary games)
+  const c = await db.cards.get(cardId);
+  if (c) {
+    const gs = c.gameStats ?? { correct: 0, wrong: 0, hints: 0 };
+    await db.cards.update(cardId, {
+      gameStats: { ...gs, correct: gs.correct + (correct ? 1 : 0), wrong: gs.wrong + (correct ? 0 : 1), lastAt: Date.now() },
+      seenIn: [...new Set([...(c.seenIn ?? []), where])].slice(-12),
+      updatedAt: Date.now(),
+    });
+  }
   const s = await db.srs.get(`${cardId}:${skill}`);
   if (!s) return;
   const now = Date.now();

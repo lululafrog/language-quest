@@ -11,6 +11,8 @@ export interface SeedWord {
   themes?: string[]; // theme ids from THEMES
   ipa?: string; // British IPA
   def?: string; // simple English learner definition (≤ 12 words)
+  cefr?: string; // A1..C1 (advanced lists carry their own level)
+  syn?: string; // one common synonym or associated expression
 }
 
 export const TIERS = [
